@@ -168,7 +168,7 @@ func (s SpectraMaxData) AllAbsorbanceData() (readings map[string][]wtype.Absorba
 			}
 
 		} else {
-			errs = append(errs, fmt.Sprintf("well %s: Only Spectramax data in scan format is currently supported. Please run Absorbance reading as scan."))
+			errs = append(errs, fmt.Sprintf("well %s: Only Spectramax data in scan format is currently supported. Please run Absorbance reading as scan.", w.Name))
 		}
 		readings[w.Name] = wellReadings
 
@@ -326,9 +326,9 @@ func (s SpectraMaxData) FindOptimalAbsorbanceWavelength(wellname string, blankna
 		return wavelength, fmt.Errorf("no data found for %s", wellname)
 	}
 
-	blankData, found := allWellData[blankname]
+	blankData, blankFound := allWellData[blankname]
 
-	if err != nil {
+	if !blankFound {
 		return wavelength, fmt.Errorf("no data found for blank %s", blankname)
 	}
 
