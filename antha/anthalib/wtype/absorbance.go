@@ -33,6 +33,11 @@ type Absorbance struct {
 	Pathlength   wunit.Length
 	Status       []string
 	Reader       string
+	Annotations  string
+}
+
+func (a Absorbance) WavelengthAsInt() int {
+	return int(a.Wavelength)
 }
 
 type Reading interface {
