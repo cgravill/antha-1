@@ -139,7 +139,7 @@ func (data MarsData) AllAbsorbanceData(wellName string) (readings []wtype.Absorb
 				Wavelength:   float64(measurement.RWavelength),
 				Reading:      measurement.Reading,
 				WellLocation: wtype.MakeWellCoordsA1(wellName),
-				Annotations:  measurement.ReadingType,
+				Annotations:  []string{measurement.ReadingType},
 			})
 	}
 
@@ -282,7 +282,7 @@ func (data MarsData) Absorbance(well string, wavelength int, options ...interfac
 			return wtype.Absorbance{
 				Reading:     result,
 				Wavelength:  float64(wavelength),
-				Annotations: fmt.Sprint(options[0]),
+				Annotations: []string{fmt.Sprint(options[0])},
 			}, nil
 		} else {
 			errs = append(errs, err.Error())

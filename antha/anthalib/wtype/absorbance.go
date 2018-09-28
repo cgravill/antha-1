@@ -31,9 +31,9 @@ type Absorbance struct {
 	Reading      float64
 	Wavelength   float64
 	Pathlength   wunit.Length
-	Status       []string
 	Reader       string
-	Annotations  string
+	// Annotations is a field to add custom user labels
+	Annotations []string
 }
 
 func (a Absorbance) WavelengthAsInt() int {
@@ -53,7 +53,7 @@ func (sample *Absorbance) BlankCorrect(blank Absorbance) {
 		sample.Reader == blank.Reader {
 		sample.Reading = sample.Reading - blank.Reading
 
-		sample.Status = append(sample.Status, "Blank Corrected")
+		sample.Annotations = append(sample.Annotations, "Blank Corrected")
 	}
 }
 
