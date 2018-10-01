@@ -129,15 +129,15 @@ func readingAtWavelength(readings []wtype.Absorbance, wavelength int) (reading f
 // AllAbsorbanceData returns all readings for using the well name as key.
 func (s SpectraMaxData) AllAbsorbanceData() (readings map[string][]wtype.Absorbance, err error) {
 
-	readings = make(map[string][]wtype.Absorbance)
-
 	var errs []string
 
 	wells := s.Experiment[0].PlateSections[0].Wavelengths[0].Wavelength.Wells[0].Wells
 
+	readings = make(map[string][]wtype.Absorbance, len(wells))
+
 	for _, w := range wells {
 
-		var wellReadings []wtype.Absorbance
+		var wellReadings = make([]wtype.Absorbance, len(strings.Fields(w.WaveData)))
 
 		if w.IsScanData() {
 			dataStrings := strings.Fields(w.RawData)
@@ -186,13 +186,13 @@ func (s SpectraMaxData) dataForWell(wellName string) ([]wtype.Absorbance, error)
 	allWellData, err := s.AllAbsorbanceData()
 
 	if err != nil {
-		return []wtype.Absorbance{}, err
+		return nil, err
 	}
 
 	wellData, found := allWellData[wellName]
 
 	if !found {
-		return []wtype.Absorbance{}, fmt.Errorf("No data found for well %s", wellName)
+		return nil, fmt.Errorf("No data found for well %s", wellName)
 	}
 
 	return wellData, nil

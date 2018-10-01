@@ -126,20 +126,19 @@ func (data MarsData) TimeCourse(wellname string, exWavelength int, emWavelength 
 // AllAbsorbanceData returns all absorbance readings using the well location as key.
 func (data MarsData) AllAbsorbanceData() (readings map[string][]wtype.Absorbance, err error) {
 
-	readings = make(map[string][]wtype.Absorbance)
+	readings = make(map[string][]wtype.Absorbance, len(data.Dataforeachwell))
 
 	for wellName, wellData := range data.Dataforeachwell {
 
-		var wellReadings []wtype.Absorbance
+		var wellReadings = make([]wtype.Absorbance, len(wellData.Data.Readings[0]))
 
-		for _, measurement := range wellData.Data.Readings[0] {
-			wellReadings = append(wellReadings,
-				wtype.Absorbance{
-					Wavelength:   float64(measurement.RWavelength),
-					Reading:      measurement.Reading,
-					WellLocation: wtype.MakeWellCoordsA1(wellName),
-					Annotations:  []string{measurement.ReadingType},
-				})
+		for readingIndex, measurement := range wellData.Data.Readings[0] {
+			wellReadings[readingIndex] = wtype.Absorbance{
+				Wavelength:   float64(measurement.RWavelength),
+				Reading:      measurement.Reading,
+				WellLocation: wtype.MakeWellCoordsA1(wellName),
+				Annotations:  []string{measurement.ReadingType},
+			}
 		}
 
 		readings[wellName] = wellReadings
