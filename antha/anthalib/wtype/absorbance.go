@@ -36,6 +36,15 @@ type Absorbance struct {
 	Annotations []string
 }
 
+// WavelengthAsInt will return the Wavelength field as an int.
+// Whilst it is possible that the wavelength used may be a decimal,
+// Wavelength would typically be expected to be in the form of an integer of the wavelength in nm.
+// In some platereader data sets this is stored as a float so this method is
+// intended to take the safest representation, as a float, and return the more
+// common representation as an int for parsers where it is known that the wavelength is stored as an int.
+// This method would therefore not safe to use for situations
+// where the wavelength may in fact be represented by a decimal.
+//
 func (a Absorbance) WavelengthAsInt() int {
 	return int(a.Wavelength)
 }
