@@ -128,8 +128,15 @@ func (t *Table) WithKey(key Key) *Table {
 
 // Sort produces a sorted Table using the Key.
 // TODO inplace optimization?
-func (t *Table) Sort(asc ...bool) *Table {
-	return nil
+//func (t *Table) Sort(asc ...bool) *Table {
+//
+//}
+
+// Sort sorts a table by a user-defined function
+// In order not to run out of resources, it is recommended to call sortTable only after removing unnecessary columns with .Project(...)
+// TODO: decide whether we prefer this more general sorting or specifying table keys (and sorting only by them) instead?
+func (t *Table) Sort(f func(r1 *Row, r2 *Row) bool) (*Table, error) {
+	return sortTable(t, f)
 }
 
 // Equal is true if the other table has the same schema (in the same order)

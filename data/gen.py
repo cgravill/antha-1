@@ -23,8 +23,6 @@ import (
 
 {% for t in env['TYPE_SUPPORT'] %}
 
-//TODO codegen below this point
-
 type Box{{ t['Type'] }} interface {
 	{{ t['Type'] }}() ({{ t['Raw'] }}, bool) // returns false = nil
 }
@@ -183,6 +181,26 @@ func NewArrowSeriesFromSeries{{ t['Type'] }}(series *Series) (*Series, error) {
 	}
 	arrowValues := builder.New{{ t['ArrowType'] }}Array()
 	return NewArrowSeries{{ t['Type'] }}(series.col, arrowValues), nil
+}
+
+func NewArrowSeriesFromRows{{ t['Type'] }}(rows *Rows, col ColumnName) (*Series, error) {
+	builder := array.New{{ t['ArrowType'] }}Builder(memory.DefaultAllocator)
+	for i := range rows.Data {
+		observation, err := rows.Data[i].Observation(col)
+		if err != nil {
+			return nil, err
+		}
+
+		if observation.value == nil {
+			builder.AppendNull()
+		} else if value, ok := observation.value.({{ t['Raw'] }}); ok {
+			builder.Append(value)
+		} else {
+			return nil, errors.Errorf("Observation value %v cannot be castede to {{ t['Raw'] }}", observation.value)
+		}
+	}
+	arrowValues := builder.New{{ t['ArrowType'] }}Array()
+	return NewArrowSeries{{ t['Type'] }}(col, arrowValues), nil
 }
 
 type {{ t['Raw'] }}ArrowSeriesMeta struct {

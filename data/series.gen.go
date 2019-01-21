@@ -12,8 +12,6 @@ import (
 
 
 
-//TODO codegen below this point
-
 type BoxFloat64 interface {
 	Float64() (float64, bool) // returns false = nil
 }
@@ -46,8 +44,6 @@ func (a *asFloat64) Float64() (float64, bool) {
 	return v.(float64), true
 }
 
-
-//TODO codegen below this point
 
 type BoxInt64 interface {
 	Int64() (int64, bool) // returns false = nil
@@ -82,8 +78,6 @@ func (a *asInt64) Int64() (int64, bool) {
 }
 
 
-//TODO codegen below this point
-
 type BoxString interface {
 	String() (string, bool) // returns false = nil
 }
@@ -116,8 +110,6 @@ func (a *asString) String() (string, bool) {
 	return v.(string), true
 }
 
-
-//TODO codegen below this point
 
 type BoxBool interface {
 	Bool() (bool, bool) // returns false = nil

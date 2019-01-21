@@ -57,6 +57,26 @@ func NewArrowSeriesFromSeriesFloat64(series *Series) (*Series, error) {
 	return NewArrowSeriesFloat64(series.col, arrowValues), nil
 }
 
+func NewArrowSeriesFromRowsFloat64(rows *Rows, col ColumnName) (*Series, error) {
+	builder := array.NewFloat64Builder(memory.DefaultAllocator)
+	for i := range rows.Data {
+		observation, err := rows.Data[i].Observation(col)
+		if err != nil {
+			return nil, err
+		}
+
+		if observation.value == nil {
+			builder.AppendNull()
+		} else if value, ok := observation.value.(float64); ok {
+			builder.Append(value)
+		} else {
+			return nil, errors.Errorf("Observation value %v cannot be castede to float64", observation.value)
+		}
+	}
+	arrowValues := builder.NewFloat64Array()
+	return NewArrowSeriesFloat64(col, arrowValues), nil
+}
+
 type float64ArrowSeriesMeta struct {
 	values *array.Float64
 }
@@ -155,6 +175,26 @@ func NewArrowSeriesFromSeriesInt64(series *Series) (*Series, error) {
 	}
 	arrowValues := builder.NewInt64Array()
 	return NewArrowSeriesInt64(series.col, arrowValues), nil
+}
+
+func NewArrowSeriesFromRowsInt64(rows *Rows, col ColumnName) (*Series, error) {
+	builder := array.NewInt64Builder(memory.DefaultAllocator)
+	for i := range rows.Data {
+		observation, err := rows.Data[i].Observation(col)
+		if err != nil {
+			return nil, err
+		}
+
+		if observation.value == nil {
+			builder.AppendNull()
+		} else if value, ok := observation.value.(int64); ok {
+			builder.Append(value)
+		} else {
+			return nil, errors.Errorf("Observation value %v cannot be castede to int64", observation.value)
+		}
+	}
+	arrowValues := builder.NewInt64Array()
+	return NewArrowSeriesInt64(col, arrowValues), nil
 }
 
 type int64ArrowSeriesMeta struct {
@@ -257,6 +297,26 @@ func NewArrowSeriesFromSeriesString(series *Series) (*Series, error) {
 	return NewArrowSeriesString(series.col, arrowValues), nil
 }
 
+func NewArrowSeriesFromRowsString(rows *Rows, col ColumnName) (*Series, error) {
+	builder := array.NewStringBuilder(memory.DefaultAllocator)
+	for i := range rows.Data {
+		observation, err := rows.Data[i].Observation(col)
+		if err != nil {
+			return nil, err
+		}
+
+		if observation.value == nil {
+			builder.AppendNull()
+		} else if value, ok := observation.value.(string); ok {
+			builder.Append(value)
+		} else {
+			return nil, errors.Errorf("Observation value %v cannot be castede to string", observation.value)
+		}
+	}
+	arrowValues := builder.NewStringArray()
+	return NewArrowSeriesString(col, arrowValues), nil
+}
+
 type stringArrowSeriesMeta struct {
 	values *array.String
 }
@@ -355,6 +415,26 @@ func NewArrowSeriesFromSeriesBool(series *Series) (*Series, error) {
 	}
 	arrowValues := builder.NewBooleanArray()
 	return NewArrowSeriesBool(series.col, arrowValues), nil
+}
+
+func NewArrowSeriesFromRowsBool(rows *Rows, col ColumnName) (*Series, error) {
+	builder := array.NewBooleanBuilder(memory.DefaultAllocator)
+	for i := range rows.Data {
+		observation, err := rows.Data[i].Observation(col)
+		if err != nil {
+			return nil, err
+		}
+
+		if observation.value == nil {
+			builder.AppendNull()
+		} else if value, ok := observation.value.(bool); ok {
+			builder.Append(value)
+		} else {
+			return nil, errors.Errorf("Observation value %v cannot be castede to bool", observation.value)
+		}
+	}
+	arrowValues := builder.NewBooleanArray()
+	return NewArrowSeriesBool(col, arrowValues), nil
 }
 
 type boolArrowSeriesMeta struct {

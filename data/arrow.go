@@ -44,6 +44,7 @@ func NewArrowSeriesFromSlice(col ColumnName, values interface{}, mask []bool) (*
 	}
 }
 
+// NewArrowSeriesFromSeries converts arbitrary Series into a new Arrow-based Series
 func NewArrowSeriesFromSeries(series *Series) (*Series, error) {
 	// for now, only series of supported Arrow types are supported
 	switch series.typ {
@@ -57,5 +58,27 @@ func NewArrowSeriesFromSeries(series *Series) (*Series, error) {
 		return NewArrowSeriesFromSeriesString(series)
 	default:
 		return nil, errors.New("The data type is not supported, expecting a series of supported primitive type")
+	}
+}
+
+// NewArrowSeriesFromRows converts a column of a Row-wide representation of a table into a new Arrow-based Series
+func NewArrowSeriesFromRows(rows *Rows, col ColumnName) (*Series, error) {
+	column, err := rows.Schema.Col(col)
+	if err != nil {
+		return nil, err
+	}
+
+	// for now, only series of supported Arrow types are supported
+	switch column.Type {
+	case reflect.TypeOf(false):
+		return NewArrowSeriesFromRowsBool(rows, col)
+	case reflect.TypeOf(int64(0)):
+		return NewArrowSeriesFromRowsInt64(rows, col)
+	case reflect.TypeOf(float64(0)):
+		return NewArrowSeriesFromRowsFloat64(rows, col)
+	case reflect.TypeOf(""):
+		return NewArrowSeriesFromRowsString(rows, col)
+	default:
+		return nil, errors.New("The data type is not supported, expecting rows of supported primitive type")
 	}
 }

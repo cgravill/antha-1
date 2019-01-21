@@ -200,6 +200,36 @@ func testCacheAndCopy(t *testing.T, typ seriesType) {
 	}
 }
 
+func TestSorting(t *testing.T) {
+	testSorting(t, nativeSeries)
+	testSorting(t, arrowSeries)
+}
+
+func testSorting(t *testing.T, typ seriesType) {
+	// an unsorted table
+	table := NewTable([]*Series{
+		newSeries(typ, "id", []int64{2, 1, 3}),
+		newSeries(typ, "str", []string{"2", "1", "3"}),
+	})
+
+	// a table sorted by id
+	sorted, err := table.Sort(func(r1 *Row, r2 *Row) bool {
+		return r1.Values[0].MustInt() < r2.Values[0].MustInt()
+	})
+	if err != nil {
+		t.Errorf("sorting failed: %s", err)
+	}
+
+	// sorted table reference value
+	sortedReference := NewTable([]*Series{
+		newSeries(typ, "id", []int64{1, 2, 3}),
+		newSeries(typ, "str", []string{"1", "2", "3"}),
+	})
+
+	// check the sorted table is equal to the reference table
+	assertEqual(t, sorted, sortedReference, "sort")
+}
+
 type seriesType int
 
 const (
