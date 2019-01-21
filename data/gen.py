@@ -79,7 +79,7 @@ func (e *ExtendOn) {{ t['Type'] }}(f func(v ...{{ t['Raw'] }}) {{ t['Raw'] }}) *
 	return NewTable(append(e.extension.series, &Series{
 		col: e.extension.newCol,
 		typ: reflect.TypeOf({{ t['Zero'] }}),
-		read: func(cache seriesIterCache) iterator {
+		read: func(cache *seriesIterCache) iterator {
 			// Every series must be cast or converted
 			colReader := make([]iter{{ t['Type'] }}, len(e.inputs))
 			var err error
@@ -92,6 +92,8 @@ func (e *ExtendOn) {{ t['Type'] }}(f func(v ...{{ t['Raw'] }}) {{ t['Raw'] }}) *
 					panic(errors.Wrapf(err, "when projecting new column %v", e.extension.newCol))
 				}
 			}
+			// end when table exhausted
+			e.extension.extensionSource(cache)
 			return &extend{{ t['Type'] }}{f: f, source: colReader}
 		}},
 	))
@@ -169,7 +171,7 @@ func NewArrowSeriesFromSeries{{ t['Type'] }}(series *Series) (*Series, error) {
 		return nil, errors.New("Unable to materialize unbounded series")
 	}
 
-	var iterCache seriesIterCache
+	iterCache := &seriesIterCache{}
 	iter := series.read(iterCache)
 
 	typedIter, err := series.iterate{{ t['Type'] }}(iter)
@@ -223,7 +225,7 @@ func (m *{{ t['Raw'] }}ArrowSeriesMeta) MaxSize() int {
 	return m.values.Len()
 }
 
-func (m *{{ t['Raw'] }}ArrowSeriesMeta) read(_ seriesIterCache) iterator {
+func (m *{{ t['Raw'] }}ArrowSeriesMeta) read(_ *seriesIterCache) iterator {
 	return &{{ t['Raw'] }}ArrowSeriesIter{
 		{{ t['Raw'] }}ArrowSeriesMeta: m,
 		pos:                  -1,

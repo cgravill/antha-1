@@ -12,16 +12,19 @@ import (
 
 
 
+// BoxFloat64 represents a nullable float64 value
 type BoxFloat64 interface {
 	Float64() (float64, bool) // returns false = nil
 }
 
+// iterFloat64 iterates over nullable float64 values
 type iterFloat64 interface {
 	advanceable
 	BoxFloat64
 }
 
-// iterateFloat64 is fallback to convert dynamic series to static iterator type
+// iterateFloat64 is a fallback to convert dynamic series to static iterator type.
+// an error is returned if the series' declared type is not assignable to float64
 func (s *Series) iterateFloat64(iter iterator) (iterFloat64, error) {
 	if cast, ok := iter.(iterFloat64); ok {
 		return cast, nil
@@ -45,16 +48,19 @@ func (a *asFloat64) Float64() (float64, bool) {
 }
 
 
+// BoxInt64 represents a nullable int64 value
 type BoxInt64 interface {
 	Int64() (int64, bool) // returns false = nil
 }
 
+// iterInt64 iterates over nullable int64 values
 type iterInt64 interface {
 	advanceable
 	BoxInt64
 }
 
-// iterateInt64 is fallback to convert dynamic series to static iterator type
+// iterateInt64 is a fallback to convert dynamic series to static iterator type.
+// an error is returned if the series' declared type is not assignable to int64
 func (s *Series) iterateInt64(iter iterator) (iterInt64, error) {
 	if cast, ok := iter.(iterInt64); ok {
 		return cast, nil
@@ -78,16 +84,19 @@ func (a *asInt64) Int64() (int64, bool) {
 }
 
 
+// BoxString represents a nullable string value
 type BoxString interface {
 	String() (string, bool) // returns false = nil
 }
 
+// iterString iterates over nullable string values
 type iterString interface {
 	advanceable
 	BoxString
 }
 
-// iterateString is fallback to convert dynamic series to static iterator type
+// iterateString is a fallback to convert dynamic series to static iterator type.
+// an error is returned if the series' declared type is not assignable to string
 func (s *Series) iterateString(iter iterator) (iterString, error) {
 	if cast, ok := iter.(iterString); ok {
 		return cast, nil
@@ -111,16 +120,19 @@ func (a *asString) String() (string, bool) {
 }
 
 
+// BoxBool represents a nullable bool value
 type BoxBool interface {
 	Bool() (bool, bool) // returns false = nil
 }
 
+// iterBool iterates over nullable bool values
 type iterBool interface {
 	advanceable
 	BoxBool
 }
 
-// iterateBool is fallback to convert dynamic series to static iterator type
+// iterateBool is a fallback to convert dynamic series to static iterator type.
+// an error is returned if the series' declared type is not assignable to bool
 func (s *Series) iterateBool(iter iterator) (iterBool, error) {
 	if cast, ok := iter.(iterBool); ok {
 		return cast, nil

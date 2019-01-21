@@ -39,6 +39,12 @@ func (m MustCreate) NewArrowSeriesFromSlice(col ColumnName, values interface{}, 
 	return ser
 }
 
+func (m MustCreate) NewTableFromStructs(structs interface{}) *Table {
+	t, err := NewTableFromStructs(structs)
+	m.handle(err)
+	return t
+}
+
 type MustSeries struct {
 	s *Series
 }

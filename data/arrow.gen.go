@@ -37,7 +37,7 @@ func NewArrowSeriesFromSeriesFloat64(series *Series) (*Series, error) {
 		return nil, errors.New("Unable to materialize unbounded series")
 	}
 
-	var iterCache seriesIterCache
+	iterCache := &seriesIterCache{}
 	iter := series.read(iterCache)
 
 	typedIter, err := series.iterateFloat64(iter)
@@ -91,7 +91,7 @@ func (m *float64ArrowSeriesMeta) MaxSize() int {
 	return m.values.Len()
 }
 
-func (m *float64ArrowSeriesMeta) read(_ seriesIterCache) iterator {
+func (m *float64ArrowSeriesMeta) read(_ *seriesIterCache) iterator {
 	return &float64ArrowSeriesIter{
 		float64ArrowSeriesMeta: m,
 		pos:                  -1,
@@ -157,7 +157,7 @@ func NewArrowSeriesFromSeriesInt64(series *Series) (*Series, error) {
 		return nil, errors.New("Unable to materialize unbounded series")
 	}
 
-	var iterCache seriesIterCache
+	iterCache := &seriesIterCache{}
 	iter := series.read(iterCache)
 
 	typedIter, err := series.iterateInt64(iter)
@@ -211,7 +211,7 @@ func (m *int64ArrowSeriesMeta) MaxSize() int {
 	return m.values.Len()
 }
 
-func (m *int64ArrowSeriesMeta) read(_ seriesIterCache) iterator {
+func (m *int64ArrowSeriesMeta) read(_ *seriesIterCache) iterator {
 	return &int64ArrowSeriesIter{
 		int64ArrowSeriesMeta: m,
 		pos:                  -1,
@@ -277,7 +277,7 @@ func NewArrowSeriesFromSeriesString(series *Series) (*Series, error) {
 		return nil, errors.New("Unable to materialize unbounded series")
 	}
 
-	var iterCache seriesIterCache
+	iterCache := &seriesIterCache{}
 	iter := series.read(iterCache)
 
 	typedIter, err := series.iterateString(iter)
@@ -331,7 +331,7 @@ func (m *stringArrowSeriesMeta) MaxSize() int {
 	return m.values.Len()
 }
 
-func (m *stringArrowSeriesMeta) read(_ seriesIterCache) iterator {
+func (m *stringArrowSeriesMeta) read(_ *seriesIterCache) iterator {
 	return &stringArrowSeriesIter{
 		stringArrowSeriesMeta: m,
 		pos:                  -1,
@@ -397,7 +397,7 @@ func NewArrowSeriesFromSeriesBool(series *Series) (*Series, error) {
 		return nil, errors.New("Unable to materialize unbounded series")
 	}
 
-	var iterCache seriesIterCache
+	iterCache := &seriesIterCache{}
 	iter := series.read(iterCache)
 
 	typedIter, err := series.iterateBool(iter)
@@ -451,7 +451,7 @@ func (m *boolArrowSeriesMeta) MaxSize() int {
 	return m.values.Len()
 }
 
-func (m *boolArrowSeriesMeta) read(_ seriesIterCache) iterator {
+func (m *boolArrowSeriesMeta) read(_ *seriesIterCache) iterator {
 	return &boolArrowSeriesIter{
 		boolArrowSeriesMeta: m,
 		pos:                  -1,

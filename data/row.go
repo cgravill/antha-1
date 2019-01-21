@@ -28,16 +28,17 @@ func (r Row) Observation(c ColumnName) (Observation, error) {
 	return Observation{}, errors.New("no column " + string(c))
 }
 
+// Observation holds an arbitrary, nullable item of column data
 type Observation struct {
 	col   *ColumnName
-	value interface{} // TODO ptr?
+	value interface{}
 }
 
 func (o Observation) ColumnName() ColumnName {
 	return *o.col
 }
 
-// dynamic read
+// IsNull returns true if the value is null
 func (o Observation) IsNull() bool {
 	return o.value == nil
 }
@@ -53,4 +54,8 @@ func (o Observation) MustInt() int {
 
 func (o Observation) MustString() string {
 	return o.value.(string)
+}
+
+func (o Observation) Interface() interface{} {
+	return o.value
 }

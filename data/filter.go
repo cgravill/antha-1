@@ -148,13 +148,13 @@ func lazyFilterTable(filterSpec FilterSpec, table *Table) *Table {
 	}
 	// compose the filter into all the series
 	wrappers := make([]*Series, len(table.series))
-	wrap := func(colIndex int, wrappedSeries *Series) func(cache seriesIterCache) iterator {
-		return func(cache seriesIterCache) iterator {
+	wrap := func(colIndex int, wrappedSeries *Series) func(cache *seriesIterCache) iterator {
+		return func(cache *seriesIterCache) iterator {
 			// The first wrapper needs to construct the common state for the parent iterator,
 			// noting we will be called in random order.
 			var commonState *filterState
 			for _, w := range wrappers {
-				if iterator, found := cache[w]; found {
+				if iterator, found := cache.cache[w]; found {
 					commonState = iterator.(*filterIter).commonState
 				}
 			}

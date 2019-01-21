@@ -42,7 +42,7 @@ func (m *nativeSliceSerMeta) MaxSize() int {
 	return m.len
 }
 
-func (m *nativeSliceSerMeta) read(_ seriesIterCache) iterator {
+func (m *nativeSliceSerMeta) read(_ *seriesIterCache) iterator {
 	return &nativeSliceSerIter{
 		nativeSliceSerMeta: m,
 		pos:                -1,

@@ -6,6 +6,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+/*
+ * specializations for more efficient Extend operations
+ */
 
 
 // Float64 adds a float64 col using float64 inputs.  Null on any null inputs.
@@ -14,7 +17,7 @@ func (e *ExtendOn) Float64(f func(v ...float64) float64) *Table {
 	return NewTable(append(e.extension.series, &Series{
 		col: e.extension.newCol,
 		typ: reflect.TypeOf(float64(0)),
-		read: func(cache seriesIterCache) iterator {
+		read: func(cache *seriesIterCache) iterator {
 			// Every series must be cast or converted
 			colReader := make([]iterFloat64, len(e.inputs))
 			var err error
@@ -27,6 +30,8 @@ func (e *ExtendOn) Float64(f func(v ...float64) float64) *Table {
 					panic(errors.Wrapf(err, "when projecting new column %v", e.extension.newCol))
 				}
 			}
+			// end when table exhausted
+			e.extension.extensionSource(cache)
 			return &extendFloat64{f: f, source: colReader}
 		}},
 	))
@@ -63,14 +68,13 @@ func (x *extendFloat64) Float64() (float64, bool) {
 }
 
 
-
 // Int64 adds a int64 col using int64 inputs.  Null on any null inputs.
 func (e *ExtendOn) Int64(f func(v ...int64) int64) *Table {
 	// TODO move from lazy to eager type validation
 	return NewTable(append(e.extension.series, &Series{
 		col: e.extension.newCol,
 		typ: reflect.TypeOf(int64(0)),
-		read: func(cache seriesIterCache) iterator {
+		read: func(cache *seriesIterCache) iterator {
 			// Every series must be cast or converted
 			colReader := make([]iterInt64, len(e.inputs))
 			var err error
@@ -83,6 +87,8 @@ func (e *ExtendOn) Int64(f func(v ...int64) int64) *Table {
 					panic(errors.Wrapf(err, "when projecting new column %v", e.extension.newCol))
 				}
 			}
+			// end when table exhausted
+			e.extension.extensionSource(cache)
 			return &extendInt64{f: f, source: colReader}
 		}},
 	))
@@ -119,14 +125,13 @@ func (x *extendInt64) Int64() (int64, bool) {
 }
 
 
-
 // String adds a string col using string inputs.  Null on any null inputs.
 func (e *ExtendOn) String(f func(v ...string) string) *Table {
 	// TODO move from lazy to eager type validation
 	return NewTable(append(e.extension.series, &Series{
 		col: e.extension.newCol,
 		typ: reflect.TypeOf(""),
-		read: func(cache seriesIterCache) iterator {
+		read: func(cache *seriesIterCache) iterator {
 			// Every series must be cast or converted
 			colReader := make([]iterString, len(e.inputs))
 			var err error
@@ -139,6 +144,8 @@ func (e *ExtendOn) String(f func(v ...string) string) *Table {
 					panic(errors.Wrapf(err, "when projecting new column %v", e.extension.newCol))
 				}
 			}
+			// end when table exhausted
+			e.extension.extensionSource(cache)
 			return &extendString{f: f, source: colReader}
 		}},
 	))
@@ -175,14 +182,13 @@ func (x *extendString) String() (string, bool) {
 }
 
 
-
 // Bool adds a bool col using bool inputs.  Null on any null inputs.
 func (e *ExtendOn) Bool(f func(v ...bool) bool) *Table {
 	// TODO move from lazy to eager type validation
 	return NewTable(append(e.extension.series, &Series{
 		col: e.extension.newCol,
 		typ: reflect.TypeOf(false),
-		read: func(cache seriesIterCache) iterator {
+		read: func(cache *seriesIterCache) iterator {
 			// Every series must be cast or converted
 			colReader := make([]iterBool, len(e.inputs))
 			var err error
@@ -195,6 +201,8 @@ func (e *ExtendOn) Bool(f func(v ...bool) bool) *Table {
 					panic(errors.Wrapf(err, "when projecting new column %v", e.extension.newCol))
 				}
 			}
+			// end when table exhausted
+			e.extension.extensionSource(cache)
 			return &extendBool{f: f, source: colReader}
 		}},
 	))

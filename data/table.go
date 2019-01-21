@@ -19,7 +19,8 @@ type Table struct {
 	read func([]*Series) *tableIterator
 }
 
-// NewTable gives lowlevel access.  TODO semantics if jagged columns, duplicates etc
+// NewTable gives lowlevel access.
+// TODO if given bounded columns of known different sizes, then return error!
 func NewTable(series []*Series) *Table {
 	return &Table{
 		series: series,
@@ -171,7 +172,7 @@ func (t *Table) Equal(other *Table) bool {
 	// TODO since we are iterating over possibly identical series we might optimize by sharing the iterator cache
 }
 
-// Size returns -1 if unknwon (because unbounded or lazy)
+// Size returns -1 if unknown (because unbounded or lazy)
 func (t *Table) Size() int {
 	if len(t.series) == 0 {
 		return 0
@@ -248,6 +249,22 @@ func (t *Table) ProjectAllBut(columns ...ColumnName) *Table {
 		if _, found := byName[ser.col]; !found {
 			s = append(s, ser)
 		}
+	}
+	return NewTable(s)
+}
+
+// Rename updates all columns of the old name to the new name
+func (t *Table) Rename(old, new ColumnName) *Table {
+	s := make([]*Series, len(t.series))
+	for i, ser := range t.series {
+		if ser.col == old {
+			ser = &Series{col: new,
+				typ:  ser.typ,
+				meta: ser.meta,
+				read: ser.read,
+			}
+		}
+		s[i] = ser
 	}
 	return NewTable(s)
 }

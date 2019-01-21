@@ -37,7 +37,7 @@ func (ss *seriesSlice) length() int {
 	return int(ss.end - ss.start)
 }
 
-func (ss *seriesSlice) read(cache seriesIterCache) iterator {
+func (ss *seriesSlice) read(cache *seriesIterCache) iterator {
 	return &slicer{
 		seriesSlice: ss,
 		pos:         -1,

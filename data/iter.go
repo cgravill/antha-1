@@ -4,7 +4,7 @@ type readRow struct {
 	cols          []*ColumnName
 	colReader     []iterator
 	index         int
-	iteratorCache seriesIterCache
+	iteratorCache *seriesIterCache
 }
 
 func (rr *readRow) fill(series []*Series) {
@@ -24,13 +24,14 @@ func (rr *readRow) Value() interface{} {
 }
 
 // Sharing state across dependencies that need it
-// TODO extract interfaces, potentially
 // TODO if this were an ordered map, then it would be possible to make the assumption that dependencies
 // have been advanced in extension columns, allowing us to cache values
-type seriesIterCache map[*Series]iterator
+type seriesIterCache struct {
+	cache map[*Series]iterator
+}
 
-func (c seriesIterCache) Advance() bool {
-	for _, sRead := range c {
+func (c *seriesIterCache) Advance() bool {
+	for _, sRead := range c.cache {
 		if !sRead.Next() {
 			return false
 		}
@@ -39,13 +40,13 @@ func (c seriesIterCache) Advance() bool {
 }
 
 // nothing here is threadsafe!
-func (c seriesIterCache) Ensure(ser *Series) iterator {
-	if seriesRead, found := c[ser]; found {
+func (c *seriesIterCache) Ensure(ser *Series) iterator {
+	if seriesRead, found := c.cache[ser]; found {
 		return seriesRead
 	}
 	// TODO prevent recursive loop using a visited set here ?
 	seriesRead := ser.read(c)
-	c[ser] = seriesRead
+	c.cache[ser] = seriesRead
 	return seriesRead
 }
 
@@ -54,7 +55,10 @@ type tableIterator struct {
 }
 
 func newTableIterator(series []*Series) *tableIterator {
-	iter := &tableIterator{readRow{index: -1, iteratorCache: make(seriesIterCache)}}
+	iter := &tableIterator{readRow{
+		index:         -1,
+		iteratorCache: &seriesIterCache{cache: make(map[*Series]iterator)},
+	}}
 	iter.fill(series)
 	return iter
 }

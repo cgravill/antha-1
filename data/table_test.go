@@ -12,6 +12,17 @@ func TestEquals(t *testing.T) {
 	testEquals(t, arrowSeries)
 }
 
+func TestEqualsComplexType(t *testing.T) {
+	assertEqual(t, NewTable([]*Series{
+		newSeries(nativeSeries, "y", []int32{}),
+		newSeries(nativeSeries, "x", [][]string{}),
+	}), NewTable([]*Series{
+		newSeries(nativeSeries, "y", []int32{}),
+		newSeries(nativeSeries, "x", [][]string{}),
+	}), "not equal")
+
+}
+
 func testEquals(t *testing.T, typ seriesType) {
 	tab := NewTable([]*Series{
 		newSeries(typ, "measure", []int64{1, 1000}),
@@ -36,7 +47,7 @@ func testEquals(t *testing.T, typ seriesType) {
 func assertEqual(t *testing.T, expected, actual *Table, msg string) {
 	if !actual.Equal(expected) {
 		t.Error(msg)
-		t.Log("actual", actual.ToRows())
+		t.Log("actual", actual.Head(20).ToRows())
 	}
 }
 
@@ -94,12 +105,46 @@ func testExtend(t *testing.T, typ seriesType) {
 		Float64(func(v ...float64) float64 {
 			return v[0] * 2.0
 		})
-	// extended2 := extendedStatic.Extend("another").On("floats", "e_static").Float64(func(v ...float64) float64 { return v[0] + v[1] })
 
-	// fmt.Println(extended2.ToRows())
 	assertEqual(t, NewTable([]*Series{
 		Must().NewSliceSeries("e_static", []float64{2, 4, 6}),
 	}), extendedStatic.Project("e_static"), "extend static")
+
+	// you don't actually need to set any inputs!
+	// note that an impure extension is bad practice in general.
+	i := int64(0)
+	extendedStaticNullary := floats.
+		Extend("generator").
+		On().
+		Int64(func(_ ...int64) int64 {
+			i++
+			return i * 10
+		})
+
+	assertEqual(t, NewTable([]*Series{
+		Must().NewSliceSeries("generator", []int64{10, 20, 30}),
+	}), extendedStaticNullary.Project("generator"), "generator")
+
+	extendedConst := floats.
+		Extend("constant").
+		Constant(float64(8))
+	assertEqual(t, NewTable([]*Series{
+		Must().NewSliceSeries("constant", []float64{8, 8, 8}),
+	}), extendedConst.Project("constant"), "extend const")
+}
+
+func TestConstantColumn(t *testing.T) {
+	tab := NewTable([]*Series{NewConstantSeries("a", 1)}).Head(2)
+	assertEqual(t, NewTable([]*Series{
+		Must().NewSliceSeries("a", []int{1, 1}),
+	}), tab, "const")
+}
+
+func TestRename(t *testing.T) {
+	tab := NewTable([]*Series{NewConstantSeries("a", 1)}).Rename("a", "x").Head(2)
+	assertEqual(t, NewTable([]*Series{
+		Must().NewSliceSeries("x", []int{1, 1}),
+	}), tab, "renamed")
 }
 
 func TestFilterEq(t *testing.T) {
@@ -155,20 +200,16 @@ func TestCache(t *testing.T) {
 	testCache(t, arrowSeries)
 }
 
-func testCache(t *testing.T, typ seriesType) {
+// TODO: .Cache must work on arbitrary series types
+
+func testCacheAndCopy(t *testing.T, typ seriesType) {
 	// a materialized table of 3 elements
 	a := NewTable([]*Series{
 		newSeries(typ, "a", []int64{1, 2, 3}),
 	})
-	if a.Size() != 3 {
-		t.Errorf("Size()? %d", a.Size())
-	}
 
 	// a lazy table - after filtration
 	filtered := a.Filter(Eq("a", 1))
-	if filtered.Size() != -1 {
-		t.Errorf("filtered.Size()? %d", filtered.Size())
-	}
 
 	// a materialized copy
 	filteredCached, err := filtered.Cache()

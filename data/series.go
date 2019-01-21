@@ -22,7 +22,7 @@ type Series struct {
 	col ColumnName
 	// typically a scalar type
 	typ  reflect.Type
-	read func(seriesIterCache) iterator
+	read func(*seriesIterCache) iterator
 	meta SeriesMeta
 }
 

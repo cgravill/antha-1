@@ -34,8 +34,19 @@ func (s Schema) Equal(other Schema) bool {
 		return false
 	}
 	for i, c := range s.Columns {
-		if c != other.Columns[i] {
+		co := other.Columns[i]
+		if c.Name != co.Name {
 			return false
+		}
+		// NB types are cached but exact equality is hard to test for, see reflect.go
+		if c.Type != co.Type {
+			if c.Type.Kind() != co.Type.Kind() {
+				return false
+			}
+
+			if !c.Type.AssignableTo(co.Type) || !co.Type.AssignableTo(c.Type) {
+				return false
+			}
 		}
 	}
 	return true

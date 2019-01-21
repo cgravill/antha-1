@@ -42,10 +42,13 @@ func ArrowSeries() *data.Table {
 
 func Example(tab *data.Table) {
 	// just print Table as a whole.
-	fmt.Println("before filter\n", tab.ToRows())
+	fmt.Println("input\n", tab.ToRows())
 
 	// iterate over the entire Table.
 	for record := range tab.IterAll() {
+		// s := &struct{ x int64}
+		// err := record.ToStruct(&s)
+		// s.x
 		m, _ := record.Observation("measure")
 		if m.IsNull() {
 			fmt.Println("measure=null at index", record.Index)
