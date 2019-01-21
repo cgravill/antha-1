@@ -10,7 +10,6 @@ import (
 
 // NewSliceSeries convert a slice of scalars to a new Series.
 // reflectively supports arbitrary slice types.
-// TODO it would be possible to have a faster path for common scalar types
 func NewSliceSeries(col ColumnName, values interface{}) (*Series, error) {
 	rValue := reflect.ValueOf(values)
 	if rValue.Kind() != reflect.Slice {
@@ -66,19 +65,5 @@ func (i *nativeSliceSerIter) Next() bool {
 func (i *nativeSliceSerIter) Value() interface{} {
 	return i.rValue.Index(i.pos).Interface()
 }
-
-/*
-// ToStructSlice reflectively copies to the given struct fields
-func (r *Rows) ToStructSlice(structsPtr interface{}) error {
-	return nil
-}
-func (r Row) ToStruct(structPtr interface{}) error {
-	return nil
-}
-
-func SeriesFromStructs(structs interface{}) (*[]Slice, error) {
-	return nil, nil
-}
-*/
 
 // TODO:make native slices implement 'iter<Type>' statically typed iterators

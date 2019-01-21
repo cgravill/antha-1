@@ -23,16 +23,19 @@ import (
 
 {% for t in env['TYPE_SUPPORT'] %}
 
+// Box{{ t['Type'] }} represents a nullable {{ t['Raw'] }} value
 type Box{{ t['Type'] }} interface {
 	{{ t['Type'] }}() ({{ t['Raw'] }}, bool) // returns false = nil
 }
 
+// iter{{ t['Type'] }} iterates over nullable {{ t['Raw'] }} values
 type iter{{ t['Type'] }} interface {
 	advanceable
 	Box{{ t['Type'] }}
 }
 
-// iterate{{ t['Type'] }} is fallback to convert dynamic series to static iterator type
+// iterate{{ t['Type'] }} is a fallback to convert dynamic series to static iterator type.
+// an error is returned if the series' declared type is not assignable to {{ t['Raw'] }}
 func (s *Series) iterate{{ t['Type'] }}(iter iterator) (iter{{ t['Type'] }}, error) {
 	if cast, ok := iter.(iter{{ t['Type'] }}); ok {
 		return cast, nil
@@ -65,8 +68,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-{% for t in env['TYPE_SUPPORT'] %}
+/*
+ * specializations for more efficient Extend operations
+ */
 
+{% for t in env['TYPE_SUPPORT'] %}
 // {{ t['Type'] }} adds a {{ t['Raw'] }} col using {{ t['Raw'] }} inputs.  Null on any null inputs.
 func (e *ExtendOn) {{ t['Type'] }}(f func(v ...{{ t['Raw'] }}) {{ t['Raw'] }}) *Table {
 	// TODO move from lazy to eager type validation
