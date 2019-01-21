@@ -150,12 +150,12 @@ func testSize(t *testing.T, typ seriesType) {
 	}
 }
 
-func TestCacheAndCopy(t *testing.T) {
-	testCacheAndCopy(t, nativeSeries)
-	testCacheAndCopy(t, arrowSeries)
+func TestCache(t *testing.T) {
+	testCache(t, nativeSeries)
+	testCache(t, arrowSeries)
 }
 
-func testCacheAndCopy(t *testing.T, typ seriesType) {
+func testCache(t *testing.T, typ seriesType) {
 	// a materialized table of 3 elements
 	a := NewTable([]*Series{
 		newSeries(typ, "a", []int64{1, 2, 3}),
@@ -171,32 +171,16 @@ func testCacheAndCopy(t *testing.T, typ seriesType) {
 	}
 
 	// a materialized copy
-	filteredCopy, err := filtered.Copy()
-	if err != nil {
-		t.Errorf("copy failed: %s", err)
-	}
-
-	// check the copy has the same content
-	assertEqual(t, filteredCopy, filtered, "copy")
-	// check the copy size
-	if filteredCopy.Size() != 1 {
-		t.Errorf("filteredCopy.Size()? %d", filteredCopy.Size())
-	}
-	// check the copy has different address
-	if filteredCopy == filtered || filteredCopy.series[0] == filtered.series[0] {
-		t.Errorf("copied table has the same address as original table")
-	}
-
-	// the same table is cached
 	filteredCached, err := filtered.Cache()
 	if err != nil {
 		t.Errorf("cache failed: %s", err)
 	}
-	// check the cached table has same content
+
+	// check the cached table has the same content
 	assertEqual(t, filteredCached, filtered, "copy")
-	// check the table and series after caching have same addresses
-	if filteredCached != filtered || filteredCached.series[0] != filtered.series[0] {
-		t.Errorf("cached table has address different from original table")
+	// check the copy size
+	if filteredCached.Size() != 1 {
+		t.Errorf("filteredCached.Size()? %d", filteredCached.Size())
 	}
 }
 

@@ -58,18 +58,12 @@ func (s *Series) assignableTo(typ reflect.Type) error {
 	return nil
 }
 
-// Copy converts a (possibly) lazy series to one that is fully materialized (currently Arrow)
-func (s *Series) Copy() (*Series, error) {
-	return NewArrowSeriesFromSeries(s)
-}
-
-// Cache does the same as Copy except it is in-place
+// Cache converts a (possibly) lazy series to one that is fully materialized (currently Arrow)
 func (s *Series) Cache() (*Series, error) {
-	copy, err := s.Copy()
-	if err != nil {
-		return nil, err
+	// optimizing the case when a series is alreary materialized
+	if s.meta.IsMaterialized() {
+		return s, nil
 	}
-	s.read = copy.read
-	s.meta = copy.meta
-	return s, nil
+	// materializing series
+	return NewArrowSeriesFromSeries(s)
 }

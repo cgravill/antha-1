@@ -53,12 +53,6 @@ func (s *Series) Must() MustSeries {
 	return MustSeries{s: s}
 }
 
-func (m MustSeries) Copy() *Series {
-	s, err := m.s.Copy()
-	m.handle(err)
-	return s
-}
-
 func (m MustSeries) Cache() *Series {
 	s, err := m.s.Cache()
 	m.handle(err)
@@ -77,12 +71,6 @@ func (m MustTable) handle(err error) {
 
 func (t *Table) Must() MustTable {
 	return MustTable{t: t}
-}
-
-func (m MustTable) Copy() *Table {
-	t, err := m.t.Copy()
-	m.handle(err)
-	return t
 }
 
 func (m MustTable) Cache() *Table {

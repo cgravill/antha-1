@@ -200,27 +200,16 @@ func (t *Table) Size() int {
 }
 
 // Cache converts a lazy table to one that is fully materialized
-func (t *Table) Copy() (*Table, error) {
+func (t *Table) Cache() (*Table, error) {
 	seriesCopies := make([]*Series, len(t.series))
 	for i, series := range t.series {
-		if seriesCopy, err := series.Copy(); err != nil {
+		if seriesCopy, err := series.Cache(); err != nil {
 			return nil, err
 		} else {
 			seriesCopies[i] = seriesCopy
 		}
 	}
 	return NewTable(seriesCopies), nil
-}
-
-// Cache converts a lazy table to one that is fully materialized
-func (t *Table) Cache() (*Table, error) {
-	for _, series := range t.series {
-		// TODO is it OK that cached series are shared with other instances?
-		if _, err := series.Cache(); err != nil {
-			return nil, err
-		}
-	}
-	return t, nil
 }
 
 // DropNullColumns filters out columns with all/any row null
