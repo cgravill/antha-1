@@ -51,9 +51,9 @@ func (s Schema) Col(col ColumnName) (Column, error) {
 }
 
 // Col gets the column index by name, first matched
-func (s Schema) ColIndex(col ColumnName) (Index, error) {
+func (s Schema) ColIndex(col ColumnName) (int, error) {
 	if cs, found := s.byName[col]; found {
-		return Index(cs[0]), nil
+		return cs[0], nil
 	} else {
 		return -1, errors.Errorf("no such column: %v", col)
 	}
