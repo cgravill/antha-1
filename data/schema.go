@@ -43,11 +43,20 @@ func (s Schema) Equal(other Schema) bool {
 
 // Col gets the column by name, first matched
 func (s Schema) Col(col ColumnName) (Column, error) {
-	cs, found := s.byName[col]
-	if found {
-		return s.Columns[cs[0]], nil
+	if index, err := s.ColIndex(col); err == nil {
+		return s.Columns[index], nil
+	} else {
+		return Column{}, err
 	}
-	return Column{}, errors.Errorf("no such column: %v", col)
+}
+
+// Col gets the column index by name, first matched
+func (s Schema) ColIndex(col ColumnName) (Index, error) {
+	if cs, found := s.byName[col]; found {
+		return Index(cs[0]), nil
+	} else {
+		return -1, errors.Errorf("no such column: %v", col)
+	}
 }
 
 // TODO String()

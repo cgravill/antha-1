@@ -14,6 +14,7 @@ import (
 // It can optionally be keyed.
 type Table struct {
 	series []*Series
+	schema Schema
 	// this must return Row
 	read func([]*Series) *tableIterator
 }
@@ -22,30 +23,28 @@ type Table struct {
 func NewTable(series []*Series) *Table {
 	return &Table{
 		series: series,
+		schema: newSchema(series),
 		read:   newTableIterator,
 	}
 }
 
 // Schema returns the type information for the Table
 func (t *Table) Schema() Schema {
-	return newSchema(t.series)
+	return t.schema
 }
 
-// TODO do we need this
+// Series returns the list of table series
 func (t *Table) Series() []*Series {
-	return nil
+	return t.series
 }
 
-func (t *Table) seriesMap() map[ColumnName][]*Series {
-
-	schema := t.Schema()
-	byName := map[ColumnName][]*Series{}
-	for n, is := range schema.byName {
-		for _, i := range is {
-			byName[n] = append(byName[n], t.series[i])
-		}
+// SeriesByName returns series by its name
+func (t *Table) SeriesByName(col ColumnName) (*Series, error) {
+	if index, err := t.schema.ColIndex(col); err == nil {
+		return t.series[index], nil
+	} else {
+		return nil, err
 	}
-	return byName
 }
 
 // TODO do we need this
@@ -228,12 +227,11 @@ func (t *Table) DropNull(all bool) *Table {
 // On duplicate columns, only the first so named is taken.
 func (t *Table) Project(columns ...ColumnName) *Table {
 	s := make([]*Series, len(columns))
-	byName := t.seriesMap()
-	for i, n := range columns {
-		if sers, found := byName[n]; !found {
-			panic(errors.Errorf("cannot project %v, no such column '%s'", t.Schema(), n))
+	for i, columnName := range columns {
+		if series, err := t.SeriesByName(columnName); err != nil {
+			panic(errors.Wrapf(err, "when projecting %v", t.Schema()))
 		} else {
-			s[i] = sers[0] //!
+			s[i] = series
 		}
 	}
 	return NewTable(s)
