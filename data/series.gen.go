@@ -10,8 +10,6 @@ import (
  * The 'as<Type>' types are fallbacks for when the underlying series is dynamic.
  */
 
-
-
 // BoxFloat64 represents a nullable float64 value
 type BoxFloat64 interface {
 	Float64() (float64, bool) // returns false = nil
@@ -46,8 +44,6 @@ func (a *asFloat64) Float64() (float64, bool) {
 	}
 	return v.(float64), true
 }
-
-
 // BoxInt64 represents a nullable int64 value
 type BoxInt64 interface {
 	Int64() (int64, bool) // returns false = nil
@@ -82,8 +78,6 @@ func (a *asInt64) Int64() (int64, bool) {
 	}
 	return v.(int64), true
 }
-
-
 // BoxString represents a nullable string value
 type BoxString interface {
 	String() (string, bool) // returns false = nil
@@ -118,8 +112,6 @@ func (a *asString) String() (string, bool) {
 	}
 	return v.(string), true
 }
-
-
 // BoxBool represents a nullable bool value
 type BoxBool interface {
 	Bool() (bool, bool) // returns false = nil

@@ -10,7 +10,6 @@ import (
  * specializations for more efficient Extend operations
  */
 
-
 // Float64 adds a float64 col using float64 inputs.  Null on any null inputs.
 func (e *ExtendOn) Float64(f func(v ...float64) float64) *Table {
 	// TODO move from lazy to eager type validation
@@ -66,7 +65,6 @@ func (x *extendFloat64) Float64() (float64, bool) {
 	v := x.f(args...)
 	return v, true
 }
-
 
 // Int64 adds a int64 col using int64 inputs.  Null on any null inputs.
 func (e *ExtendOn) Int64(f func(v ...int64) int64) *Table {
@@ -124,7 +122,6 @@ func (x *extendInt64) Int64() (int64, bool) {
 	return v, true
 }
 
-
 // String adds a string col using string inputs.  Null on any null inputs.
 func (e *ExtendOn) String(f func(v ...string) string) *Table {
 	// TODO move from lazy to eager type validation
@@ -180,7 +177,6 @@ func (x *extendString) String() (string, bool) {
 	v := x.f(args...)
 	return v, true
 }
-
 
 // Bool adds a bool col using bool inputs.  Null on any null inputs.
 func (e *ExtendOn) Bool(f func(v ...bool) bool) *Table {

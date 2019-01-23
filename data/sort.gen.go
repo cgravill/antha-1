@@ -28,7 +28,6 @@ func createColumnSortFunc(schema Schema, columnKey ColumnKey) (sortFuncExt, erro
 	}
 }
 
-
 // float64
 
 func createColumnSortFuncFloat64(columnIndex int, asc bool) sortFuncExt {
@@ -68,8 +67,6 @@ func compareFloat64(val1, val2 float64) int {
 		return 0
 	}
 }
-
-
 
 // int64
 
@@ -111,8 +108,6 @@ func compareInt64(val1, val2 int64) int {
 	}
 }
 
-
-
 // string
 
 func createColumnSortFuncString(columnIndex int, asc bool) sortFuncExt {
@@ -142,8 +137,6 @@ func compareObservationsString(o1, o2 Observation) int {
 }
 
 
-
-
 // bool
 
 func createColumnSortFuncBool(columnIndex int, asc bool) sortFuncExt {
@@ -171,6 +164,5 @@ func compareObservationsBool(o1, o2 Observation) int {
 		return 0
 	}
 }
-
 
 
