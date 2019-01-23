@@ -121,22 +121,29 @@ func (t *Table) Key() Key {
 	return nil
 }
 
-// WithKey sets the sort key (but does not sort).
-func (t *Table) WithKey(key Key) *Table {
-	return nil
+// WithKey sets the sort key (but does not sort - the table is assumed to be already sorted, even though it is not checked currently).
+func (t *Table) WithKey(key *Key) *Table {
+	newTable := &Table{
+		series: t.series,
+		schema: t.schema,
+		read:   t.read,
+	}
+	newTable.schema.Key = key
+	return newTable
 }
 
-// Sort produces a sorted Table using the Key.
+// Sort produces a Table sorted by the columns defined by the Key.
 // TODO inplace optimization?
-//func (t *Table) Sort(asc ...bool) *Table {
-//
-//}
+func (t *Table) Sort(key Key) (*Table, error) {
+	return sortTableByKey(t, key)
+}
 
-// Sort sorts a table by a user-defined function
-// In order not to run out of resources, it is recommended to call sortTable only after removing unnecessary columns with .Project(...)
-// TODO: decide whether we prefer this more general sorting or specifying table keys (and sorting only by them) instead?
-func (t *Table) Sort(f func(r1 *Row, r2 *Row) bool) (*Table, error) {
-	return sortTable(t, f)
+type SortFunc func(r1 *Row, r2 *Row) bool
+
+// SortByFunc sorts a table by an arbitrary user-defined function.
+// In order not to run out of resources, it is recommended to call SortByFunc only after removing unnecessary columns with .Project(...)
+func (t *Table) SortByFunc(f SortFunc) (*Table, error) {
+	return sortTableByFunc(t, f)
 }
 
 // Equal is true if the other table has the same schema (in the same order)

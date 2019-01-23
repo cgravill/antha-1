@@ -53,7 +53,7 @@ func Example(tab *data.Table) {
 		if m.IsNull() {
 			fmt.Println("measure=null at index", record.Index)
 		} else {
-			fmt.Println("measure=", m.MustInt())
+			fmt.Println("measure=", m.MustInt64())
 		}
 	}
 
@@ -69,7 +69,7 @@ func Example(tab *data.Table) {
 		if m.IsNull() {
 			return nil
 		} else {
-			return float64(m.MustInt()) * float64(2.5)
+			return float64(m.MustInt64()) * float64(2.5)
 		}
 	}
 	extended := tab.

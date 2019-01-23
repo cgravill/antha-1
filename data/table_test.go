@@ -201,8 +201,7 @@ func TestCache(t *testing.T) {
 }
 
 // TODO: .Cache must work on arbitrary series types
-
-func testCacheAndCopy(t *testing.T, typ seriesType) {
+func testCache(t *testing.T, typ seriesType) {
 	// a materialized table of 3 elements
 	a := NewTable([]*Series{
 		newSeries(typ, "a", []int64{1, 2, 3}),
@@ -218,19 +217,46 @@ func testCacheAndCopy(t *testing.T, typ seriesType) {
 	}
 
 	// check the cached table has the same content
-	assertEqual(t, filteredCached, filtered, "copy")
+	assertEqual(t, filtered, filteredCached, "copy")
 	// check the copy size
 	if filteredCached.Size() != 1 {
 		t.Errorf("filteredCached.Size()? %d", filteredCached.Size())
 	}
 }
 
-func TestSorting(t *testing.T) {
-	testSorting(t, nativeSeries)
-	testSorting(t, arrowSeries)
+func TestSort(t *testing.T) {
+	// an input table - sorted by id
+	table := NewTable([]*Series{
+		Must().NewArrowSeriesFromSlice("id", []int64{1, 2, 3, 4, 5}, nil),
+		Must().NewArrowSeriesFromSlice("int64_measure", []int64{50, 20, 20, 20, 10}, nil),
+		Must().NewArrowSeriesFromSlice("float64_nullable_measure", []float64{1., -1., 2., 2., 5.}, []bool{true, false, true, true, true}),
+	})
+
+	// sorting the table by two other columns
+	sorted, err := table.Sort([]ColumnKey{
+		ColumnKey{Column: "int64_measure", Asc: true},
+		ColumnKey{Column: "float64_nullable_measure", Asc: false},
+	})
+	if err != nil {
+		t.Errorf("sort failed: %s", err)
+	}
+
+	// reference sorted table
+	sortedReference := NewTable([]*Series{
+		Must().NewArrowSeriesFromSlice("id", []int64{5, 3, 4, 2, 1}, nil), // 1 and 5 should swap; 3 and 4 should remain in the same order (since sorting is stable)
+		Must().NewArrowSeriesFromSlice("int64_measure", []int64{10, 20, 20, 20, 50}, nil),
+		Must().NewArrowSeriesFromSlice("float64_nullable_measure", []float64{5., 2., 2., -1., 1.}, []bool{true, true, true, false, true}),
+	})
+
+	assertEqual(t, sortedReference, sorted, "sort")
 }
 
-func testSorting(t *testing.T, typ seriesType) {
+func TestSortByFunc(t *testing.T) {
+	testSortByFunc(t, nativeSeries)
+	testSortByFunc(t, arrowSeries)
+}
+
+func testSortByFunc(t *testing.T, typ seriesType) {
 	// an unsorted table
 	table := NewTable([]*Series{
 		newSeries(typ, "id", []int64{2, 1, 3}),
@@ -238,11 +264,11 @@ func testSorting(t *testing.T, typ seriesType) {
 	})
 
 	// a table sorted by id
-	sorted, err := table.Sort(func(r1 *Row, r2 *Row) bool {
-		return r1.Values[0].MustInt() < r2.Values[0].MustInt()
+	sorted, err := table.SortByFunc(func(r1 *Row, r2 *Row) bool {
+		return r1.Values[0].MustInt64() < r2.Values[0].MustInt64()
 	})
 	if err != nil {
-		t.Errorf("sorting failed: %s", err)
+		t.Errorf("sort by func failed: %s", err)
 	}
 
 	// sorted table reference value
@@ -252,7 +278,7 @@ func testSorting(t *testing.T, typ seriesType) {
 	})
 
 	// check the sorted table is equal to the reference table
-	assertEqual(t, sorted, sortedReference, "sort")
+	assertEqual(t, sortedReference, sorted, "sort by func")
 }
 
 type seriesType int

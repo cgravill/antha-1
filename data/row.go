@@ -43,19 +43,6 @@ func (o Observation) IsNull() bool {
 	return o.value == nil
 }
 
-func (o Observation) MustInt64() int64 {
-	// panic on err
-	return o.value.(int64)
-}
-
-func (o Observation) MustInt() int {
-	return int(o.MustInt64())
-}
-
-func (o Observation) MustString() string {
-	return o.value.(string)
-}
-
 func (o Observation) Interface() interface{} {
 	return o.value
 }

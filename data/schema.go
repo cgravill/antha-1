@@ -8,12 +8,20 @@ import (
 
 type ColumnName string
 type Index int
-type Key []ColumnName
 
 // Schema is intended as an immutable representation of table metadata
 type Schema struct {
 	Columns []Column
+	Key     *Key
 	byName  map[ColumnName][]int
+}
+
+// Key defines sorting columns (and directions)
+type Key []ColumnKey
+
+type ColumnKey struct {
+	Column ColumnName
+	Asc    bool
 }
 
 // Column is Series metadata
@@ -79,4 +87,27 @@ func newSchema(series []*Series) Schema {
 		schema.byName[s.col] = append(schema.byName[s.col], c)
 	}
 	return schema
+}
+
+// IsPrefix checks if other key is a prefix of k
+func (key Key) HasPrefix(other Key) bool {
+	if len(other) > len(key) {
+		return false
+	}
+	for i := range other {
+		if !other[i].Equal(key[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+// Equal checks if two keys are equal
+func (key Key) Equal(other Key) bool {
+	return len(other) == len(key) && key.HasPrefix(other)
+}
+
+// Equal checks if two key entries are equal
+func (ck ColumnKey) Equal(other ColumnKey) bool {
+	return ck.Column == other.Column && ck.Asc == other.Asc
 }
