@@ -13,21 +13,21 @@ func TestFromStructs(t *testing.T) {
 	}
 	tab := Must().NewTableFromStructs([]foo{})
 	assertEqual(t, NewTable([]*Series{
-		newSeries(nativeSeries, "Bar", []int64{}),
-		newSeries(nativeSeries, "Baz", [][]string{}),
+		nativeSeries("Bar", []int64{}),
+		nativeSeries("Baz", [][]string{}),
 	}), tab, "empty")
 
 	tab2 := Must().NewTableFromStructs([]struct{ A, B int64 }{{11, 2}, {33, 4}})
 	assertEqual(t, NewTable([]*Series{
-		newSeries(nativeSeries, "A", []int64{11, 33}),
-		newSeries(nativeSeries, "B", []int64{2, 4}),
+		nativeSeries("A", []int64{11, 33}),
+		nativeSeries("B", []int64{2, 4}),
 	}), tab2, "anonymous struct type, filled")
 
 	s := &foo{Bar: 1}
 	tab3 := Must().NewTableFromStructs([]*foo{s})
 	assertEqual(t, NewTable([]*Series{
-		newSeries(nativeSeries, "Bar", []int64{1}),
-		newSeries(nativeSeries, "Baz", [][]string{nil}),
+		nativeSeries("Bar", []int64{1}),
+		nativeSeries("Baz", [][]string{nil}),
 	}), tab3, "ptr struct type")
 
 	_, err := NewTableFromStructs(1)
@@ -43,11 +43,11 @@ func TestToStructs(t *testing.T) {
 	// TODO nulls == zero type
 
 	tab := NewTable([]*Series{
-		newSeries(nativeSeries, "A", []int64{1, 1000}),
-		newSeries(nativeSeries, "B", []string{"abcdef", "abcd"}),
-		newSeries(nativeSeries, "unexported", []string{"xx", "xx"}),
-		newSeries(nativeSeries, "Unmapped", []string{"xx", "xx"}),
-		// TODO error here: newSeries(nativeSeries, "C", []float64{0, 0}),
+		nativeSeries("A", []int64{1, 1000}),
+		nativeSeries("B", []string{"abcdef", "abcd"}),
+		nativeSeries("unexported", []string{"xx", "xx"}),
+		nativeSeries("Unmapped", []string{"xx", "xx"}),
+		// TODO error here: nativeSeries( "C", []float64{0, 0}),
 	})
 	type destT struct {
 		B          string

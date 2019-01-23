@@ -1,7 +1,6 @@
 package data
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 	// TODO "github.com/stretchr/testify/assert"
@@ -14,24 +13,24 @@ func TestEquals(t *testing.T) {
 
 func TestEqualsComplexType(t *testing.T) {
 	assertEqual(t, NewTable([]*Series{
-		newSeries(nativeSeries, "y", []int32{}),
-		newSeries(nativeSeries, "x", [][]string{}),
+		nativeSeries("y", []int32{}),
+		nativeSeries("x", [][]string{}),
 	}), NewTable([]*Series{
-		newSeries(nativeSeries, "y", []int32{}),
-		newSeries(nativeSeries, "x", [][]string{}),
+		nativeSeries("y", []int32{}),
+		nativeSeries("x", [][]string{}),
 	}), "not equal")
 
 }
 
-func testEquals(t *testing.T, typ seriesType) {
+func testEquals(t *testing.T, makeSeries makeSeriesType) {
 	tab := NewTable([]*Series{
-		newSeries(typ, "measure", []int64{1, 1000}),
-		newSeries(typ, "label", []string{"abcdef", "abcd"}),
+		makeSeries("measure", []int64{1, 1000}),
+		makeSeries("label", []string{"abcdef", "abcd"}),
 	})
 	assertEqual(t, tab, tab, "not self equal")
 
 	tab2 := NewTable([]*Series{
-		newSeries(typ, "measure", []int64{1, 1000}),
+		makeSeries("measure", []int64{1, 1000}),
 	})
 	assertEqual(t, tab2, tab.Project("measure"), "not equal by value")
 
@@ -56,25 +55,25 @@ func TestSlice(t *testing.T) {
 	testSlice(t, arrowSeries)
 }
 
-func testSlice(t *testing.T, typ seriesType) {
+func testSlice(t *testing.T, makeSeries makeSeriesType) {
 	a := NewTable([]*Series{
-		newSeries(typ, "a", []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}),
+		makeSeries("a", []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}),
 	})
 	assertEqual(t, a, a.Slice(0, 100), "slice all")
 
 	slice00 := a.Slice(1, 1)
 	assertEqual(t, NewTable([]*Series{
-		newSeries(typ, "a", []int64{}),
+		makeSeries("a", []int64{}),
 	}), slice00, "slice00")
 
 	slice04 := a.Head(4)
 	assertEqual(t, NewTable([]*Series{
-		newSeries(typ, "a", []int64{1, 2, 3, 4}),
+		makeSeries("a", []int64{1, 2, 3, 4}),
 	}), slice04, "slice04")
 
 	slice910 := a.Slice(9, 10)
 	assertEqual(t, NewTable([]*Series{
-		newSeries(typ, "a", []int64{10}),
+		makeSeries("a", []int64{10}),
 	}), slice910, "slice910")
 }
 
@@ -83,9 +82,9 @@ func TestExtend(t *testing.T) {
 	testExtend(t, arrowSeries)
 }
 
-func testExtend(t *testing.T, typ seriesType) {
+func testExtend(t *testing.T, makeSeries makeSeriesType) {
 	a := NewTable([]*Series{
-		newSeries(typ, "a", []int64{1, 2, 3}),
+		makeSeries("a", []int64{1, 2, 3}),
 	})
 	extended := a.Extend("e").By(func(r Row) interface{} {
 		a, _ := r.Observation("a")
@@ -93,11 +92,11 @@ func testExtend(t *testing.T, typ seriesType) {
 	},
 		reflect.TypeOf(float64(0)))
 	assertEqual(t, NewTable([]*Series{
-		newSeries(typ, "e", []float64{0.5, 1.0, 1.5}),
+		makeSeries("e", []float64{0.5, 1.0, 1.5}),
 	}), extended.Project("e"), "extend")
 
 	floats := NewTable([]*Series{
-		newSeries(typ, "floats", []float64{1, 2, 3}),
+		makeSeries("floats", []float64{1, 2, 3}),
 	})
 	extendedStatic := floats.
 		Extend("e_static").
@@ -107,7 +106,7 @@ func testExtend(t *testing.T, typ seriesType) {
 		})
 
 	assertEqual(t, NewTable([]*Series{
-		Must().NewSliceSeries("e_static", []float64{2, 4, 6}),
+		nativeSeries("e_static", []float64{2, 4, 6}),
 	}), extendedStatic.Project("e_static"), "extend static")
 
 	// you don't actually need to set any inputs!
@@ -122,28 +121,28 @@ func testExtend(t *testing.T, typ seriesType) {
 		})
 
 	assertEqual(t, NewTable([]*Series{
-		Must().NewSliceSeries("generator", []int64{10, 20, 30}),
+		nativeSeries("generator", []int64{10, 20, 30}),
 	}), extendedStaticNullary.Project("generator"), "generator")
 
 	extendedConst := floats.
 		Extend("constant").
 		Constant(float64(8))
 	assertEqual(t, NewTable([]*Series{
-		Must().NewSliceSeries("constant", []float64{8, 8, 8}),
+		nativeSeries("constant", []float64{8, 8, 8}),
 	}), extendedConst.Project("constant"), "extend const")
 }
 
 func TestConstantColumn(t *testing.T) {
 	tab := NewTable([]*Series{NewConstantSeries("a", 1)}).Head(2)
 	assertEqual(t, NewTable([]*Series{
-		Must().NewSliceSeries("a", []int{1, 1}),
+		nativeSeries("a", []int{1, 1}),
 	}), tab, "const")
 }
 
 func TestRename(t *testing.T) {
 	tab := NewTable([]*Series{NewConstantSeries("a", 1)}).Rename("a", "x").Head(2)
 	assertEqual(t, NewTable([]*Series{
-		Must().NewSliceSeries("x", []int{1, 1}),
+		nativeSeries("x", []int{1, 1}),
 	}), tab, "renamed")
 }
 
@@ -152,9 +151,9 @@ func TestFilterEq(t *testing.T) {
 	testFilterEq(t, arrowSeries)
 }
 
-func testFilterEq(t *testing.T, typ seriesType) {
+func testFilterEq(t *testing.T, makeSeries makeSeriesType) {
 	a := NewTable([]*Series{
-		newSeries(typ, "a", []int64{1, 2, 3}),
+		makeSeries("a", []int64{1, 2, 3}),
 	})
 	filtered := a.Filter(Eq("a", 2))
 	assertEqual(t, filtered, a.Slice(1, 2), "filter")
@@ -165,13 +164,13 @@ func TestSize(t *testing.T) {
 	testSize(t, arrowSeries)
 }
 
-func testSize(t *testing.T, typ seriesType) {
+func testSize(t *testing.T, makeSeries makeSeriesType) {
 	empty := NewTable([]*Series{})
 	if empty.Size() != 0 {
 		t.Errorf("should be empty. %d", empty.Size())
 	}
 	a := NewTable([]*Series{
-		newSeries(typ, "a", []int64{1, 2, 3}),
+		makeSeries("a", []int64{1, 2, 3}),
 	})
 	if a.Size() != 3 {
 		t.Errorf("size? %d", a.Size())
@@ -201,10 +200,10 @@ func TestCache(t *testing.T) {
 }
 
 // TODO: .Cache must work on arbitrary series types
-func testCache(t *testing.T, typ seriesType) {
+func testCache(t *testing.T, makeSeries makeSeriesType) {
 	// a materialized table of 3 elements
 	a := NewTable([]*Series{
-		newSeries(typ, "a", []int64{1, 2, 3}),
+		makeSeries("a", []int64{1, 2, 3}),
 	})
 
 	// a lazy table - after filtration
@@ -256,11 +255,11 @@ func TestSortByFunc(t *testing.T) {
 	testSortByFunc(t, arrowSeries)
 }
 
-func testSortByFunc(t *testing.T, typ seriesType) {
+func testSorting(t *testing.T, makeSeries makeSeriesType) {
 	// an unsorted table
 	table := NewTable([]*Series{
-		newSeries(typ, "id", []int64{2, 1, 3}),
-		newSeries(typ, "str", []string{"2", "1", "3"}),
+		makeSeries("id", []int64{2, 1, 3}),
+		makeSeries("str", []string{"2", "1", "3"}),
 	})
 
 	// a table sorted by id
@@ -273,28 +272,19 @@ func testSortByFunc(t *testing.T, typ seriesType) {
 
 	// sorted table reference value
 	sortedReference := NewTable([]*Series{
-		newSeries(typ, "id", []int64{1, 2, 3}),
-		newSeries(typ, "str", []string{"1", "2", "3"}),
+		makeSeries("id", []int64{1, 2, 3}),
+		makeSeries("str", []string{"1", "2", "3"}),
 	})
 
 	// check the sorted table is equal to the reference table
 	assertEqual(t, sortedReference, sorted, "sort by func")
 }
 
-type seriesType int
+type makeSeriesType func(col ColumnName, values interface{}) *Series
 
-const (
-	nativeSeries seriesType = iota
-	arrowSeries
-)
-
-func newSeries(typ seriesType, col ColumnName, values interface{}) *Series {
-	switch typ {
-	case nativeSeries:
-		return Must().NewSliceSeries(col, values)
-	case arrowSeries:
+var (
+	nativeSeries = Must().NewSliceSeries
+	arrowSeries  = func(col ColumnName, values interface{}) *Series {
 		return Must().NewArrowSeriesFromSlice(col, values, nil)
-	default:
-		panic(fmt.Errorf("Unknown series type: %d", typ))
 	}
-}
+)
