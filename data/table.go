@@ -29,14 +29,19 @@ func NewTable(series []*Series) *Table {
 	}
 }
 
+func newFromTable(t *Table) *Table {
+	s := make([]*Series, len(t.series))
+	copy(s, t.series)
+	return &Table{
+		series: s,
+		schema: t.schema,
+		read:   t.read,
+	}
+}
+
 // Schema returns the type information for the Table
 func (t *Table) Schema() Schema {
 	return t.schema
-}
-
-// Series returns the list of table series
-func (t *Table) Series() []*Series {
-	return t.series
 }
 
 // SeriesByName returns series by its name
@@ -47,11 +52,6 @@ func (t *Table) SeriesByName(col ColumnName) (*Series, error) {
 		return nil, err
 	}
 }
-
-// TODO do we need this
-// func (t *Table) ColumnNames() []ColumnName {
-// 	return nil
-// }
 
 // IterAll iterates over the entire table, no buffer.
 // Use when ranging over all rows is required.
@@ -98,17 +98,17 @@ func (t *Table) ToRows() Rows {
 // unlike go slices, if the end index is out of range then fewer records are returned
 // rather than receiving an error
 func (t *Table) Slice(start, end Index) *Table {
-	newSeries := make([]*Series, len(t.series))
+	newTable := newFromTable(t)
 	for i, ser := range t.series {
 		m := newSeriesSlice(ser, start, end)
-		newSeries[i] = &Series{
+		newTable.series[i] = &Series{
 			typ:  ser.typ,
 			col:  ser.col,
 			read: m.read,
 			meta: m,
 		}
 	}
-	return NewTable(newSeries)
+	return newTable
 }
 
 // Head is a lazy subset of the first count records (but may return fewer)
@@ -116,18 +116,9 @@ func (t *Table) Head(count int) *Table {
 	return t.Slice(0, Index(count))
 }
 
-// Key returns the key columns
-func (t *Table) Key() Key {
-	return nil
-}
-
-// WithKey sets the sort key (but does not sort - the table is assumed to be already sorted, even though it is not checked currently).
-func (t *Table) WithKey(key *Key) *Table {
-	newTable := &Table{
-		series: t.series,
-		schema: t.schema,
-		read:   t.read,
-	}
+// withKey sets the sort key (but does not sort - the table is assumed to be already sorted, even though it is not checked currently).
+func (t *Table) withKey(key Key) *Table {
+	newTable := newFromTable(t)
 	newTable.schema.Key = key
 	return newTable
 }
@@ -157,7 +148,7 @@ func (t *Table) Equal(other *Table) bool {
 	if !schema1.Equal(schema2) {
 		return false
 	}
-	// TODO compare tables' key, known bounded length, and sortedness
+	// TODO compare tables' key/sortedness (?), known bounded length
 
 	// TODO if table series are identical we can shortcut the iteration
 	iter1, done1 := t.Iter()
@@ -231,18 +222,20 @@ func (t *Table) DropNull(all bool) *Table {
 	return nil
 }
 
-// Project reorders and/or takes a subset of columns.
-// On duplicate columns, only the first so named is taken.
-func (t *Table) Project(columns ...ColumnName) *Table {
+// Project reorders and/or takes a subset of columns. On duplicate columns, only
+// the first so named is taken. Returns error, and nil table, if any column is
+// missing
+func (t *Table) Project(columns ...ColumnName) (*Table, error) {
 	s := make([]*Series, len(columns))
 	for i, columnName := range columns {
 		if series, err := t.SeriesByName(columnName); err != nil {
-			panic(errors.Wrapf(err, "when projecting %v", t.Schema()))
+			return nil, errors.Wrapf(err, "when projecting %v", t.Schema())
 		} else {
 			s[i] = series
 		}
 	}
-	return NewTable(s)
+	// TODO rearrange key
+	return NewTable(s), nil
 }
 
 // ProjectAllBut discards the named columns, which may not exist in the schema
@@ -257,10 +250,11 @@ func (t *Table) ProjectAllBut(columns ...ColumnName) *Table {
 			s = append(s, ser)
 		}
 	}
-	return NewTable(s)
+	return NewTable(s) // TODO set key to subkey
 }
 
-// Rename updates all columns of the old name to the new name
+// Rename updates all columns of the old name to the new name.
+// Does nothing if none match in the schema.
 func (t *Table) Rename(old, new ColumnName) *Table {
 	s := make([]*Series, len(t.series))
 	for i, ser := range t.series {
@@ -273,18 +267,38 @@ func (t *Table) Rename(old, new ColumnName) *Table {
 		}
 		s[i] = ser
 	}
+	// TODO rename key column
 	return NewTable(s)
 }
 
-// Filter selects some records lazily
-func (t *Table) Filter(f FilterSpec) *Table {
-	return lazyFilterTable(f, t)
+// Convert lazily converts all columns of the given name to the assigned type.
+// Returns non-nil error (and nil Table) if any column is not convertible. Note
+// that if no column name matches, the same table is returned.
+func (t *Table) Convert(col ColumnName, typ reflect.Type) (*Table, error) {
+	newT := newFromTable(t)
+	converted := false
+	conv := &conversion{newType: typ, Table: t}
+	for i, ser := range t.series {
+		var err error
+		if ser.col == col && !typesEqual(ser.typ, typ) {
+			newT.series[i], err = conv.convert(ser)
+			converted = true
+			if err != nil {
+				return nil, errors.Wrapf(err, "cannot convert column %d (%q)", i, col)
+			}
+		}
+	}
+	if !converted {
+		return t, nil
+	}
+	// types but not sort key are different.  TODO: unless natural order is different for the converted type?
+	newT.schema = newSchema(newT.series, t.schema.Key...)
+	return newT, nil
 }
 
-// Join is a natural join on sorted tables with the same Key
-// TODO dedup series (?)
-func (t *Table) Join(other Joinable) *Table {
-	return nil
+// Filter selects some records lazily
+func (t *Table) Filter(f FilterSpec) (*Table, error) {
+	return lazyFilterTable(f, t)
 }
 
 // Extend adds a column by applying a function
@@ -292,19 +306,4 @@ func (t *Table) Extend(newCol ColumnName) *Extension {
 	series := make([]*Series, len(t.series))
 	copy(series, t.series)
 	return &Extension{newCol: newCol, series: series}
-}
-
-// Copy gives a new table, optionally with duplicate Series data
-// TODO semantics
-// func (t *Table) Copy(deep bool) *Table {
-// 	return nil
-// }
-
-var _ Joinable = (*Table)(nil)
-
-type Joinable interface {
-	//?
-	Key() Key
-	Series() []*Series
-	// TODO bridge interfaces for more efficient backend join ops
 }

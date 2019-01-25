@@ -70,10 +70,10 @@ func TestToStructs(t *testing.T) {
 	}
 	roundtrip := Must().NewTableFromStructs(dest)
 	// notice column order is set by struct field order
-	expected := tab.Project("B", "A").Extend("Unbound").Constant(0)
+	expected := tab.Must().Project("B", "A").Extend("Unbound").Constant(0)
 	assertEqual(t, expected, roundtrip, "roundtrip")
 
-	err = tab.Project("B").Rename("B", "A").ToStructs(&dest)
+	err = tab.Must().Project("B").Rename("B", "A").ToStructs(&dest)
 	if err == nil {
 		t.Error("assignability check")
 	}

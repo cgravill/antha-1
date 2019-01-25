@@ -61,7 +61,7 @@ func Example(tab *data.Table) {
 	fmt.Println("tab.Slice(2,4)\n", tab.Slice(2, 4).ToRows())
 
 	// produce a new Table by filtering
-	smallerTab := tab.Filter(data.Eq("label", "aa"))
+	smallerTab := tab.Must().Filter(data.Eq("label", "aa"))
 	fmt.Println("after filter\n", smallerTab.ToRows())
 
 	mult := func(r data.Row) interface{} {
@@ -74,12 +74,16 @@ func Example(tab *data.Table) {
 	}
 	extended := tab.
 		Extend("multiplied").By(mult, reflect.TypeOf(float64(0)))
-	fmt.Println("extended and filtered\n", extended.Filter(data.Eq("multiplied", 25)).ToRows())
+	fmt.Println("extended and filtered\n", extended.Must().Filter(data.Eq("multiplied", 25)).ToRows())
 
-	// TODO: use static extend in the example - requires converting "measure" to homogeneous float type
+	// equivalent extension using static types
 	projected := tab.
-		Extend("multiplied").By(mult, reflect.TypeOf(float64(0))).
-		Project("label", "multiplied")
+		Must().Convert("measure", reflect.TypeOf(float64(0))).
+		Extend("multiplied").On("measure").Float64(
+		func(vals ...float64) float64 {
+			return vals[0] * 2.5
+		}).
+		Must().Project("label", "multiplied")
 	fmt.Println("extended and projected\n", projected.ToRows())
 
 	alternateProjected := extended.ProjectAllBut("measure")

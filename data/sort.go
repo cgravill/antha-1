@@ -25,7 +25,7 @@ func sortTableByKey(t *Table, key Key) (*Table, error) {
 	}
 
 	// supplying the sorted table with a key
-	return sorted.WithKey(&key), nil
+	return sorted.withKey(key), nil
 }
 
 // creates a sort function for comparing rows which satisfy a given schema by a given key

@@ -2,8 +2,8 @@
 package data
 
 import (
-	"reflect"
 	"github.com/pkg/errors"
+	"reflect"
 )
 
 /*
@@ -233,4 +233,3 @@ func (x *extendBool) Bool() (bool, bool) {
 	v := x.f(args...)
 	return v, true
 }
-

@@ -62,12 +62,16 @@ type MaterializedSeriesBuilder interface {
 	Build() *Series
 }
 
-/*
- * casting - not conversion
- */
 func (s *Series) assignableTo(typ reflect.Type) error {
 	if !s.typ.AssignableTo(typ) {
 		return errors.Errorf("column %s of type %v cannot be iterated as %v", s.col, s.typ, typ)
+	}
+	return nil
+}
+
+func (s *Series) convertibleTo(typ reflect.Type) error {
+	if !s.typ.ConvertibleTo(typ) {
+		return errors.Errorf("column %s of type %v cannot be converted to %v", s.col, s.typ, typ)
 	}
 	return nil
 }
@@ -77,6 +81,9 @@ func (s *Series) Cache() (*Series, error) {
 	// optimizing the case when a series is alreary materialized
 	if s.meta.IsMaterialized() {
 		return s, nil
+	}
+	if !s.meta.IsBounded() {
+		//TODO error
 	}
 	// materializing series
 	return NewArrowSeriesFromSeries(s)

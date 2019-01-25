@@ -12,7 +12,7 @@ type Index int
 // Schema is intended as an immutable representation of table metadata
 type Schema struct {
 	Columns []Column
-	Key     *Key
+	Key     Key
 	byName  map[ColumnName][]int
 }
 
@@ -36,25 +36,30 @@ func (s Schema) Size() int {
 	return len(s.Columns)
 }
 
-// Equal returns true if order, name and types match
+// Equal returns true if order, name, and types match
 func (s Schema) Equal(other Schema) bool {
 	if s.Size() != other.Size() {
 		return false
 	}
 	for i, c := range s.Columns {
 		co := other.Columns[i]
-		if c.Name != co.Name {
+		if c.Name != co.Name || !typesEqual(c.Type, co.Type) {
 			return false
 		}
-		// NB types are cached but exact equality is hard to test for, see reflect.go
-		if c.Type != co.Type {
-			if c.Type.Kind() != co.Type.Kind() {
-				return false
-			}
+	}
+	return true
+}
 
-			if !c.Type.AssignableTo(co.Type) || !co.Type.AssignableTo(c.Type) {
-				return false
-			}
+// NB types are cached but exact equality is hard to test for, see reflect.go
+
+func typesEqual(t1, t2 reflect.Type) bool {
+	if t1 != t2 {
+		if t1.Kind() != t2.Kind() {
+			return false
+		}
+
+		if !t1.AssignableTo(t2) || !t2.AssignableTo(t1) {
+			return false
 		}
 	}
 	return true
@@ -69,7 +74,7 @@ func (s Schema) Col(col ColumnName) (Column, error) {
 	}
 }
 
-// Col gets the column index by name, first matched
+// ColIndex gets the column index by name, first matched
 func (s Schema) ColIndex(col ColumnName) (int, error) {
 	if cs, found := s.byName[col]; found {
 		return cs[0], nil
@@ -80,12 +85,13 @@ func (s Schema) ColIndex(col ColumnName) (int, error) {
 
 // TODO String()
 
-func newSchema(series []*Series) Schema {
+func newSchema(series []*Series, keys ...ColumnKey) Schema {
 	schema := Schema{byName: map[ColumnName][]int{}}
 	for c, s := range series {
 		schema.Columns = append(schema.Columns, Column{Type: s.typ, Name: s.col})
 		schema.byName[s.col] = append(schema.byName[s.col], c)
 	}
+	schema.Key = keys
 	return schema
 }
 

@@ -139,9 +139,12 @@ func (iter *filterIter) Value() interface{} {
 	return colVals[iter.colIndex]
 }
 
-func lazyFilterTable(filterSpec FilterSpec, table *Table) *Table {
+func lazyFilterTable(filterSpec FilterSpec, table *Table) (*Table, error) {
 	// eager schema check
-	filterSubject := table.Project(filterSpec.Columns()...)
+	filterSubject, err := table.Project(filterSpec.Columns()...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can't filter columns %+v", filterSpec.Columns())
+	}
 	matcher, err := filterSpec.MatchFor(filterSubject.Schema())
 	if err != nil {
 		panic(errors.Wrapf(err, "can't filter %+v with %+v", table, filterSpec))
@@ -178,8 +181,7 @@ func lazyFilterTable(filterSpec FilterSpec, table *Table) *Table {
 			meta: &filteredSeriesMeta{wrapped: wrappedSeries.meta},
 		}
 	}
-	t := NewTable(wrappers)
-	return t
+	return NewTable(wrappers), nil
 }
 
 // filtered series metadata

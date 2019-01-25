@@ -8,6 +8,7 @@ import (
  * calculated columns
  */
 
+// TODO: MustExtension for capturing errors...
 // TODO figure out how to avoid recalculating state, without user having to cache
 // TODO make extension series bounded and sized, if the wrapped series are
 
@@ -63,7 +64,7 @@ func (e *Extension) On(cols ...ColumnName) *ExtendOn {
 	schema := newSchema(e.series)
 	on := &ExtendOn{extension: e, combinedSeriesMeta: newExtendSeriesMeta(e.series)}
 	for _, c := range cols {
-		// TODO panic here, need test
+		// TODO panic here, need test for this case
 		on.inputs = append(on.inputs, e.series[schema.byName[c][0]])
 	}
 	return on

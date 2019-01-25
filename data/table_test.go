@@ -32,13 +32,13 @@ func testEquals(t *testing.T, makeSeries makeSeriesType) {
 	tab2 := NewTable([]*Series{
 		makeSeries("measure", []int64{1, 1000}),
 	})
-	assertEqual(t, tab2, tab.Project("measure"), "not equal by value")
+	assertEqual(t, tab2, tab.Must().Project("measure"), "not equal by value")
 
-	if tab2.Equal(tab.Project("label")) {
+	if tab2.Equal(tab.Must().Project("label")) {
 		t.Error("equal with mismatched schema")
 	}
 
-	if tab2.Equal(tab2.Filter(Eq("measure", 1000))) {
+	if tab2.Equal(tab2.Must().Filter(Eq("measure", 1000))) {
 		t.Error("equal with mismatched data")
 	}
 }
@@ -93,7 +93,7 @@ func testExtend(t *testing.T, makeSeries makeSeriesType) {
 		reflect.TypeOf(float64(0)))
 	assertEqual(t, NewTable([]*Series{
 		makeSeries("e", []float64{0.5, 1.0, 1.5}),
-	}), extended.Project("e"), "extend")
+	}), extended.Must().Project("e"), "extend")
 
 	floats := NewTable([]*Series{
 		makeSeries("floats", []float64{1, 2, 3}),
@@ -107,7 +107,7 @@ func testExtend(t *testing.T, makeSeries makeSeriesType) {
 
 	assertEqual(t, NewTable([]*Series{
 		nativeSeries("e_static", []float64{2, 4, 6}),
-	}), extendedStatic.Project("e_static"), "extend static")
+	}), extendedStatic.Must().Project("e_static"), "extend static")
 
 	// you don't actually need to set any inputs!
 	// note that an impure extension is bad practice in general.
@@ -122,28 +122,53 @@ func testExtend(t *testing.T, makeSeries makeSeriesType) {
 
 	assertEqual(t, NewTable([]*Series{
 		nativeSeries("generator", []int64{10, 20, 30}),
-	}), extendedStaticNullary.Project("generator"), "generator")
+	}), extendedStaticNullary.Must().Project("generator"), "generator")
 
 	extendedConst := floats.
 		Extend("constant").
 		Constant(float64(8))
 	assertEqual(t, NewTable([]*Series{
 		nativeSeries("constant", []float64{8, 8, 8}),
-	}), extendedConst.Project("constant"), "extend const")
+	}), extendedConst.Must().Project("constant"), "extend const")
 }
 
 func TestConstantColumn(t *testing.T) {
-	tab := NewTable([]*Series{NewConstantSeries("a", 1)}).Head(2)
+	tab := NewTable([]*Series{NewConstantSeries("a", 1)}).
+		Head(2)
 	assertEqual(t, NewTable([]*Series{
 		nativeSeries("a", []int{1, 1}),
 	}), tab, "const")
 }
 
 func TestRename(t *testing.T) {
-	tab := NewTable([]*Series{NewConstantSeries("a", 1)}).Rename("a", "x").Head(2)
+	tab := NewTable([]*Series{NewConstantSeries("a", 1)}).
+		Rename("a", "x").
+		Head(2)
 	assertEqual(t, NewTable([]*Series{
 		nativeSeries("x", []int{1, 1}),
 	}), tab, "renamed")
+}
+
+func TestConvert(t *testing.T) {
+	tab := NewTable([]*Series{NewConstantSeries("a", 1)}).
+		Must().
+		Convert("a", reflect.TypeOf(float64(0))).
+		Head(2)
+	assertEqual(t, NewTable([]*Series{
+		nativeSeries("a", []float64{1, 1}),
+	}), tab, "convert")
+
+	assertEqual(t, tab, tab.Must().Convert("X", reflect.TypeOf(float64(0))), "no such col")
+
+	tabN := NewTable([]*Series{Must().NewArrowSeriesFromSlice("nullable", []float64{0, 1}, []bool{false, true})}).
+		Must().
+		Convert("nullable", reflect.TypeOf(int64(0)))
+	expectNull := NewTable([]*Series{Must().NewArrowSeriesFromSlice("nullable", []int64{0, 1}, []bool{false, true})})
+	assertEqual(t, expectNull, tabN, "convert nullable")
+
+	if _, err := tab.Convert("a", reflect.TypeOf("")); err == nil {
+		t.Errorf("inconvertible")
+	}
 }
 
 func TestFilterEq(t *testing.T) {
@@ -155,7 +180,7 @@ func testFilterEq(t *testing.T, makeSeries makeSeriesType) {
 	a := NewTable([]*Series{
 		makeSeries("a", []int64{1, 2, 3}),
 	})
-	filtered := a.Filter(Eq("a", 2))
+	filtered := a.Must().Filter(Eq("a", 2))
 	assertEqual(t, filtered, a.Slice(1, 2), "filter")
 }
 
@@ -176,7 +201,7 @@ func testSize(t *testing.T, makeSeries makeSeriesType) {
 		t.Errorf("size? %d", a.Size())
 	}
 	// a filter is of unbounded size
-	filtered := a.Filter(Eq("a", 1))
+	filtered := a.Must().Filter(Eq("a", 1))
 	if filtered.Size() != -1 {
 		t.Errorf("filtered.Size()? %d", filtered.Size())
 	}
@@ -207,7 +232,7 @@ func testCache(t *testing.T, makeSeries makeSeriesType) {
 	})
 
 	// a lazy table - after filtration
-	filtered := a.Filter(Eq("a", 1))
+	filtered := a.Must().Filter(Eq("a", 1))
 
 	// a materialized copy
 	filteredCached, err := filtered.Cache()
@@ -251,8 +276,8 @@ func TestSort(t *testing.T) {
 }
 
 func TestSortByFunc(t *testing.T) {
-	testSortByFunc(t, nativeSeries)
-	testSortByFunc(t, arrowSeries)
+	testSorting(t, nativeSeries)
+	testSorting(t, arrowSeries)
 }
 
 func testSorting(t *testing.T, makeSeries makeSeriesType) {
