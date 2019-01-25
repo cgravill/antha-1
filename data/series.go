@@ -48,6 +48,20 @@ type Sliceable interface {
 	Slice(start, end Index) *Series
 }
 
+// MaterializedSeriesBuilder is an interface for building materialized Series from external data source
+type MaterializedSeriesBuilder interface {
+	// Reserve reserves extra buffer space
+	Reserve(capacity int)
+	// Size returns the number of appended values
+	Size() int
+	// Append appends a single value
+	Append(value interface{})
+	// AppendNull appends nil value
+	AppendNull()
+	// Build constructs Series
+	Build() *Series
+}
+
 /*
  * casting - not conversion
  */

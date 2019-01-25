@@ -148,7 +148,19 @@ import (
 // Series implemented on the top of Apache Arrow.
 // For now, designed in the same style as arrow/go library: i.e. no reflection, using generated code supporting a finite list of data types
 
-// NewArrowSeries converts a Arrow array to a new Series. Only closed list of Arrow data types is supported yet.
+// NewArrowSeriesBuilder creates a new builder for Arrow Series
+func NewArrowSeriesBuilder(col ColumnName, typ reflect.Type) (MaterializedSeriesBuilder, error) {
+	switch typ {
+		{% for t in env['TYPE_SUPPORT'] -%}
+		case reflect.TypeOf({{ t['Zero'] }}):
+			return newArrowSeriesBuilder{{ t['Type'] }}(col), nil
+		{% endfor -%}
+		default:
+			return nil, errors.Errorf("The data type %v is not supported", typ)
+	}
+}
+
+// NewArrowSeries converts an existing Arrow array to a new Series. Only closed list of Arrow data types is supported yet.
 func NewArrowSeries(col ColumnName, values array.Interface) (*Series, error) {
 	switch typedValues := values.(type) {
 	{% for t in env['TYPE_SUPPORT'] -%}
@@ -209,12 +221,32 @@ func NewArrowSeriesFromRows(rows *Rows, col ColumnName) (*Series, error) {
 
 // {{ t['Raw'] }}
 
+type arrowSeriesBuilder{{ t['Type'] }} struct {
+	builder *array.{{ t['ArrowType'] }}Builder
+	col ColumnName
+}
+
+func newArrowSeriesBuilder{{ t['Type'] }}(col ColumnName) *arrowSeriesBuilder{{ t['Type'] }} {
+	return &arrowSeriesBuilder{{ t['Type'] }} {
+		builder: array.New{{ t['ArrowType'] }}Builder(memory.DefaultAllocator),
+		col:     col,
+	}
+}
+
+func (b* arrowSeriesBuilder{{ t['Type'] }}) Reserve(capacity int)     { b.builder.Reserve(capacity) }
+func (b* arrowSeriesBuilder{{ t['Type'] }}) Size() int                { return b.builder.Len() }
+func (b* arrowSeriesBuilder{{ t['Type'] }}) Append(value interface{}) { b.builder.Append(value.({{ t['Raw'] }})) }
+func (b* arrowSeriesBuilder{{ t['Type'] }}) AppendNull()              { b.builder.AppendNull() }
+func (b* arrowSeriesBuilder{{ t['Type'] }}) Build() *Series           { return NewArrowSeries{{ t['Type'] }}(b.col, b.builder.New{{ t['ArrowType'] }}Array()) }
+
+var _ MaterializedSeriesBuilder = (*arrowSeriesBuilder{{ t['Type'] }})(nil)
+
 func NewArrowSeries{{ t['Type'] }}(col ColumnName, values *array.{{ t['ArrowType'] }}) *Series {
-	metadata := &{{ t['Raw'] }}ArrowSeriesMeta{values: values}
+	metadata := &arrowSeriesMeta{values: values}
 	return &Series{
 		typ:  reflect.TypeOf({{ t['Zero'] }}),
 		col:  col,
-		read: metadata.read,
+		read: metadata.read{{ t['Type'] }},
 		meta: metadata,
 	}
 }
@@ -273,40 +305,24 @@ func NewArrowSeriesFromRows{{ t['Type'] }}(rows *Rows, col ColumnName) (*Series,
 	return NewArrowSeries{{ t['Type'] }}(col, arrowValues), nil
 }
 
-type {{ t['Raw'] }}ArrowSeriesMeta struct {
-	values *array.{{ t['ArrowType'] }}
-}
-
-func (m *{{ t['Raw'] }}ArrowSeriesMeta) IsBounded() bool { return true; }
-func (m *{{ t['Raw'] }}ArrowSeriesMeta) IsMaterialized() bool { return true; }
-
-func (m *{{ t['Raw'] }}ArrowSeriesMeta) ExactSize() int {
-	return m.values.Len()
-}
-func (m *{{ t['Raw'] }}ArrowSeriesMeta) MaxSize() int {
-	return m.values.Len()
-}
-
-func (m *{{ t['Raw'] }}ArrowSeriesMeta) read(_ *seriesIterCache) iterator {
-	return &{{ t['Raw'] }}ArrowSeriesIter{
-		{{ t['Raw'] }}ArrowSeriesMeta: m,
-		pos:                  -1,
+func (m *arrowSeriesMeta) read{{ t['Type'] }}(_ *seriesIterCache) iterator {
+	return &arrowSeriesIter{{ t['Type'] }}{
+		values: m.values.(*array.{{ t['ArrowType'] }}),
+		pos:    -1,
 	}
 }
 
-var _ Bounded = (*{{ t['Raw'] }}ArrowSeriesMeta)(nil)
-
-type {{ t['Raw'] }}ArrowSeriesIter struct {
-	*{{ t['Raw'] }}ArrowSeriesMeta
+type arrowSeriesIter{{ t['Type'] }} struct {
+	values *array.{{ t['ArrowType'] }}
 	pos int
 }
 
-func (i *{{ t['Raw'] }}ArrowSeriesIter) Next() bool {
+func (i *arrowSeriesIter{{ t['Type'] }}) Next() bool {
 	i.pos++
 	return i.pos < i.values.Len()
 }
 
-func (i *{{ t['Raw'] }}ArrowSeriesIter) {{ t['Type'] }}() ({{ t['Raw'] }}, bool) {
+func (i *arrowSeriesIter{{ t['Type'] }}) {{ t['Type'] }}() ({{ t['Raw'] }}, bool) {
 	if !i.values.IsNull(i.pos) {
 		return i.values.Value(i.pos), true
 	} else {
@@ -314,7 +330,7 @@ func (i *{{ t['Raw'] }}ArrowSeriesIter) {{ t['Type'] }}() ({{ t['Raw'] }}, bool)
 	}
 }
 
-func (i *{{ t['Raw'] }}ArrowSeriesIter) Value() interface{} {
+func (i *arrowSeriesIter{{ t['Type'] }}) Value() interface{} {
 	if val, ok := i.{{ t['Type'] }}(); ok {
 		return val
 	} else {
@@ -322,8 +338,8 @@ func (i *{{ t['Raw'] }}ArrowSeriesIter) Value() interface{} {
 	}
 }
 
-var _ iterator = (*{{ t['Raw'] }}ArrowSeriesIter)(nil)
-var _ iter{{ t['Type'] }} = (*{{ t['Raw'] }}ArrowSeriesIter)(nil)
+var _ iterator = (*arrowSeriesIter{{ t['Type'] }})(nil)
+var _ iter{{ t['Type'] }} = (*arrowSeriesIter{{ t['Type'] }})(nil)
 
 {% endfor %}
 '''

@@ -12,7 +12,23 @@ import (
 // Series implemented on the top of Apache Arrow.
 // For now, designed in the same style as arrow/go library: i.e. no reflection, using generated code supporting a finite list of data types
 
-// NewArrowSeries converts a Arrow array to a new Series. Only closed list of Arrow data types is supported yet.
+// NewArrowSeriesBuilder creates a new builder for Arrow Series
+func NewArrowSeriesBuilder(col ColumnName, typ reflect.Type) (MaterializedSeriesBuilder, error) {
+	switch typ {
+		case reflect.TypeOf(float64(0)):
+			return newArrowSeriesBuilderFloat64(col), nil
+		case reflect.TypeOf(int64(0)):
+			return newArrowSeriesBuilderInt64(col), nil
+		case reflect.TypeOf(""):
+			return newArrowSeriesBuilderString(col), nil
+		case reflect.TypeOf(false):
+			return newArrowSeriesBuilderBool(col), nil
+		default:
+			return nil, errors.Errorf("The data type %v is not supported", typ)
+	}
+}
+
+// NewArrowSeries converts an existing Arrow array to a new Series. Only closed list of Arrow data types is supported yet.
 func NewArrowSeries(col ColumnName, values array.Interface) (*Series, error) {
 	switch typedValues := values.(type) {
 	case *array.Float64:
@@ -87,12 +103,32 @@ func NewArrowSeriesFromRows(rows *Rows, col ColumnName) (*Series, error) {
 
 // float64
 
+type arrowSeriesBuilderFloat64 struct {
+	builder *array.Float64Builder
+	col ColumnName
+}
+
+func newArrowSeriesBuilderFloat64(col ColumnName) *arrowSeriesBuilderFloat64 {
+	return &arrowSeriesBuilderFloat64 {
+		builder: array.NewFloat64Builder(memory.DefaultAllocator),
+		col:     col,
+	}
+}
+
+func (b* arrowSeriesBuilderFloat64) Reserve(capacity int)     { b.builder.Reserve(capacity) }
+func (b* arrowSeriesBuilderFloat64) Size() int                { return b.builder.Len() }
+func (b* arrowSeriesBuilderFloat64) Append(value interface{}) { b.builder.Append(value.(float64)) }
+func (b* arrowSeriesBuilderFloat64) AppendNull()              { b.builder.AppendNull() }
+func (b* arrowSeriesBuilderFloat64) Build() *Series           { return NewArrowSeriesFloat64(b.col, b.builder.NewFloat64Array()) }
+
+var _ MaterializedSeriesBuilder = (*arrowSeriesBuilderFloat64)(nil)
+
 func NewArrowSeriesFloat64(col ColumnName, values *array.Float64) *Series {
-	metadata := &float64ArrowSeriesMeta{values: values}
+	metadata := &arrowSeriesMeta{values: values}
 	return &Series{
 		typ:  reflect.TypeOf(float64(0)),
 		col:  col,
-		read: metadata.read,
+		read: metadata.readFloat64,
 		meta: metadata,
 	}
 }
@@ -151,40 +187,24 @@ func NewArrowSeriesFromRowsFloat64(rows *Rows, col ColumnName) (*Series, error) 
 	return NewArrowSeriesFloat64(col, arrowValues), nil
 }
 
-type float64ArrowSeriesMeta struct {
-	values *array.Float64
-}
-
-func (m *float64ArrowSeriesMeta) IsBounded() bool { return true; }
-func (m *float64ArrowSeriesMeta) IsMaterialized() bool { return true; }
-
-func (m *float64ArrowSeriesMeta) ExactSize() int {
-	return m.values.Len()
-}
-func (m *float64ArrowSeriesMeta) MaxSize() int {
-	return m.values.Len()
-}
-
-func (m *float64ArrowSeriesMeta) read(_ *seriesIterCache) iterator {
-	return &float64ArrowSeriesIter{
-		float64ArrowSeriesMeta: m,
-		pos:                  -1,
+func (m *arrowSeriesMeta) readFloat64(_ *seriesIterCache) iterator {
+	return &arrowSeriesIterFloat64{
+		values: m.values.(*array.Float64),
+		pos:    -1,
 	}
 }
 
-var _ Bounded = (*float64ArrowSeriesMeta)(nil)
-
-type float64ArrowSeriesIter struct {
-	*float64ArrowSeriesMeta
+type arrowSeriesIterFloat64 struct {
+	values *array.Float64
 	pos int
 }
 
-func (i *float64ArrowSeriesIter) Next() bool {
+func (i *arrowSeriesIterFloat64) Next() bool {
 	i.pos++
 	return i.pos < i.values.Len()
 }
 
-func (i *float64ArrowSeriesIter) Float64() (float64, bool) {
+func (i *arrowSeriesIterFloat64) Float64() (float64, bool) {
 	if !i.values.IsNull(i.pos) {
 		return i.values.Value(i.pos), true
 	} else {
@@ -192,7 +212,7 @@ func (i *float64ArrowSeriesIter) Float64() (float64, bool) {
 	}
 }
 
-func (i *float64ArrowSeriesIter) Value() interface{} {
+func (i *arrowSeriesIterFloat64) Value() interface{} {
 	if val, ok := i.Float64(); ok {
 		return val
 	} else {
@@ -200,17 +220,37 @@ func (i *float64ArrowSeriesIter) Value() interface{} {
 	}
 }
 
-var _ iterator = (*float64ArrowSeriesIter)(nil)
-var _ iterFloat64 = (*float64ArrowSeriesIter)(nil)
+var _ iterator = (*arrowSeriesIterFloat64)(nil)
+var _ iterFloat64 = (*arrowSeriesIterFloat64)(nil)
 
 // int64
 
+type arrowSeriesBuilderInt64 struct {
+	builder *array.Int64Builder
+	col ColumnName
+}
+
+func newArrowSeriesBuilderInt64(col ColumnName) *arrowSeriesBuilderInt64 {
+	return &arrowSeriesBuilderInt64 {
+		builder: array.NewInt64Builder(memory.DefaultAllocator),
+		col:     col,
+	}
+}
+
+func (b* arrowSeriesBuilderInt64) Reserve(capacity int)     { b.builder.Reserve(capacity) }
+func (b* arrowSeriesBuilderInt64) Size() int                { return b.builder.Len() }
+func (b* arrowSeriesBuilderInt64) Append(value interface{}) { b.builder.Append(value.(int64)) }
+func (b* arrowSeriesBuilderInt64) AppendNull()              { b.builder.AppendNull() }
+func (b* arrowSeriesBuilderInt64) Build() *Series           { return NewArrowSeriesInt64(b.col, b.builder.NewInt64Array()) }
+
+var _ MaterializedSeriesBuilder = (*arrowSeriesBuilderInt64)(nil)
+
 func NewArrowSeriesInt64(col ColumnName, values *array.Int64) *Series {
-	metadata := &int64ArrowSeriesMeta{values: values}
+	metadata := &arrowSeriesMeta{values: values}
 	return &Series{
 		typ:  reflect.TypeOf(int64(0)),
 		col:  col,
-		read: metadata.read,
+		read: metadata.readInt64,
 		meta: metadata,
 	}
 }
@@ -269,40 +309,24 @@ func NewArrowSeriesFromRowsInt64(rows *Rows, col ColumnName) (*Series, error) {
 	return NewArrowSeriesInt64(col, arrowValues), nil
 }
 
-type int64ArrowSeriesMeta struct {
-	values *array.Int64
-}
-
-func (m *int64ArrowSeriesMeta) IsBounded() bool { return true; }
-func (m *int64ArrowSeriesMeta) IsMaterialized() bool { return true; }
-
-func (m *int64ArrowSeriesMeta) ExactSize() int {
-	return m.values.Len()
-}
-func (m *int64ArrowSeriesMeta) MaxSize() int {
-	return m.values.Len()
-}
-
-func (m *int64ArrowSeriesMeta) read(_ *seriesIterCache) iterator {
-	return &int64ArrowSeriesIter{
-		int64ArrowSeriesMeta: m,
-		pos:                  -1,
+func (m *arrowSeriesMeta) readInt64(_ *seriesIterCache) iterator {
+	return &arrowSeriesIterInt64{
+		values: m.values.(*array.Int64),
+		pos:    -1,
 	}
 }
 
-var _ Bounded = (*int64ArrowSeriesMeta)(nil)
-
-type int64ArrowSeriesIter struct {
-	*int64ArrowSeriesMeta
+type arrowSeriesIterInt64 struct {
+	values *array.Int64
 	pos int
 }
 
-func (i *int64ArrowSeriesIter) Next() bool {
+func (i *arrowSeriesIterInt64) Next() bool {
 	i.pos++
 	return i.pos < i.values.Len()
 }
 
-func (i *int64ArrowSeriesIter) Int64() (int64, bool) {
+func (i *arrowSeriesIterInt64) Int64() (int64, bool) {
 	if !i.values.IsNull(i.pos) {
 		return i.values.Value(i.pos), true
 	} else {
@@ -310,7 +334,7 @@ func (i *int64ArrowSeriesIter) Int64() (int64, bool) {
 	}
 }
 
-func (i *int64ArrowSeriesIter) Value() interface{} {
+func (i *arrowSeriesIterInt64) Value() interface{} {
 	if val, ok := i.Int64(); ok {
 		return val
 	} else {
@@ -318,17 +342,37 @@ func (i *int64ArrowSeriesIter) Value() interface{} {
 	}
 }
 
-var _ iterator = (*int64ArrowSeriesIter)(nil)
-var _ iterInt64 = (*int64ArrowSeriesIter)(nil)
+var _ iterator = (*arrowSeriesIterInt64)(nil)
+var _ iterInt64 = (*arrowSeriesIterInt64)(nil)
 
 // string
 
+type arrowSeriesBuilderString struct {
+	builder *array.StringBuilder
+	col ColumnName
+}
+
+func newArrowSeriesBuilderString(col ColumnName) *arrowSeriesBuilderString {
+	return &arrowSeriesBuilderString {
+		builder: array.NewStringBuilder(memory.DefaultAllocator),
+		col:     col,
+	}
+}
+
+func (b* arrowSeriesBuilderString) Reserve(capacity int)     { b.builder.Reserve(capacity) }
+func (b* arrowSeriesBuilderString) Size() int                { return b.builder.Len() }
+func (b* arrowSeriesBuilderString) Append(value interface{}) { b.builder.Append(value.(string)) }
+func (b* arrowSeriesBuilderString) AppendNull()              { b.builder.AppendNull() }
+func (b* arrowSeriesBuilderString) Build() *Series           { return NewArrowSeriesString(b.col, b.builder.NewStringArray()) }
+
+var _ MaterializedSeriesBuilder = (*arrowSeriesBuilderString)(nil)
+
 func NewArrowSeriesString(col ColumnName, values *array.String) *Series {
-	metadata := &stringArrowSeriesMeta{values: values}
+	metadata := &arrowSeriesMeta{values: values}
 	return &Series{
 		typ:  reflect.TypeOf(""),
 		col:  col,
-		read: metadata.read,
+		read: metadata.readString,
 		meta: metadata,
 	}
 }
@@ -387,40 +431,24 @@ func NewArrowSeriesFromRowsString(rows *Rows, col ColumnName) (*Series, error) {
 	return NewArrowSeriesString(col, arrowValues), nil
 }
 
-type stringArrowSeriesMeta struct {
-	values *array.String
-}
-
-func (m *stringArrowSeriesMeta) IsBounded() bool { return true; }
-func (m *stringArrowSeriesMeta) IsMaterialized() bool { return true; }
-
-func (m *stringArrowSeriesMeta) ExactSize() int {
-	return m.values.Len()
-}
-func (m *stringArrowSeriesMeta) MaxSize() int {
-	return m.values.Len()
-}
-
-func (m *stringArrowSeriesMeta) read(_ *seriesIterCache) iterator {
-	return &stringArrowSeriesIter{
-		stringArrowSeriesMeta: m,
-		pos:                  -1,
+func (m *arrowSeriesMeta) readString(_ *seriesIterCache) iterator {
+	return &arrowSeriesIterString{
+		values: m.values.(*array.String),
+		pos:    -1,
 	}
 }
 
-var _ Bounded = (*stringArrowSeriesMeta)(nil)
-
-type stringArrowSeriesIter struct {
-	*stringArrowSeriesMeta
+type arrowSeriesIterString struct {
+	values *array.String
 	pos int
 }
 
-func (i *stringArrowSeriesIter) Next() bool {
+func (i *arrowSeriesIterString) Next() bool {
 	i.pos++
 	return i.pos < i.values.Len()
 }
 
-func (i *stringArrowSeriesIter) String() (string, bool) {
+func (i *arrowSeriesIterString) String() (string, bool) {
 	if !i.values.IsNull(i.pos) {
 		return i.values.Value(i.pos), true
 	} else {
@@ -428,7 +456,7 @@ func (i *stringArrowSeriesIter) String() (string, bool) {
 	}
 }
 
-func (i *stringArrowSeriesIter) Value() interface{} {
+func (i *arrowSeriesIterString) Value() interface{} {
 	if val, ok := i.String(); ok {
 		return val
 	} else {
@@ -436,17 +464,37 @@ func (i *stringArrowSeriesIter) Value() interface{} {
 	}
 }
 
-var _ iterator = (*stringArrowSeriesIter)(nil)
-var _ iterString = (*stringArrowSeriesIter)(nil)
+var _ iterator = (*arrowSeriesIterString)(nil)
+var _ iterString = (*arrowSeriesIterString)(nil)
 
 // bool
 
+type arrowSeriesBuilderBool struct {
+	builder *array.BooleanBuilder
+	col ColumnName
+}
+
+func newArrowSeriesBuilderBool(col ColumnName) *arrowSeriesBuilderBool {
+	return &arrowSeriesBuilderBool {
+		builder: array.NewBooleanBuilder(memory.DefaultAllocator),
+		col:     col,
+	}
+}
+
+func (b* arrowSeriesBuilderBool) Reserve(capacity int)     { b.builder.Reserve(capacity) }
+func (b* arrowSeriesBuilderBool) Size() int                { return b.builder.Len() }
+func (b* arrowSeriesBuilderBool) Append(value interface{}) { b.builder.Append(value.(bool)) }
+func (b* arrowSeriesBuilderBool) AppendNull()              { b.builder.AppendNull() }
+func (b* arrowSeriesBuilderBool) Build() *Series           { return NewArrowSeriesBool(b.col, b.builder.NewBooleanArray()) }
+
+var _ MaterializedSeriesBuilder = (*arrowSeriesBuilderBool)(nil)
+
 func NewArrowSeriesBool(col ColumnName, values *array.Boolean) *Series {
-	metadata := &boolArrowSeriesMeta{values: values}
+	metadata := &arrowSeriesMeta{values: values}
 	return &Series{
 		typ:  reflect.TypeOf(false),
 		col:  col,
-		read: metadata.read,
+		read: metadata.readBool,
 		meta: metadata,
 	}
 }
@@ -505,40 +553,24 @@ func NewArrowSeriesFromRowsBool(rows *Rows, col ColumnName) (*Series, error) {
 	return NewArrowSeriesBool(col, arrowValues), nil
 }
 
-type boolArrowSeriesMeta struct {
-	values *array.Boolean
-}
-
-func (m *boolArrowSeriesMeta) IsBounded() bool { return true; }
-func (m *boolArrowSeriesMeta) IsMaterialized() bool { return true; }
-
-func (m *boolArrowSeriesMeta) ExactSize() int {
-	return m.values.Len()
-}
-func (m *boolArrowSeriesMeta) MaxSize() int {
-	return m.values.Len()
-}
-
-func (m *boolArrowSeriesMeta) read(_ *seriesIterCache) iterator {
-	return &boolArrowSeriesIter{
-		boolArrowSeriesMeta: m,
-		pos:                  -1,
+func (m *arrowSeriesMeta) readBool(_ *seriesIterCache) iterator {
+	return &arrowSeriesIterBool{
+		values: m.values.(*array.Boolean),
+		pos:    -1,
 	}
 }
 
-var _ Bounded = (*boolArrowSeriesMeta)(nil)
-
-type boolArrowSeriesIter struct {
-	*boolArrowSeriesMeta
+type arrowSeriesIterBool struct {
+	values *array.Boolean
 	pos int
 }
 
-func (i *boolArrowSeriesIter) Next() bool {
+func (i *arrowSeriesIterBool) Next() bool {
 	i.pos++
 	return i.pos < i.values.Len()
 }
 
-func (i *boolArrowSeriesIter) Bool() (bool, bool) {
+func (i *arrowSeriesIterBool) Bool() (bool, bool) {
 	if !i.values.IsNull(i.pos) {
 		return i.values.Value(i.pos), true
 	} else {
@@ -546,7 +578,7 @@ func (i *boolArrowSeriesIter) Bool() (bool, bool) {
 	}
 }
 
-func (i *boolArrowSeriesIter) Value() interface{} {
+func (i *arrowSeriesIterBool) Value() interface{} {
 	if val, ok := i.Bool(); ok {
 		return val
 	} else {
@@ -554,6 +586,6 @@ func (i *boolArrowSeriesIter) Value() interface{} {
 	}
 }
 
-var _ iterator = (*boolArrowSeriesIter)(nil)
-var _ iterBool = (*boolArrowSeriesIter)(nil)
+var _ iterator = (*arrowSeriesIterBool)(nil)
+var _ iterBool = (*arrowSeriesIterBool)(nil)
 
