@@ -7,8 +7,7 @@ import (
 
 func sortTableByKey(t *Table, key Key) (*Table, error) {
 	// short path - in case the table is already sorted by the same (or more specialized) key
-	if tableKey := t.Schema().Key; tableKey != nil && tableKey.HasPrefix(key) {
-		//TODO: should we replace the table key with key?
+	if tableKey := t.sortKey; tableKey.HasPrefix(key) {
 		return t, nil
 	}
 
@@ -25,7 +24,7 @@ func sortTableByKey(t *Table, key Key) (*Table, error) {
 	}
 
 	// supplying the sorted table with a key
-	return sorted.withKey(key), nil
+	return newFromTable(sorted, key...), nil
 }
 
 // creates a sort function for comparing rows which satisfy a given schema by a given key

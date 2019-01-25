@@ -13,8 +13,9 @@ import (
 // Table is an immutable container of Series
 // It can optionally be keyed.
 type Table struct {
-	series []*Series
-	schema Schema
+	series  []*Series
+	schema  Schema
+	sortKey Key
 	// this must return Row
 	read func([]*Series) *tableIterator
 }
@@ -29,13 +30,15 @@ func NewTable(series []*Series) *Table {
 	}
 }
 
-func newFromTable(t *Table) *Table {
+// newFromTable creates a new table pointing with the same series, and sets the sort key
+func newFromTable(t *Table, key ...ColumnKey) *Table {
 	s := make([]*Series, len(t.series))
 	copy(s, t.series)
 	return &Table{
-		series: s,
-		schema: t.schema,
-		read:   t.read,
+		series:  s,
+		schema:  t.schema,
+		sortKey: key,
+		read:    t.read,
 	}
 }
 
@@ -98,7 +101,7 @@ func (t *Table) ToRows() Rows {
 // unlike go slices, if the end index is out of range then fewer records are returned
 // rather than receiving an error
 func (t *Table) Slice(start, end Index) *Table {
-	newTable := newFromTable(t)
+	newTable := newFromTable(t, t.sortKey...)
 	for i, ser := range t.series {
 		m := newSeriesSlice(ser, start, end)
 		newTable.series[i] = &Series{
@@ -114,13 +117,6 @@ func (t *Table) Slice(start, end Index) *Table {
 // Head is a lazy subset of the first count records (but may return fewer)
 func (t *Table) Head(count int) *Table {
 	return t.Slice(0, Index(count))
-}
-
-// withKey sets the sort key (but does not sort - the table is assumed to be already sorted, even though it is not checked currently).
-func (t *Table) withKey(key Key) *Table {
-	newTable := newFromTable(t)
-	newTable.schema.Key = key
-	return newTable
 }
 
 // Sort produces a Table sorted by the columns defined by the Key.
@@ -199,15 +195,14 @@ func (t *Table) Size() int {
 
 // Cache converts a lazy table to one that is fully materialized
 func (t *Table) Cache() (*Table, error) {
-	seriesCopies := make([]*Series, len(t.series))
+	newTable := newFromTable(t, t.sortKey...)
 	for i, series := range t.series {
-		if seriesCopy, err := series.Cache(); err != nil {
+		var err error
+		if newTable.series[i], err = series.Cache(); err != nil {
 			return nil, err
-		} else {
-			seriesCopies[i] = seriesCopy
 		}
 	}
-	return NewTable(seriesCopies), nil
+	return newTable, nil
 }
 
 // DropNullColumns filters out columns with all/any row null
@@ -275,7 +270,7 @@ func (t *Table) Rename(old, new ColumnName) *Table {
 // Returns non-nil error (and nil Table) if any column is not convertible. Note
 // that if no column name matches, the same table is returned.
 func (t *Table) Convert(col ColumnName, typ reflect.Type) (*Table, error) {
-	newT := newFromTable(t)
+	newT := newFromTable(t, t.sortKey...)
 	converted := false
 	conv := &conversion{newType: typ, Table: t}
 	for i, ser := range t.series {
@@ -292,7 +287,7 @@ func (t *Table) Convert(col ColumnName, typ reflect.Type) (*Table, error) {
 		return t, nil
 	}
 	// types but not sort key are different.  TODO: unless natural order is different for the converted type?
-	newT.schema = newSchema(newT.series, t.schema.Key...)
+	newT.schema = newSchema(newT.series)
 	return newT, nil
 }
 

@@ -12,7 +12,6 @@ type Index int
 // Schema is intended as an immutable representation of table metadata
 type Schema struct {
 	Columns []Column
-	Key     Key
 	byName  map[ColumnName][]int
 }
 
@@ -85,17 +84,16 @@ func (s Schema) ColIndex(col ColumnName) (int, error) {
 
 // TODO String()
 
-func newSchema(series []*Series, keys ...ColumnKey) Schema {
+func newSchema(series []*Series) Schema {
 	schema := Schema{byName: map[ColumnName][]int{}}
 	for c, s := range series {
 		schema.Columns = append(schema.Columns, Column{Type: s.typ, Name: s.col})
 		schema.byName[s.col] = append(schema.byName[s.col], c)
 	}
-	schema.Key = keys
 	return schema
 }
 
-// IsPrefix checks if other key is a prefix of k
+// HasPrefix checks if other key is a prefix of k
 func (key Key) HasPrefix(other Key) bool {
 	if len(other) > len(key) {
 		return false

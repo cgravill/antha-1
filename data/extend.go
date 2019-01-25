@@ -11,6 +11,7 @@ import (
 // TODO: MustExtension for capturing errors...
 // TODO figure out how to avoid recalculating state, without user having to cache
 // TODO make extension series bounded and sized, if the wrapped series are
+// TODO preserve sort key
 
 // Extension is the fluent interface for adding calculated columns
 type Extension struct {
@@ -23,7 +24,6 @@ type Extension struct {
 // By allows dynamic access to observations
 func (e *Extension) By(f func(r Row) interface{}, newType reflect.Type) *Table {
 	// TODO: either reflectively infer newType, or assert/verify the f return type
-
 	series := append(e.series, &Series{
 		col: e.newCol,
 		typ: newType,
