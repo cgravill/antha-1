@@ -84,6 +84,17 @@ func (s Schema) ColIndex(col ColumnName) (int, error) {
 
 // TODO String()
 
+func NewSchema(columns []Column) *Schema {
+	schema := &Schema{
+		Columns: columns,
+		byName:  map[ColumnName][]int{},
+	}
+	for i, column := range columns {
+		schema.byName[column.Name] = append(schema.byName[column.Name], i)
+	}
+	return schema
+}
+
 func newSchema(series []*Series) Schema {
 	schema := Schema{byName: map[ColumnName][]int{}}
 	for c, s := range series {
