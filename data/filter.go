@@ -30,25 +30,39 @@ func (s *Selection) On(cols ...ColumnName) *FilterOn {
 }
 
 // FilterOn filters by named columns.
+// TODO(twoodwark): this is needlessly eager with respect to all underlying columns.
 type FilterOn struct {
 	t    *Table
 	cols []ColumnName
 }
 
-// Interface matches the named column values as interface{} arguments.
-// If given any SchemaAssertions, they are called first and may have side effects.
-// TODO(twoodwark): this is eager with respect to all underlying columns.
-func (o *FilterOn) Interface(fn MatchInterface, assertions ...SchemaAssertion) (*Table, error) {
+// TODO
+// func (o *FilterOn) Not() *FilterOn {}
+// func (o *FilterOn) Null() (*Table, error) {} // all null
+
+func (o *FilterOn) checkSchema(colsType reflect.Type, assertions ...SchemaAssertion) error {
 	// eager schema check
 	filterSubject, err := o.t.Project(o.cols...)
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't filter columns %+v", o.cols)
+		return errors.Wrapf(err, "can't filter columns %+v", o.cols)
+	}
+	// assert columns assignable
+	if colsType != nil {
+		for _, col := range filterSubject.Schema().Columns {
+			if !col.Type.AssignableTo(colsType) {
+				return errors.Errorf("column %s is not assignable to type %v", col.Name, colsType)
+			}
+		}
 	}
 	for _, assrt := range assertions {
 		if err := assrt(filterSubject.Schema()); err != nil {
-			return nil, errors.Wrapf(err, "can't filter %+v with %+v", o.t, fn)
+			return err
 		}
 	}
+	return nil
+}
+
+func (o *FilterOn) matchColIndexes(assertions ...SchemaAssertion) map[int]int {
 	// which columns values do we need?
 	matchColIndexes := map[int]int{}
 	for i, n := range o.cols {
@@ -56,16 +70,7 @@ func (o *FilterOn) Interface(fn MatchInterface, assertions ...SchemaAssertion) (
 			matchColIndexes[c] = i
 		}
 	}
-
-	matchRow := func(r Row) bool {
-		matchVals := make([]interface{}, len(o.cols))
-		for c, i := range matchColIndexes {
-			matchVals[i] = r.Values[c].value
-		}
-		return fn(matchVals...)
-	}
-
-	return filterTable(matchRow, o.t), nil
+	return matchColIndexes
 }
 
 // SchemaAssertion is given the schema of the table projection on which the
@@ -74,9 +79,6 @@ type SchemaAssertion func(Schema) error
 
 // MatchRow implements a filter on entire table rows.
 type MatchRow func(r Row) bool
-
-// MatchInterface implements a filter on heterogeneous columns.
-type MatchInterface func(...interface{}) bool
 
 /*
  * generic filter guts
@@ -119,7 +121,6 @@ func (st *filterState) isMatch() bool {
 }
 
 type filterIter struct {
-	//wrapped     iterator // series iterator
 	commonState *filterState
 	pos         Index
 	colIndex    int
@@ -168,7 +169,6 @@ func filterTable(matchRow MatchRow, table *Table) *Table {
 				pos:         commonState.index,
 				colIndex:    colIndex,
 				commonState: commonState,
-				//wrapped:     commonState.source.iteratorCache.Ensure(wrappedSeries),
 			}
 		}
 	}
@@ -222,7 +222,7 @@ type eq struct {
 
 // TODO Eq specialization methods to more efficiently filter known scalar types (?)
 
-// CheckSchema converts eqpected values, as a side effect
+// CheckSchema converts expected values, as a side effect
 func (w *eq) CheckSchema(schema Schema) error {
 	if schema.Size() != len(w.expected) {
 		return fmt.Errorf("Eq: %d column(s), to equal %d value(s) %+v", schema.Size(), len(w.expected), w.expected)

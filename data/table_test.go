@@ -195,6 +195,13 @@ func testFilter(t *testing.T, makeSeries makeSeriesType) {
 		t.Error("no err, eq incorrect arity")
 	}
 
+	_, err = a.Filter().On("a").String(func(v ...string) bool {
+		return v[0] != ""
+	})
+	if err == nil {
+		t.Error("no err, func unassignable datatype")
+	}
+
 	filteredEq := a.Must().Filter().On("a").Interface(Eq(2))
 	assertEqual(t, filteredEq, a.Slice(1, 2), "filter eq")
 
@@ -213,10 +220,10 @@ func testFilter(t *testing.T, makeSeries makeSeriesType) {
 	})
 	assertEqual(t, a.Head(1), filteredRow, "filter by")
 
-	// filteredStatic := a.Must().Filter().On("a").Int64(func(v ...int64) bool {
-	// 	return v[0] != 1
-	// })
-	// assertEqual(t, filteredRow, a.Slice(2, 3), "filter static")
+	filteredStatic := a.Must().Filter().On("a").Int64(func(v ...int64) bool {
+		return v[0] != 1
+	})
+	assertEqual(t, filteredStatic, a.Slice(1, 3), "filter static")
 }
 
 func TestSize(t *testing.T) {

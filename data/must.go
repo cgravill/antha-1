@@ -101,9 +101,3 @@ func (s *MustSelection) On(cols ...ColumnName) *MustFilterOn {
 type MustFilterOn struct {
 	*FilterOn
 }
-
-func (o *MustFilterOn) Interface(m MatchInterface, assertions ...SchemaAssertion) *Table {
-	t, err := o.FilterOn.Interface(m, assertions...)
-	handle(err)
-	return t
-}
