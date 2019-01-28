@@ -292,8 +292,8 @@ func (t *Table) Convert(col ColumnName, typ reflect.Type) (*Table, error) {
 }
 
 // Filter selects some records lazily
-func (t *Table) Filter(f FilterSpec) (*Table, error) {
-	return lazyFilterTable(f, t)
+func (t *Table) Filter() *Selection {
+	return &Selection{t}
 }
 
 // Extend adds a column by applying a function

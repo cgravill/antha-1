@@ -11,80 +11,88 @@ import (
  * filter interfaces
  */
 
-// Matcher returns true for column values that match
-type Matcher func(...interface{}) bool
-
-// FilterSpec implements a filter operation
-type FilterSpec interface {
-	Columns() []ColumnName
-	// MatchFor should return error if the filter is invalid eg. requires a different datatype
-	// the required columnnames are guaranteed to be present in this schema
-	MatchFor(Schema) (Matcher, error)
-	// TODO bridge interfaces for more efficient backend filter ops
+// Selection is the fluent interface for filtering rows.
+type Selection struct {
+	t *Table
 }
 
-/*
- * concrete filters
- */
-type eq struct {
-	Col ColumnName
-	Val interface{}
+// By accepts a filter function that operates on rows of the whole table.
+// The filtered table contains rows where this function returns true.
+func (s *Selection) By(fn MatchRow) *Table {
+	return filterTable(fn, s.t)
 }
 
-// Eq matches Rows that have the given column equal to val
-func Eq(col ColumnName, val interface{}) FilterSpec {
-	return eq{Col: col, Val: val}
+// On selects columns for filtering. Note this does not panic yet, even if the
+// columns do not exist.  (However subsequent calls to the returned object will
+// error.)
+func (s *Selection) On(cols ...ColumnName) *FilterOn {
+	return &FilterOn{t: s.t, cols: cols}
 }
 
-// TODO Eq specialization methods to more efficiently filter known scalar types (?)
-
-func (w eq) Columns() []ColumnName {
-	return []ColumnName{w.Col}
+// FilterOn filters by named columns.
+type FilterOn struct {
+	t    *Table
+	cols []ColumnName
 }
 
-func (w eq) MatchFor(schema Schema) (Matcher, error) {
-	c, _ := schema.Col(w.Col)
-	// if possible, cast/convert to the matched type
-	val := reflect.ValueOf(w.Val)
-	if !val.Type().ConvertibleTo(c.Type) {
-		return nil, fmt.Errorf("Incompatible types: %+v and %+v", val.Type(), c.Type)
+// Interface matches the named column values as interface{} arguments.
+// If given any SchemaAssertions, they are called first and may have side effects.
+// TODO(twoodwark): this is eager with respect to all underlying columns.
+func (o *FilterOn) Interface(fn MatchInterface, assertions ...SchemaAssertion) (*Table, error) {
+	// eager schema check
+	filterSubject, err := o.t.Project(o.cols...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can't filter columns %+v", o.cols)
 	}
-	valConverted := val.Convert(c.Type).Interface()
-	matchValues := func(v ...interface{}) bool {
-		return v[0] == valConverted
+	for _, assrt := range assertions {
+		if err := assrt(filterSubject.Schema()); err != nil {
+			return nil, errors.Wrapf(err, "can't filter %+v with %+v", o.t, fn)
+		}
+	}
+	// which columns values do we need?
+	matchColIndexes := map[int]int{}
+	for i, n := range o.cols {
+		for _, c := range o.t.schema.byName[n] {
+			matchColIndexes[c] = i
+		}
 	}
 
-	return matchValues, nil
+	matchRow := func(r Row) bool {
+		matchVals := make([]interface{}, len(o.cols))
+		for c, i := range matchColIndexes {
+			matchVals[i] = r.Values[c].value
+		}
+		return fn(matchVals...)
+	}
+
+	return filterTable(matchRow, o.t), nil
 }
+
+// SchemaAssertion is given the schema of the table projection on which the
+// filter will operate.  It should return nil if the schema is acceptable.
+type SchemaAssertion func(Schema) error
+
+// MatchRow implements a filter on entire table rows.
+type MatchRow func(r Row) bool
+
+// MatchInterface implements a filter on heterogeneous columns.
+type MatchInterface func(...interface{}) bool
 
 /*
  * generic filter guts
  */
-type filterState struct {
-	matchColIndexes map[int]bool
-	matcher         Matcher
-	source          *tableIterator
-	iterNext        bool
-	curr            []interface{}
-	index           Index
-}
 
 // the filtered series share an underlying iterator cache
-func newFilterState(matcher Matcher, filterSpec FilterSpec, underlying []*Series) *filterState {
-	s := &filterState{
-		index:           -1,
-		matcher:         matcher,
-		matchColIndexes: map[int]bool{},
-		source:          newTableIterator(underlying),
-	}
-	schema := newSchema(underlying)
-	for _, n := range filterSpec.Columns() {
-		for _, c := range schema.byName[n] {
-			s.matchColIndexes[c] = true
-		}
-	}
-
-	return s
+type filterState struct {
+	// matcher determines when to return the row.
+	// TODO  we don't always need to read the whole Row. colVals do not need to
+	// be updated for lazy columns when we already know we matched false
+	// (assuming we are using column matchers and not row matchers).
+	matcher  MatchRow
+	source   *tableIterator
+	iterNext bool
+	curr     []interface{}
+	index    Index
 }
 
 func (st *filterState) advance() {
@@ -97,26 +105,21 @@ func (st *filterState) advance() {
 	}
 	st.iterNext = false
 }
+
 func (st *filterState) isMatch() bool {
-	// TODO save some garbage here by indexing columns by position and only
-	// getting series values needed to satisfy the filter (ie avoid copying to
-	// a Row!)
 	row := st.source.Value().(Row)
 	colVals := []interface{}{}
-	matchVals := []interface{}{}
-	for i, n := range st.source.cols {
-		o, _ := row.Observation(*n)
+
+	for _, o := range row.Values {
 		colVals = append(colVals, o.value)
-		if st.matchColIndexes[i] {
-			matchVals = append(matchVals, o.value)
-		}
 	}
+	// cache the column values for the underlying, in case they are expensive
 	st.curr = colVals
-	return st.matcher(matchVals...)
+	return st.matcher(row)
 }
 
 type filterIter struct {
-	wrapped     iterator // series iterator
+	//wrapped     iterator // series iterator
 	commonState *filterState
 	pos         Index
 	colIndex    int
@@ -134,54 +137,50 @@ func (iter *filterIter) Next() bool {
 	return iter.commonState.iterNext
 }
 
+// Value reads the cached column value
 func (iter *filterIter) Value() interface{} {
 	colVals := iter.commonState.curr
 	return colVals[iter.colIndex]
 }
 
-func lazyFilterTable(filterSpec FilterSpec, table *Table) (*Table, error) {
-	// eager schema check
-	filterSubject, err := table.Project(filterSpec.Columns()...)
-	if err != nil {
-		return nil, errors.Wrapf(err, "can't filter columns %+v", filterSpec.Columns())
-	}
-	matcher, err := filterSpec.MatchFor(filterSubject.Schema())
-	if err != nil {
-		panic(errors.Wrapf(err, "can't filter %+v with %+v", table, filterSpec))
-	}
-	// compose the filter into all the series
-	wrappers := make([]*Series, len(table.series))
+// compose the matchRow filter into all the series
+func filterTable(matchRow MatchRow, table *Table) *Table {
+	newTable := newFromTable(table, table.sortKey...)
 	wrap := func(colIndex int, wrappedSeries *Series) func(cache *seriesIterCache) iterator {
 		return func(cache *seriesIterCache) iterator {
 			// The first wrapper needs to construct the common state for the parent iterator,
 			// noting we will be called in random order.
 			var commonState *filterState
-			for _, w := range wrappers {
+			for _, w := range newTable.series {
 				if iterator, found := cache.cache[w]; found {
 					commonState = iterator.(*filterIter).commonState
 				}
 			}
 			if commonState == nil {
-				commonState = newFilterState(matcher, filterSpec, table.series)
+				commonState = &filterState{
+					index:   -1,
+					matcher: matchRow,
+					source:  newTableIterator(table.series),
+				}
 			}
 
 			return &filterIter{
 				pos:         commonState.index,
 				colIndex:    colIndex,
 				commonState: commonState,
-				wrapped:     commonState.source.iteratorCache.Ensure(wrappedSeries),
+				//wrapped:     commonState.source.iteratorCache.Ensure(wrappedSeries),
 			}
 		}
 	}
 	for i, wrappedSeries := range table.series {
-		wrappers[i] = &Series{
+		newTable.series[i] = &Series{
 			typ:  wrappedSeries.typ,
 			col:  wrappedSeries.col,
 			read: wrap(i, wrappedSeries),
 			meta: &filteredSeriesMeta{wrapped: wrappedSeries.meta},
 		}
 	}
-	return NewTable(wrappers), nil
+	return newTable
 }
 
 // filtered series metadata
@@ -202,4 +201,40 @@ func (m *filteredSeriesMeta) MaxSize() int {
 	} else {
 		return -1
 	}
+}
+
+/*
+ * concrete filters
+ */
+
+// Eq retuns a function matching the selected column(s) where equal to expected
+// value(s), after any required type conversion.
+func Eq(expected ...interface{}) (MatchInterface, SchemaAssertion) {
+	assertion := &eq{expected: expected, converted: make([]interface{}, len(expected))}
+	return func(v ...interface{}) bool {
+		return reflect.DeepEqual(v, assertion.converted)
+	}, assertion.CheckSchema
+}
+
+type eq struct {
+	expected, converted []interface{}
+}
+
+// TODO Eq specialization methods to more efficiently filter known scalar types (?)
+
+// CheckSchema converts eqpected values, as a side effect
+func (w *eq) CheckSchema(schema Schema) error {
+	if schema.Size() != len(w.expected) {
+		return fmt.Errorf("Eq: %d column(s), to equal %d value(s) %+v", schema.Size(), len(w.expected), w.expected)
+	}
+	for i, c := range schema.Columns {
+		// convert to the column type
+		val := reflect.ValueOf(w.expected[i])
+		if !val.Type().ConvertibleTo(c.Type) {
+			return fmt.Errorf("Eq: inconvertible type for %s: %+v to %+v", c.Name, val.Type(), c.Type)
+		}
+		w.converted[i] = val.Convert(c.Type).Interface()
+	}
+	w.expected = nil
+	return nil
 }

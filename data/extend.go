@@ -13,7 +13,7 @@ import (
 // TODO make extension series bounded and sized, if the wrapped series are
 // TODO preserve sort key
 
-// Extension is the fluent interface for adding calculated columns
+// Extension is the fluent interface for adding calculated columns.
 type Extension struct {
 	// the new column to add
 	newCol ColumnName
@@ -31,6 +31,7 @@ func (e *Extension) By(f func(r Row) interface{}, newType reflect.Type) *Table {
 			return &extendRowSeries{f: f, source: e.extensionSource(cache)}
 		}},
 	)
+	// TODO preserve sort key
 	newT := NewTable(series)
 	return newT
 }
@@ -68,13 +69,6 @@ func (e *Extension) On(cols ...ColumnName) *ExtendOn {
 		on.inputs = append(on.inputs, e.series[schema.byName[c][0]])
 	}
 	return on
-}
-
-// ExtendOn enables extensions using specific column values as function inputs
-type ExtendOn struct {
-	*combinedSeriesMeta // FIXME use this value
-	extension           *Extension
-	inputs              []*Series
 }
 
 // Constant adds a constant column to the table
@@ -134,4 +128,11 @@ func (m *combinedSeriesMeta) MaxSize() int {
 		return m.max
 	}
 	panic("don't call MaxSize on unbounded series")
+}
+
+// ExtendOn enables extensions using specific column values as function inputs
+type ExtendOn struct {
+	*combinedSeriesMeta // FIXME use this value
+	extension           *Extension
+	inputs              []*Series
 }

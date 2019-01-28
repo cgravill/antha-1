@@ -61,7 +61,7 @@ func Example(tab *data.Table) {
 	fmt.Println("tab.Slice(2,4)\n", tab.Slice(2, 4).ToRows())
 
 	// produce a new Table by filtering
-	smallerTab := tab.Must().Filter(data.Eq("label", "aa"))
+	smallerTab := tab.Must().Filter().On("label").Interface(data.Eq("aa"))
 	fmt.Println("after filter\n", smallerTab.ToRows())
 
 	mult := func(r data.Row) interface{} {
@@ -72,9 +72,9 @@ func Example(tab *data.Table) {
 			return float64(m.MustInt64()) * float64(2.5)
 		}
 	}
-	extended := tab.
-		Extend("multiplied").By(mult, reflect.TypeOf(float64(0)))
-	fmt.Println("extended and filtered\n", extended.Must().Filter(data.Eq("multiplied", 25)).ToRows())
+	extended := tab.Extend("multiplied").By(mult, reflect.TypeOf(float64(0)))
+	extendedAndFiltered := extended.Must().Filter().On("multiplied").Interface(data.Eq(25))
+	fmt.Println("extended and filtered\n", extendedAndFiltered.ToRows())
 
 	// equivalent extension using static types
 	projected := tab.

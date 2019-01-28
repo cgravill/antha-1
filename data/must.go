@@ -15,9 +15,9 @@ func handle(err error) {
 	}
 }
 
+// MustCreate panics on any error when creating tables/series
 type MustCreate struct{}
 
-// Must asserts no error on the objects it creates
 func Must() MustCreate {
 	return MustCreate{}
 }
@@ -85,8 +85,25 @@ func (m MustTable) Convert(col ColumnName, typ reflect.Type) *Table {
 	handle(err)
 	return t
 }
-func (m MustTable) Filter(f FilterSpec) *Table {
-	t, err := m.t.Filter(f)
+
+func (m MustTable) Filter() *MustSelection {
+	return &MustSelection{m.t.Filter()}
+}
+
+type MustSelection struct {
+	*Selection
+}
+
+func (s *MustSelection) On(cols ...ColumnName) *MustFilterOn {
+	return &MustFilterOn{s.Selection.On(cols...)}
+}
+
+type MustFilterOn struct {
+	*FilterOn
+}
+
+func (o *MustFilterOn) Interface(m MatchInterface, assertions ...SchemaAssertion) *Table {
+	t, err := o.FilterOn.Interface(m, assertions...)
 	handle(err)
 	return t
 }

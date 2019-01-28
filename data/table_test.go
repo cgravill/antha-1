@@ -38,7 +38,7 @@ func testEquals(t *testing.T, makeSeries makeSeriesType) {
 		t.Error("equal with mismatched schema")
 	}
 
-	if tab2.Equal(tab2.Must().Filter(Eq("measure", 1000))) {
+	if tab2.Equal(tab2.Must().Filter().On("measure").Interface(Eq(1000))) {
 		t.Error("equal with mismatched data")
 	}
 }
@@ -171,17 +171,52 @@ func TestConvert(t *testing.T) {
 	}
 }
 
-func TestFilterEq(t *testing.T) {
-	testFilterEq(t, nativeSeries)
-	testFilterEq(t, arrowSeries)
+func TestFilter(t *testing.T) {
+	testFilter(t, nativeSeries)
+	testFilter(t, arrowSeries)
 }
 
-func testFilterEq(t *testing.T, makeSeries makeSeriesType) {
+func testFilter(t *testing.T, makeSeries makeSeriesType) {
 	a := NewTable([]*Series{
 		makeSeries("a", []int64{1, 2, 3}),
+		makeSeries("b", []float64{2, 2, 2}),
 	})
-	filtered := a.Must().Filter(Eq("a", 2))
-	assertEqual(t, filtered, a.Slice(1, 2), "filter")
+	_, err := a.Filter().On("XYZ").Interface(Eq(2))
+	if err == nil {
+		t.Error("no err, eq no such column")
+	}
+	_, err = a.Filter().On("a").Interface(Eq("a string!"))
+	if err == nil {
+		t.Error("no err, eq inconvertible datatype")
+	}
+
+	_, err = a.Filter().On("a", "b").Interface(Eq(0))
+	if err == nil {
+		t.Error("no err, eq incorrect arity")
+	}
+
+	filteredEq := a.Must().Filter().On("a").Interface(Eq(2))
+	assertEqual(t, filteredEq, a.Slice(1, 2), "filter eq")
+
+	filteredEqMulti := a.Must().Filter().On("a", "b").Interface(Eq(1, 1))
+	assertEqual(t, filteredEqMulti, a.Head(0), "filter eq multi")
+
+	// heterogeneous column values
+	filtered2Col := a.Must().Filter().On("b", "a").Interface(func(v ...interface{}) bool {
+		return v[0].(float64) < float64(v[1].(int64))
+	})
+	assertEqual(t, a.Slice(2, 3), filtered2Col, "filter multi")
+
+	filteredRow := a.Must().Filter().By(func(r Row) bool {
+		a, _ := r.Observation("a")
+		return a.MustInt64() == 1
+	})
+	assertEqual(t, a.Head(1), filteredRow, "filter by")
+
+	// filteredStatic := a.Must().Filter().On("a").Int64(func(v ...int64) bool {
+	// 	return v[0] != 1
+	// })
+	// assertEqual(t, filteredRow, a.Slice(2, 3), "filter static")
 }
 
 func TestSize(t *testing.T) {
@@ -201,7 +236,7 @@ func testSize(t *testing.T, makeSeries makeSeriesType) {
 		t.Errorf("size? %d", a.Size())
 	}
 	// a filter is of unbounded size
-	filtered := a.Must().Filter(Eq("a", 1))
+	filtered := a.Must().Filter().On("a").Interface(Eq(1))
 	if filtered.Size() != -1 {
 		t.Errorf("filtered.Size()? %d", filtered.Size())
 	}
@@ -232,7 +267,7 @@ func testCache(t *testing.T, makeSeries makeSeriesType) {
 	})
 
 	// a lazy table - after filtration
-	filtered := a.Must().Filter(Eq("a", 1))
+	filtered := a.Must().Filter().On("a").Interface(Eq(1))
 
 	// a materialized copy
 	filteredCached, err := filtered.Cache()
