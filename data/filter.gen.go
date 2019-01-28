@@ -13,7 +13,8 @@ import (
 // MatchFloat64 implements a filter on float64 columns.
 type MatchFloat64 func(...float64) bool
 
-// Float64 matches the named column values as float64 arguments.
+// Float64 matches the named column values as float64 arguments. 
+// If any column is nil the filter is automatically false.
 // If given any SchemaAssertions, they are called now and may have side effects.
 func (o *FilterOn) Float64(fn MatchFloat64, assertions ...SchemaAssertion) (*Table, error) {
 	if err := o.checkSchema(reflect.TypeOf(float64(0)), assertions...); err != nil {
@@ -23,7 +24,11 @@ func (o *FilterOn) Float64(fn MatchFloat64, assertions ...SchemaAssertion) (*Tab
 	matchRow := func(r Row) bool {
 		matchVals := make([]float64, len(o.cols))
 		for c, i := range matchColIndexes {
-			matchVals[i] = r.Values[c].value.(float64)
+			val := r.Values[c].value
+			if val == nil {
+				return false
+			}
+			matchVals[i] = val.(float64)
 		}
 		return fn(matchVals...)
 	}
@@ -41,7 +46,8 @@ func (o *MustFilterOn) Float64(m MatchFloat64, assertions ...SchemaAssertion) *T
 // MatchInt64 implements a filter on int64 columns.
 type MatchInt64 func(...int64) bool
 
-// Int64 matches the named column values as int64 arguments.
+// Int64 matches the named column values as int64 arguments. 
+// If any column is nil the filter is automatically false.
 // If given any SchemaAssertions, they are called now and may have side effects.
 func (o *FilterOn) Int64(fn MatchInt64, assertions ...SchemaAssertion) (*Table, error) {
 	if err := o.checkSchema(reflect.TypeOf(int64(0)), assertions...); err != nil {
@@ -51,7 +57,11 @@ func (o *FilterOn) Int64(fn MatchInt64, assertions ...SchemaAssertion) (*Table, 
 	matchRow := func(r Row) bool {
 		matchVals := make([]int64, len(o.cols))
 		for c, i := range matchColIndexes {
-			matchVals[i] = r.Values[c].value.(int64)
+			val := r.Values[c].value
+			if val == nil {
+				return false
+			}
+			matchVals[i] = val.(int64)
 		}
 		return fn(matchVals...)
 	}
@@ -69,7 +79,8 @@ func (o *MustFilterOn) Int64(m MatchInt64, assertions ...SchemaAssertion) *Table
 // MatchString implements a filter on string columns.
 type MatchString func(...string) bool
 
-// String matches the named column values as string arguments.
+// String matches the named column values as string arguments. 
+// If any column is nil the filter is automatically false.
 // If given any SchemaAssertions, they are called now and may have side effects.
 func (o *FilterOn) String(fn MatchString, assertions ...SchemaAssertion) (*Table, error) {
 	if err := o.checkSchema(reflect.TypeOf(""), assertions...); err != nil {
@@ -79,7 +90,11 @@ func (o *FilterOn) String(fn MatchString, assertions ...SchemaAssertion) (*Table
 	matchRow := func(r Row) bool {
 		matchVals := make([]string, len(o.cols))
 		for c, i := range matchColIndexes {
-			matchVals[i] = r.Values[c].value.(string)
+			val := r.Values[c].value
+			if val == nil {
+				return false
+			}
+			matchVals[i] = val.(string)
 		}
 		return fn(matchVals...)
 	}
@@ -97,7 +112,8 @@ func (o *MustFilterOn) String(m MatchString, assertions ...SchemaAssertion) *Tab
 // MatchBool implements a filter on bool columns.
 type MatchBool func(...bool) bool
 
-// Bool matches the named column values as bool arguments.
+// Bool matches the named column values as bool arguments. 
+// If any column is nil the filter is automatically false.
 // If given any SchemaAssertions, they are called now and may have side effects.
 func (o *FilterOn) Bool(fn MatchBool, assertions ...SchemaAssertion) (*Table, error) {
 	if err := o.checkSchema(reflect.TypeOf(false), assertions...); err != nil {
@@ -107,7 +123,11 @@ func (o *FilterOn) Bool(fn MatchBool, assertions ...SchemaAssertion) (*Table, er
 	matchRow := func(r Row) bool {
 		matchVals := make([]bool, len(o.cols))
 		for c, i := range matchColIndexes {
-			matchVals[i] = r.Values[c].value.(bool)
+			val := r.Values[c].value
+			if val == nil {
+				return false
+			}
+			matchVals[i] = val.(bool)
 		}
 		return fn(matchVals...)
 	}
@@ -118,34 +138,6 @@ func (o *FilterOn) Bool(fn MatchBool, assertions ...SchemaAssertion) (*Table, er
 // Bool matches the named column values as bool arguments.
 func (o *MustFilterOn) Bool(m MatchBool, assertions ...SchemaAssertion) *Table {
 	t, err := o.FilterOn.Bool(m, assertions...)
-	handle(err)
-	return t
-}
-
-// MatchInterface implements a filter on interface{} columns.
-type MatchInterface func(...interface{}) bool
-
-// Interface matches the named column values as interface{} arguments.
-// If given any SchemaAssertions, they are called now and may have side effects.
-func (o *FilterOn) Interface(fn MatchInterface, assertions ...SchemaAssertion) (*Table, error) {
-	if err := o.checkSchema(nil, assertions...); err != nil {
-		return nil, errors.Wrapf(err, "can't filter %+v with %+v", o.t, fn)
-	}
-	matchColIndexes := o.matchColIndexes()
-	matchRow := func(r Row) bool {
-		matchVals := make([]interface{}, len(o.cols))
-		for c, i := range matchColIndexes {
-			matchVals[i] = r.Values[c].value.(interface{})
-		}
-		return fn(matchVals...)
-	}
-
-	return filterTable(matchRow, o.t), nil
-}
-
-// Interface matches the named column values as interface{} arguments.
-func (o *MustFilterOn) Interface(m MatchInterface, assertions ...SchemaAssertion) *Table {
-	t, err := o.FilterOn.Interface(m, assertions...)
 	handle(err)
 	return t
 }

@@ -203,6 +203,34 @@ func (m *filteredSeriesMeta) MaxSize() int {
 	}
 }
 
+// MatchInterface implements a filter on interface{} columns.  Note that this can receive nil values.
+type MatchInterface func(...interface{}) bool
+
+// Interface matches the named column values as interface{} arguments, inckuding nil.
+// If given any SchemaAssertions, they are called now and may have side effects.
+func (o *FilterOn) Interface(fn MatchInterface, assertions ...SchemaAssertion) (*Table, error) {
+	if err := o.checkSchema(nil, assertions...); err != nil {
+		return nil, errors.Wrapf(err, "can't filter %+v with %+v", o.t, fn)
+	}
+	matchColIndexes := o.matchColIndexes()
+	matchRow := func(r Row) bool {
+		matchVals := make([]interface{}, len(o.cols))
+		for c, i := range matchColIndexes {
+			matchVals[i] = r.Values[c].value
+		}
+		return fn(matchVals...)
+	}
+
+	return filterTable(matchRow, o.t), nil
+}
+
+// Interface matches the named column values as interface{} arguments.
+func (o *MustFilterOn) Interface(m MatchInterface, assertions ...SchemaAssertion) *Table {
+	t, err := o.FilterOn.Interface(m, assertions...)
+	handle(err)
+	return t
+}
+
 /*
  * concrete filters
  */
@@ -228,10 +256,15 @@ func (w *eq) CheckSchema(schema Schema) error {
 		return fmt.Errorf("Eq: %d column(s), to equal %d value(s) %+v", schema.Size(), len(w.expected), w.expected)
 	}
 	for i, c := range schema.Columns {
+		e := w.expected[i]
+		if e == nil {
+			continue
+		}
 		// convert to the column type
-		val := reflect.ValueOf(w.expected[i])
+		val := reflect.ValueOf(e)
+
 		if !val.Type().ConvertibleTo(c.Type) {
-			return fmt.Errorf("Eq: inconvertible type for %s: %+v to %+v", c.Name, val.Type(), c.Type)
+			return fmt.Errorf("Eq: inconvertible type for %s==%v: %+v to %+v", c.Name, e, val.Type(), c.Type)
 		}
 		w.converted[i] = val.Convert(c.Type).Interface()
 	}

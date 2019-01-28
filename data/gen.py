@@ -8,12 +8,6 @@ TYPE_SUPPORT = [
 	{'Raw':'bool', 'Type':'Bool', 'Zero':'false', 'ArrowType':'Boolean'},
 ]
 
-# additional types for reflection-based ops
-TYPE_REFLECT_SUPPORT = [
-	{'Raw':'interface{}', 'Type':'Interface'},
-]
-
-
 CUSTOM_COMPARE = ['string', 'bool']
 
 TPL = {}
@@ -155,22 +149,27 @@ import (
 /*
  * specializations for more efficient Filter operations
  */
-{% for t in env['TYPE_SUPPORT'] + env['TYPE_REFLECT_SUPPORT']   -%}
+{% for t in env['TYPE_SUPPORT'] -%}
 
 // Match{{ t['Type'] }} implements a filter on {{ t['Raw'] }} columns.
 type Match{{ t['Type'] }} func(...{{ t['Raw'] }}) bool
 
-// {{ t['Type'] }} matches the named column values as {{ t['Raw'] }} arguments.
+// {{ t['Type'] }} matches the named column values as {{ t['Raw'] }} arguments. 
+// If any column is nil the filter is automatically false.
 // If given any SchemaAssertions, they are called now and may have side effects.
 func (o *FilterOn) {{ t['Type'] }}(fn Match{{ t['Type'] }}, assertions ...SchemaAssertion) (*Table, error) {
-	if err := o.checkSchema({% if 'Zero' in t %}reflect.TypeOf({{ t['Zero'] }}){% else %}nil{% endif %}, assertions...); err != nil {
+	if err := o.checkSchema(reflect.TypeOf({{ t['Zero'] }}), assertions...); err != nil {
 		return nil, errors.Wrapf(err, "can't filter %+v with %+v", o.t, fn)
 	}
 	matchColIndexes := o.matchColIndexes()
 	matchRow := func(r Row) bool {
 		matchVals := make([]{{ t['Raw'] }}, len(o.cols))
 		for c, i := range matchColIndexes {
-			matchVals[i] = r.Values[c].value.({{ t['Raw'] }})
+			val := r.Values[c].value
+			if val == nil {
+				return false
+			}
+			matchVals[i] = val.({{ t['Raw'] }})
 		}
 		return fn(matchVals...)
 	}

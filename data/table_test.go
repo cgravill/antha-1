@@ -133,7 +133,7 @@ func testExtend(t *testing.T, makeSeries makeSeriesType) {
 }
 
 func TestEmpty(t *testing.T) {
-	empty := NewTable(nil)
+	empty := NewTable([]*Series{})
 	if empty.Size() != 0 {
 		t.Errorf("size")
 	}
@@ -238,6 +238,26 @@ func testFilter(t *testing.T, makeSeries makeSeriesType) {
 	assertEqual(t, filteredStatic, a.Slice(1, 3), "filter static")
 }
 
+func TestFilterNull(t *testing.T) {
+	withNull := NewTable([]*Series{
+		Must().NewArrowSeriesFromSlice("col1", []int64{0, 3}, []bool{false, true}),
+	})
+	filteredEq := withNull.Must().Filter().On("col1").Interface(Eq(3))
+	assertEqual(t, withNull.Slice(1, 2), filteredEq, "filter eq")
+
+	filteredEqNil := withNull.Must().Filter().On("col1").Interface(Eq(nil))
+	assertEqual(t, withNull.Slice(0, 1), filteredEqNil, "filter eq nil")
+
+	filteredStatic := withNull.Must().Filter().On("col1").Int64(func(v ...int64) bool {
+		return v[0] != 1
+	})
+	assertEqual(t, filteredStatic, withNull.Slice(1, 2), "filter static int64")
+	filteredStaticIface := withNull.Must().Filter().On("col1").Interface(func(v ...interface{}) bool {
+		return v[0] != 1
+	})
+	assertEqual(t, filteredStaticIface, withNull, "filter static interface{}")
+
+}
 func TestSize(t *testing.T) {
 	testSize(t, nativeSeries)
 	testSize(t, arrowSeries)
