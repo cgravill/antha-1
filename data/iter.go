@@ -31,6 +31,9 @@ type seriesIterCache struct {
 }
 
 func (c *seriesIterCache) Advance() bool {
+	if len(c.cache) == 0 {
+		return false
+	}
 	for _, sRead := range c.cache {
 		if !sRead.Next() {
 			return false

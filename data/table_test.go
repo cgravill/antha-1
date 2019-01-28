@@ -132,6 +132,18 @@ func testExtend(t *testing.T, makeSeries makeSeriesType) {
 	}), extendedConst.Must().Project("constant"), "extend const")
 }
 
+func TestEmpty(t *testing.T) {
+	empty := NewTable(nil)
+	if empty.Size() != 0 {
+		t.Errorf("size")
+	}
+	rows := empty.ToRows()
+	if len(rows.Data) != 0 {
+		t.Errorf("rows %+v", rows)
+	}
+
+}
+
 func TestConstantColumn(t *testing.T) {
 	tab := NewTable([]*Series{NewConstantSeries("a", 1)}).
 		Head(2)

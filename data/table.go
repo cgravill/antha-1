@@ -10,8 +10,7 @@ import (
 
 // Lazy data sets
 
-// Table is an immutable container of Series
-// It can optionally be keyed.
+// Table is an immutable container of Series.
 type Table struct {
 	series  []*Series
 	schema  Schema
@@ -20,8 +19,8 @@ type Table struct {
 	read func([]*Series) *tableIterator
 }
 
-// NewTable gives lowlevel access.
-// TODO if given bounded columns of known different sizes, then return error!
+// NewTable constructs a Table from the given Series.  If at least one of the
+// given Series is bounded, then the returned Table is bounded at that size.
 func NewTable(series []*Series) *Table {
 	return &Table{
 		series: series,
@@ -42,12 +41,12 @@ func newFromTable(t *Table, key ...ColumnKey) *Table {
 	}
 }
 
-// Schema returns the type information for the Table
+// Schema returns the type information for the Table.
 func (t *Table) Schema() Schema {
 	return t.schema
 }
 
-// SeriesByName returns series by its name
+// SeriesByName returns series by its name.
 func (t *Table) SeriesByName(col ColumnName) (*Series, error) {
 	if index, err := t.schema.ColIndex(col); err == nil {
 		return t.series[index], nil
@@ -207,15 +206,15 @@ func (t *Table) Cache() (*Table, error) {
 
 // DropNullColumns filters out columns with all/any row null
 // TODO
-func (t *Table) DropNullColumns(all bool) *Table {
-	return nil
-}
+// func (t *Table) DropNullColumns(all bool) *Table {
+// 	return nil
+// }
 
 // DropNull filters out rows with all/any col null
 // TODO
-func (t *Table) DropNull(all bool) *Table {
-	return nil
-}
+// func (t *Table) DropNull(all bool) *Table {
+// 	return nil
+// }
 
 // Project reorders and/or takes a subset of columns. On duplicate columns, only
 // the first so named is taken. Returns error, and nil table, if any column is
