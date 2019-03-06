@@ -3,11 +3,7 @@
 
     "Repositories": {
         "repos.antha.com/antha-ninja/elements-westeros": {
-<<<<<<< Updated upstream
-            "Directory": "/Users/matthewgregg/matthew/go/src/repos.antha.com/antha-ninja/elements-westeros",
-=======
             "Directory": "/Users/matthewgregg/go/src/repos.antha.com/antha-ninja/elements-westeros",
->>>>>>> Stashed changes
             "Branch": "matthew"
         }
     },
