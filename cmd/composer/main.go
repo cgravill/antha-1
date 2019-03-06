@@ -8,6 +8,7 @@ import (
 	"github.com/antha-lang/antha/composer"
 	"github.com/antha-lang/antha/logger"
 	"github.com/antha-lang/antha/workflow"
+	"github.com/antha-lang/antha/workflow/v1point2"
 )
 
 func main() {
@@ -18,16 +19,24 @@ func main() {
 	}
 
 	var outdir string
-	var keep, run, linkedDrivers bool
+	var keep, run, linkedDrivers, migrate bool
 	flag.StringVar(&outdir, "outdir", "", "Directory to write to (default: a temporary directory will be created)")
 	flag.BoolVar(&keep, "keep", false, "Keep build environment if compilation is successful")
 	flag.BoolVar(&run, "run", true, "Run the workflow if compilation is successful")
 	flag.BoolVar(&linkedDrivers, "linkedDrivers", false, "Compile workflow with linked-in drivers")
+	flag.BoolVar(&migrate, "migrate", false, "Migrate workflow to the current version")
 	flag.Parse()
 
 	logger := logger.NewLogger()
 
-	if rs, err := workflow.ReadersFromPaths(flag.Args()); err != nil {
+	if migrate {
+		// MTG - To refactor when working.
+		if rs, err := workflow.ReadersFromPaths(flag.Args()); err != nil {
+			logger.Fatal(err)
+		} else if _, err := v1point2.MigrateFromReaders(rs...); err != nil {
+			logger.Fatal(err)
+		}
+	} else if rs, err := workflow.ReadersFromPaths(flag.Args()); err != nil {
 		logger.Fatal(err)
 	} else if wf, err := workflow.WorkflowFromReaders(rs...); err != nil {
 		logger.Fatal(err)
