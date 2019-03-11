@@ -2,10 +2,12 @@ package v1point2
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/antha-lang/antha/antha/anthalib/wtype"
 	"github.com/antha-lang/antha/microArch/driver/liquidhandling"
+	"github.com/antha-lang/antha/workflow"
 )
 
 type Workflow struct {
@@ -66,4 +68,23 @@ type MixTaskResult struct {
 	Instructions liquidhandling.SetOfRobotInstructions
 	Outputs      map[string]*wtype.Plate
 	TimeEstimate time.Duration
+}
+
+func (wf *Workflow) MigratedElement(name string) (*workflow.ElementInstance, error) {
+	ei := &workflow.ElementInstance{}
+	meta := &json.RawMessage{}
+
+	if v, pr := wf.Processes[name]; !pr {
+		return nil, errors.New("element instance " + name + " not present")
+	} else {
+		ei.ElementTypeName = workflow.ElementTypeName(v.Component)
+		if enc, err := json.Marshal(v.Metadata); err != nil {
+			return nil, err
+		} else if err := meta.UnmarshalJSON(enc); err != nil {
+			return nil, err
+		} else {
+			ei.Meta = *meta
+		}
+		return ei, nil
+	}
 }
