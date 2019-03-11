@@ -7,7 +7,7 @@
         "GilsonPipetMax": {
             "Devices": {
                 "Gillian": {
-                    "Connection": "file:///Users/matthewgregg/go/src/github.com/Synthace/PipetMaxDriver/server/server",
+                    "Connection": "file:///home/matthew/src/Go_external_1.11/src/github.com/Synthace/PipetMaxDriver/server/server",
                     "InputPlateTypes": ["pcrplate_skirted"]
                 }
             }
