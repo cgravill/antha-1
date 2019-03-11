@@ -33,3 +33,13 @@ func ReadersFromPaths(paths []string) ([]io.ReadCloser, error) {
 
 	return rs, nil
 }
+
+func ReaderFromPath(path string) (io.ReadCloser, error) {
+	if path == "" {
+		return os.Stdin, nil
+	} else if fh, err := os.Open(path); err != nil {
+		return nil, err
+	} else {
+		return fh, nil
+	}
+}
