@@ -14,7 +14,7 @@ func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n", os.Args[0])
 		flag.PrintDefaults()
-		fmt.Fprintf(flag.CommandLine.Output(), "All further args are interpreted as paths to workflows to be merged and composed. Use - to read a workflow from stdin.\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "All further args are interpreted as paths to up to date workflows to be merged and used as a basis for the upgrade.\n")
 	}
 
 	var from, outfile string
@@ -26,7 +26,11 @@ func main() {
 
 	if source, err := workflow.ReaderFromPath(from); err != nil {
 		logger.Fatal(err)
-	} else if _, err := v1point2.MigrateWorkflow(logger, flag.Args(), source, outfile); err != nil {
+	} else if m, err := v1point2.NewMigrater(logger, flag.Args(), source); err != nil {
 		logger.Fatal(err)
+	} else if err := m.MigrateAll(); err != nil {
+		logger.Fatal(err)
+	} else {
+		m.WriteTo(outfile)
 	}
 }
