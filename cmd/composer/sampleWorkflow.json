@@ -3,7 +3,7 @@
 
     "Repositories": {
         "repos.antha.com/antha-ninja/elements-westeros": {
-            "Directory": "/Users/matthewgregg/go/src/repos.antha.com/antha-ninja/elements-westeros",
+            "Directory": "/home/matthew/src/Go_external_1.11/src/repos.antha.com/antha-ninja/elements-westeros",
             "Branch": "matthew"
         }
     },
@@ -24,8 +24,8 @@
                     "y": 256
                 },
                 "Parameters": {
-                    "ParamFileA": {"Path": "/Users/matthewgregg/tmp/anthafoobar/inputs/fileA.txt"},
-                    "ParamFileB": {"Path": "/Users/matthewgregg/tmp/anthafoobar/inputs/fileB.txt"},
+                    "ParamFileA": {"Path": "/tmp/anthafoobar/inputs/fileA.txt"},
+                    "ParamFileB": {"Path": "/tmp/anthafoobar/inputs/fileB.txt"},
                     "ParamFilename": "myfilename",
                     "ParamFileSlice": []
                 }
