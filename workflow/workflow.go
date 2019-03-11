@@ -42,11 +42,7 @@ func WorkflowFromReaders(rs ...io.ReadCloser) (*Workflow, error) {
 			return nil, err
 		}
 	}
-	if err := acc.validate(); err != nil {
-		return nil, err
-	} else {
-		return acc, nil
-	}
+	return acc, nil
 }
 
 func (wf *Workflow) WriteToFile(p string) error {
@@ -54,6 +50,15 @@ func (wf *Workflow) WriteToFile(p string) error {
 		return err
 	} else {
 		return ioutil.WriteFile(p, bs, 0400)
+	}
+}
+
+func (wf *Workflow) WriteTo(o io.WriteCloser) (int, error) {
+	defer o.Close()
+	if bs, err := json.Marshal(wf); err != nil {
+		return 0, err
+	} else {
+		return o.Write(bs)
 	}
 }
 
