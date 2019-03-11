@@ -35,6 +35,21 @@ func NewMigrater(logger *logger.Logger, merges []string, migrate io.ReadCloser) 
 func (m *Migrater) MigrateAll() error {
 	if err := m.migrateParameters(); err != nil {
 		return err
+	} else if err := m.migrateElements(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Migrater) migrateElements() error {
+	for k := range m.OldWorkflow.Processes {
+		name := workflow.ElementInstanceName(k)
+		if ei, err := m.OldWorkflow.MigratedElement(k); err != nil {
+			return err
+		} else {
+			m.BaseWorkflow.Elements.Instances[name] = ei
+		}
 	}
 
 	return nil
