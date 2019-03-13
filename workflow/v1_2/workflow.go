@@ -1,4 +1,4 @@
-package v1point2
+package v1_2
 
 import (
 	"encoding/json"
@@ -70,6 +70,20 @@ type MixTaskResult struct {
 	TimeEstimate time.Duration
 }
 
+func (wf *Workflow) MigratedElementParameters(name string) (*workflow.ElementParameterSet, error) {
+	if v, pr := wf.Parameters[name]; !pr {
+		return nil, errors.New("parameters not present for element" + name)
+	} else {
+		pset := workflow.ElementParameterSet(make(map[workflow.ElementParameterName]json.RawMessage))
+
+		for pname, pval := range v {
+			epname := workflow.ElementParameterName(pname)
+			pset[epname] = pval
+		}
+		return &pset, nil
+	}
+}
+
 func (wf *Workflow) MigratedElement(name string) (*workflow.ElementInstance, error) {
 	ei := &workflow.ElementInstance{}
 	meta := &json.RawMessage{}
@@ -82,8 +96,11 @@ func (wf *Workflow) MigratedElement(name string) (*workflow.ElementInstance, err
 			return nil, err
 		} else if err := meta.UnmarshalJSON(enc); err != nil {
 			return nil, err
+		} else if params, err := wf.MigratedElementParameters(name); err != nil {
+			return nil, err
 		} else {
 			ei.Meta = *meta
+			ei.Parameters = *params
 		}
 		return ei, nil
 	}

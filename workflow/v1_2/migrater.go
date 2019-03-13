@@ -1,4 +1,4 @@
-package v1point2
+package v1_2
 
 import (
 	"encoding/json"
