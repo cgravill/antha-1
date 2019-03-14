@@ -42,7 +42,12 @@ func WorkflowFromReaders(rs ...io.ReadCloser) (*Workflow, error) {
 			return nil, err
 		}
 	}
-	return acc, nil
+
+	if err := acc.validate(); err != nil {
+		return nil, err
+	} else {
+		return acc, nil
+	}
 }
 
 func (wf *Workflow) WriteToFile(p string) error {
