@@ -85,6 +85,12 @@ func (m *Meta) UnmarshalJSON(bs []byte) error {
 	return nil
 }
 
+func (m *Meta) InitEmpty() {
+	if m.Rest == nil {
+		m.Rest = make(map[string]interface{})
+	}
+}
+
 func (m *Meta) MarshalJSON() ([]byte, error) {
 	all := make(map[string]interface{}, len(m.Rest)+1)
 	for key, val := range m.Rest {

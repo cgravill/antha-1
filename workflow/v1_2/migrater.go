@@ -6,13 +6,14 @@ import (
 	"os"
 
 	"github.com/antha-lang/antha/logger"
+	"github.com/antha-lang/antha/utils"
 	"github.com/antha-lang/antha/workflow"
 )
 
 type Migrater struct {
-	Logger       *logger.Logger
-	BaseWorkflow *workflow.Workflow
-	OldWorkflow  *Workflow
+	Logger      *logger.Logger
+	Cur         *workflow.Workflow
+	OldWorkflow *workflowv1_2
 }
 
 // NewMigrater creates a new migration object
@@ -24,56 +25,49 @@ func NewMigrater(logger *logger.Logger, merges []string, migrate io.ReadCloser) 
 		return nil, err
 	} else {
 		return &Migrater{
-			Logger:       logger,
-			BaseWorkflow: wf,
-			OldWorkflow:  owf,
+			Logger:      logger,
+			Cur:         wf,
+			OldWorkflow: owf,
 		}, nil
 	}
 }
 
 // MigrateAll perform all migration steps
 func (m *Migrater) MigrateAll() error {
-	if err := m.migrateParameters(); err != nil {
-		return err
-	} else if err := m.migrateElements(); err != nil {
-		return err
-	}
+	return utils.ErrorSlice{
+		m.migrateParameters(),
+		m.migrateElements(),
+	}.Pack()
 
-	return nil
 }
 
 func (m *Migrater) migrateElements() error {
 	for k := range m.OldWorkflow.Processes {
 		name := workflow.ElementInstanceName(k)
-		if ei, err := m.OldWorkflow.MigratedElement(k); err != nil {
+		ei, err := m.OldWorkflow.MigrateElement(k)
+		if err != nil {
 			return err
-		} else {
-			m.BaseWorkflow.Elements.Instances[name] = ei
 		}
+		m.Cur.Elements.Instances[name] = ei
+
 	}
 
 	return nil
 }
 
 func (m *Migrater) migrateParameters() error {
-	m.BaseWorkflow.JobId = workflow.JobId(m.OldWorkflow.Properties.Name)
-
-	if m.BaseWorkflow.Meta.Rest == nil {
-		m.BaseWorkflow.Meta.Rest = make(map[string]interface{})
-	}
-
-	m.BaseWorkflow.Meta.Rest["Description"] = m.OldWorkflow.Properties.Description
-
+	m.Cur.JobId = workflow.JobId(m.OldWorkflow.Properties.Name)
+	m.Cur.Meta.InitEmpty()
+	m.Cur.Meta.Rest["Description"] = m.OldWorkflow.Properties.Description
 	return nil
 }
 
-func (m *Migrater) WriteTo(target string) error {
-	if target == "" {
-		_, err := m.BaseWorkflow.WriteTo(os.Stdout)
+func (m *Migrater) WriteToPath(target string) error {
+	if target == "" || target == "-" {
+		_, err := m.Cur.WriteTo(os.Stdout)
 		return err
-	} else {
-		return m.BaseWorkflow.WriteToFile(target)
 	}
+	return m.Cur.WriteToFile(target)
 }
 
 func baseWorkflow(paths []string) (*workflow.Workflow, error) {
@@ -81,22 +75,21 @@ func baseWorkflow(paths []string) (*workflow.Workflow, error) {
 		return &workflow.Workflow{}, nil
 	}
 
-	if rs, err := workflow.ReadersFromPaths(paths); err != nil {
+	rs, err := workflow.ReadersFromPaths(paths)
+
+	if err != nil {
 		return nil, err
-	} else if wf, err := workflow.PartialWorkflowFromReaders(rs...); err != nil {
-		return nil, err
-	} else {
-		return wf, nil
 	}
+
+	return workflow.WorkflowFromReaders(rs...)
 }
 
-func readWorkflow(r io.ReadCloser) (*Workflow, error) {
+func readWorkflow(r io.ReadCloser) (*workflowv1_2, error) {
 	defer r.Close()
-	wf := &Workflow{}
+	wf := &workflowv1_2{}
 	dec := json.NewDecoder(r)
 	if err := dec.Decode(wf); err != nil {
 		return nil, err
-	} else {
-		return wf, nil
 	}
+	return wf, nil
 }

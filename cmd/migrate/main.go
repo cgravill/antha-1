@@ -7,7 +7,7 @@ import (
 
 	"github.com/antha-lang/antha/logger"
 	"github.com/antha-lang/antha/workflow"
-	"github.com/antha-lang/antha/workflow/v1point2"
+	"github.com/antha-lang/antha/workflow/v1_2"
 )
 
 func main() {
@@ -26,7 +26,7 @@ func main() {
 
 	if source, err := workflow.ReaderFromPath(fromFile); err != nil {
 		logger.Fatal(err)
-	} else if m, err := v1point2.NewMigrater(logger, flag.Args(), source); err != nil {
+	} else if m, err := v1_2.NewMigrater(logger, flag.Args(), source); err != nil {
 		logger.Fatal(err)
 	} else if err := m.MigrateAll(); err != nil {
 		logger.Fatal(err)

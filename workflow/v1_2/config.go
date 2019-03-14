@@ -2,7 +2,7 @@ package v1_2
 
 import "github.com/antha-lang/antha/antha/anthalib/wtype"
 
-type Opt struct {
+type opt struct {
 	MaxPlates            *float64 `json:"maxPlates,omitempty"`
 	MaxWells             *float64 `json:"maxWells,omitempty"`
 	ResidualVolumeWeight *float64 `json:"residualVolumeWeight,omitempty"`
