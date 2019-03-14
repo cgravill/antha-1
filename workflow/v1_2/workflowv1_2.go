@@ -86,7 +86,6 @@ func (wf *workflowv1_2) MigrateElementParameters(name string) (*workflow.Element
 
 func (wf *workflowv1_2) MigrateElement(name string) (*workflow.ElementInstance, error) {
 	ei := &workflow.ElementInstance{}
-	meta := &json.RawMessage{}
 
 	v, pr := wf.Processes[name]
 	if !pr {
@@ -94,17 +93,16 @@ func (wf *workflowv1_2) MigrateElement(name string) (*workflow.ElementInstance, 
 	}
 
 	ei.ElementTypeName = workflow.ElementTypeName(v.Component)
-	if enc, err := json.Marshal(v.Metadata); err != nil {
+	enc, err := json.Marshal(v.Metadata)
+	if err != nil {
 		return nil, err
-	} else {
-		ei.Meta = json.RawMessage(enc)
 	}
+	ei.Meta = json.RawMessage(enc)
 
-	if params, err := wf.MigrateElementParameters(name); err != nil {
+	params, err := wf.MigrateElementParameters(name)
+	if err != nil {
 		return nil, err
-	} else {
-		ei.Meta = *meta
-		ei.Parameters = *params
 	}
+	ei.Parameters = *params
 	return ei, nil
 }

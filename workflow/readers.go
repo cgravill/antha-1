@@ -37,7 +37,7 @@ func ReadersFromPaths(paths []string) ([]io.ReadCloser, error) {
 func ReaderFromPath(path string) (io.ReadCloser, error) {
 	if path == "" || path == "-" {
 		return os.Stdin, nil
-	} else {
-		return os.Open(path)
 	}
+
+	return os.Open(path)
 }

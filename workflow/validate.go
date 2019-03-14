@@ -12,7 +12,7 @@ import (
 	"github.com/antha-lang/antha/utils"
 )
 
-func (wf *Workflow) validate() error {
+func (wf *Workflow) Validate() error {
 	if wf.JobId == "" {
 		return errors.New("Validation error: Workflow has empty JobId")
 	} else {

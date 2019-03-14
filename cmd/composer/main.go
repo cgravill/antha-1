@@ -31,6 +31,8 @@ func main() {
 		logger.Fatal(err)
 	} else if wf, err := workflow.WorkflowFromReaders(rs...); err != nil {
 		logger.Fatal(err)
+	} else if err := wf.Validate(); err != nil {
+		logger.Fatal(err)
 	} else if comp, err := composer.NewComposer(logger, wf, outdir, keep, run, linkedDrivers); err != nil {
 		logger.Fatal(err)
 	} else if err := comp.FindWorkflowElementTypes(); err != nil {

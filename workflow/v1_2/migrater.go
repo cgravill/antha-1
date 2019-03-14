@@ -11,9 +11,9 @@ import (
 )
 
 type Migrater struct {
-	Logger      *logger.Logger
-	Cur         *workflow.Workflow
-	OldWorkflow *workflowv1_2
+	Logger *logger.Logger
+	Cur    *workflow.Workflow
+	Old    *workflowv1_2
 }
 
 // NewMigrater creates a new migration object
@@ -25,9 +25,9 @@ func NewMigrater(logger *logger.Logger, merges []string, migrate io.ReadCloser) 
 		return nil, err
 	} else {
 		return &Migrater{
-			Logger:      logger,
-			Cur:         wf,
-			OldWorkflow: owf,
+			Logger: logger,
+			Cur:    wf,
+			Old:    owf,
 		}, nil
 	}
 }
@@ -38,13 +38,12 @@ func (m *Migrater) MigrateAll() error {
 		m.migrateParameters(),
 		m.migrateElements(),
 	}.Pack()
-
 }
 
 func (m *Migrater) migrateElements() error {
-	for k := range m.OldWorkflow.Processes {
+	for k := range m.Old.Processes {
 		name := workflow.ElementInstanceName(k)
-		ei, err := m.OldWorkflow.MigrateElement(k)
+		ei, err := m.Old.MigrateElement(k)
 		if err != nil {
 			return err
 		}
@@ -55,9 +54,9 @@ func (m *Migrater) migrateElements() error {
 }
 
 func (m *Migrater) migrateParameters() error {
-	m.Cur.JobId = workflow.JobId(m.OldWorkflow.Properties.Name)
+	m.Cur.JobId = workflow.JobId(m.Old.Properties.Name)
 	m.Cur.Meta.InitEmpty()
-	m.Cur.Meta.Rest["Description"] = m.OldWorkflow.Properties.Description
+	m.Cur.Meta.Rest["Description"] = m.Old.Properties.Description
 	return nil
 }
 

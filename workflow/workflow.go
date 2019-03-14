@@ -43,11 +43,7 @@ func WorkflowFromReaders(rs ...io.ReadCloser) (*Workflow, error) {
 		}
 	}
 
-	if err := acc.validate(); err != nil {
-		return nil, err
-	} else {
-		return acc, nil
-	}
+	return acc, nil
 }
 
 func (wf *Workflow) WriteToFile(p string) error {
