@@ -70,7 +70,7 @@ type mixTaskResult struct {
 	TimeEstimate time.Duration
 }
 
-func (wf *workflowv1_2) MigratedElementParameters(name string) (*workflow.ElementParameterSet, error) {
+func (wf *workflowv1_2) MigrateElementParameters(name string) (*workflow.ElementParameterSet, error) {
 	v, pr := wf.Parameters[name]
 	if !pr {
 		return nil, errors.New("parameters not present for element" + name)
@@ -92,12 +92,15 @@ func (wf *workflowv1_2) MigrateElement(name string) (*workflow.ElementInstance, 
 	if !pr {
 		return nil, errors.New("element instance " + name + " not present")
 	}
+
 	ei.ElementTypeName = workflow.ElementTypeName(v.Component)
 	if enc, err := json.Marshal(v.Metadata); err != nil {
 		return nil, err
-	} else if err := meta.UnmarshalJSON(enc); err != nil {
-		return nil, err
-	} else if params, err := wf.MigratedElementParameters(name); err != nil {
+	} else {
+		ei.Meta = json.RawMessage(enc)
+	}
+
+	if params, err := wf.MigrateElementParameters(name); err != nil {
 		return nil, err
 	} else {
 		ei.Meta = *meta

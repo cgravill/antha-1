@@ -53,13 +53,10 @@ func (wf *Workflow) WriteToFile(p string) error {
 	}
 }
 
-func (wf *Workflow) WriteTo(o io.WriteCloser) (int, error) {
-	defer o.Close()
-	if bs, err := json.Marshal(wf); err != nil {
-		return 0, err
-	} else {
-		return o.Write(bs)
-	}
+func (wf *Workflow) WriteToStream(w io.WriteCloser) error {
+	defer w.Close()
+	enc := json.NewEncoder(w)
+	return enc.Encode(wf)
 }
 
 type Meta struct {

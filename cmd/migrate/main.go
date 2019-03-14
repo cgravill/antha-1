@@ -31,6 +31,6 @@ func main() {
 	} else if err := m.MigrateAll(); err != nil {
 		logger.Fatal(err)
 	} else {
-		m.WriteTo(toFile)
+		m.WriteToPath(toFile)
 	}
 }

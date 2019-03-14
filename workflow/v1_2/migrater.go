@@ -49,7 +49,6 @@ func (m *Migrater) migrateElements() error {
 			return err
 		}
 		m.Cur.Elements.Instances[name] = ei
-
 	}
 
 	return nil
@@ -64,8 +63,7 @@ func (m *Migrater) migrateParameters() error {
 
 func (m *Migrater) WriteToPath(target string) error {
 	if target == "" || target == "-" {
-		_, err := m.Cur.WriteTo(os.Stdout)
-		return err
+		return m.Cur.WriteToStream(os.Stdout)
 	}
 	return m.Cur.WriteToFile(target)
 }
