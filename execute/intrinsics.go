@@ -86,31 +86,40 @@ func Incubate(lab *laboratory.Laboratory, in *wtype.Liquid, opt IncubateOpt) *wt
 // in future this should generate handles as side-effects
 
 type mixerPromptOpts struct {
-	Component   *wtype.Liquid
-	ComponentIn *wtype.Liquid
-	Message     string
+	Components   []*wtype.Liquid
+	ComponentsIn []*wtype.Liquid
+	Message      string
+}
+
+func newCompsFromComps(lab *laboratory.Laboratory, in []*wtype.Liquid) []*wtype.Liquid {
+	r := []*wtype.Liquid{}
+
+	for _, c := range in {
+		r = append(r, newCompFromComp(lab, c))
+	}
+
+	return r
 }
 
 // MixerPrompt prompts user with a message during mixer execution
-func MixerPrompt(lab *laboratory.Laboratory, in *wtype.Liquid, message string) *wtype.Liquid {
+func MixerPrompt(lab *laboratory.Laboratory, message string, in ...*wtype.Liquid) []*wtype.Liquid {
 	inst := mixerPrompt(lab,
 		mixerPromptOpts{
-			Component:   newCompFromComp(lab, in),
-			ComponentIn: in,
-			Message:     message,
+			Components:   newCompsFromComps(lab, in),
+			ComponentsIn: in,
+			Message:      message,
 		},
 	)
 	lab.Trace.Issue(inst)
-	return inst.Result[0]
+	return inst.Result
 }
 
 // ExecuteMixes will ensure that all mix activities
 // in a workflow prior to this point must be completed before Mix instructions after this point.
-func ExecuteMixes(lab *laboratory.Laboratory, liquid *wtype.LHComponent) *wtype.LHComponent {
-	return MixerPrompt(lab, liquid, wtype.MAGICBARRIERPROMPTSTRING)
+func ExecuteMixes(lab *laboratory.Laboratory, liquids ...*wtype.LHComponent) []*wtype.LHComponent {
+	return MixerPrompt(lab, wtype.MAGICBARRIERPROMPTSTRING, liquids...)
 }
 
-// Prompt prompts user with a message
 func Prompt(lab *laboratory.Laboratory, in *wtype.Liquid, message string) *wtype.Liquid {
 	inst := &instructions.CommandInst{
 		Args:   []*wtype.Liquid{in},
@@ -133,15 +142,17 @@ func Prompt(lab *laboratory.Laboratory, in *wtype.Liquid, message string) *wtype
 
 func mixerPrompt(lab *laboratory.Laboratory, opts mixerPromptOpts) *instructions.CommandInst {
 	inst := wtype.NewLHPromptInstruction(lab.IDGenerator)
-	inst.SetGeneration(opts.ComponentIn.Generation())
+	inst.SetGeneration(opts.ComponentsIn[0].Generation())
 	inst.Message = opts.Message
-	inst.AddOutput(opts.Component)
-	inst.AddInput(opts.ComponentIn)
-	inst.PassThrough[opts.ComponentIn.ID] = opts.Component
+	for i := 0; i < len(opts.Components); i++ {
+		inst.AddOutput(opts.Components[i])
+		inst.AddInput(opts.ComponentsIn[i])
+		inst.PassThrough[opts.ComponentsIn[i].ID] = opts.Components[i]
+	}
 
 	return &instructions.CommandInst{
-		Args:   []*wtype.Liquid{opts.ComponentIn},
-		Result: []*wtype.Liquid{opts.Component},
+		Args:   opts.ComponentsIn,
+		Result: opts.Components,
 		Command: &instructions.Command{
 			Inst: inst,
 			Request: instructions.Request{
