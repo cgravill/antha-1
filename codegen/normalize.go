@@ -2,7 +2,6 @@ package codegen
 
 import (
 	"fmt"
-
 	"github.com/antha-lang/antha/graph"
 	"github.com/antha-lang/antha/instructions"
 )
@@ -43,7 +42,9 @@ func makeRoot(nodes []instructions.Node) (instructions.Node, error) {
 
 	// If some nodes are not reachable from roots, there must be a cycle
 	if len(seen) != g.NumNodes() {
-		return nil, fmt.Errorf("cycle containing %T", someNode(g, seen))
+		n := someNode(g, seen)
+
+		return nil, fmt.Errorf("cycle containing %T - %v", n, n)
 	}
 
 	ret := &instructions.Bundle{}

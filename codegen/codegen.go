@@ -419,11 +419,11 @@ func Compile(labEffects *effects.LaboratoryEffects, dir string, t *target.Target
 
 	root, err := makeRoot(roots)
 	if err != nil {
-		return nil, fmt.Errorf("invalid program: %s", err)
+		return nil, fmt.Errorf("1: invalid program: %s", err)
 	}
 	ir, err := build(root)
 	if err != nil {
-		return nil, fmt.Errorf("invalid program: %s", err)
+		return nil, fmt.Errorf("2: invalid program: %s", err)
 	}
 	if err := ir.assignDevices(t); err != nil {
 		return nil, fmt.Errorf("error assigning devices with target configuration %s: %s", t, err)
