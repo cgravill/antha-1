@@ -37,7 +37,7 @@ type IncubateOpt struct {
 	PreShakeRadius wunit.Length
 }
 
-func newCompFromComp(lab *laboratory.Laboratory, in *wtype.Liquid) *wtype.Liquid {
+func updateLiquidID(lab *laboratory.Laboratory, in *wtype.Liquid) *wtype.Liquid {
 	comp := in.Dup(lab.IDGenerator)
 	comp.ID = lab.IDGenerator.NextID()
 	comp.BlockID = wtype.NewBlockID(string(lab.Workflow.SimulationId))
@@ -65,7 +65,7 @@ func Incubate(lab *laboratory.Laboratory, in *wtype.Liquid, opt IncubateOpt) *wt
 
 	inst := &instructions.CommandInst{
 		Args:   []*wtype.Liquid{in},
-		Result: []*wtype.Liquid{newCompFromComp(lab, in)},
+		Result: []*wtype.Liquid{updateLiquidID(lab, in)},
 		Command: &instructions.Command{
 			Inst: innerInst,
 			Request: instructions.Request{
@@ -90,11 +90,11 @@ type mixerPromptOpts struct {
 	Message      string
 }
 
-func newCompsFromComps(lab *laboratory.Laboratory, in []*wtype.Liquid) []*wtype.Liquid {
+func updateLiquidIDs(lab *laboratory.Laboratory, in []*wtype.Liquid) []*wtype.Liquid {
 	r := []*wtype.Liquid{}
 
 	for _, c := range in {
-		r = append(r, newCompFromComp(lab, c))
+		r = append(r, updateLiquidID(lab, c))
 	}
 
 	return r
@@ -104,13 +104,28 @@ func newCompsFromComps(lab *laboratory.Laboratory, in []*wtype.Liquid) []*wtype.
 func MixerPrompt(lab *laboratory.Laboratory, message string, in ...*wtype.Liquid) []*wtype.Liquid {
 	inst := mixerPrompt(lab,
 		mixerPromptOpts{
-			Components:   newCompsFromComps(lab, in),
+			Components:   updateLiquidIDs(lab, in),
 			ComponentsIn: in,
 			Message:      message,
 		},
 	)
 	lab.Trace.Issue(inst)
 	return inst.Result
+}
+
+// MixerWait prompts user with a message during mixer execution and waits for the specifed time before resuming.
+func MixerWait(ctx context.Context, time wunit.Time, message string, in ...*wtype.Liquid) []*wtype.Liquid {
+	inst := mixerPrompt(ctx,
+		mixerPromptOpts{
+			Components:   updateLiquidIDs(ctx, in),
+			ComponentsIn: in,
+			Message:      message,
+			WaitTime:     time,
+		},
+	)
+
+	Issue(ctx, inst)
+	return inst.result
 }
 
 // ExecuteMixes will ensure that all mix activities
@@ -122,7 +137,7 @@ func ExecuteMixes(lab *laboratory.Laboratory, liquids ...*wtype.LHComponent) []*
 func Prompt(lab *laboratory.Laboratory, in *wtype.Liquid, message string) *wtype.Liquid {
 	inst := &instructions.CommandInst{
 		Args:   []*wtype.Liquid{in},
-		Result: []*wtype.Liquid{newCompFromComp(lab, in)},
+		Result: []*wtype.Liquid{updateLiquidID(lab, in)},
 		Command: &instructions.Command{
 			Inst: &instructions.PromptInst{
 				Message: message,
@@ -173,7 +188,7 @@ func readPlate(lab *laboratory.Laboratory, opts PlateReadOpts) *instructions.Com
 	inst.ComponentIn = opts.Sample
 
 	// Clone the component to represent the result of the AbsorbanceRead
-	inst.ComponentOut = newCompFromComp(lab, opts.Sample)
+	inst.ComponentOut = updateLiquidID(lab, opts.Sample)
 	inst.Options = opts.Options
 
 	return &instructions.CommandInst{
@@ -215,7 +230,7 @@ func runQPCR(lab *laboratory.Laboratory, opts QPCROptions, command string) *inst
 	inst.ComponentOut = []*wtype.Liquid{}
 
 	for _, r := range inst.ComponentIn {
-		inst.ComponentOut = append(inst.ComponentOut, newCompFromComp(lab, r))
+		inst.ComponentOut = append(inst.ComponentOut, updateLiquidID(lab, r))
 	}
 
 	return &instructions.CommandInst{
