@@ -146,9 +146,6 @@ func mixerPrompt(lab *laboratory.Laboratory, opts mixerPromptOpts) *instructions
 	for i := 0; i < len(opts.Components); i++ {
 		inst.AddOutput(opts.Components[i])
 		inst.AddInput(opts.ComponentsIn[i])
-		inst.PassThrough[opts.ComponentsIn[i].ID] = opts.Components[i]
-
-		fmt.Println("IN: ", opts.ComponentsIn[i], " OUT: ", opts.Components[i], " SAME? ", opts.ComponentsIn[i].ID == opts.Components[i].ID)
 	}
 
 	return &instructions.CommandInst{

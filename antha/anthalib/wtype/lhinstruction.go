@@ -49,7 +49,7 @@ type LHInstruction struct {
 	PlateName        string
 	OutPlate         *Plate
 	Message          string
-	PassThrough      map[string]*Liquid // 1:1 pass through, only applies to prompts
+	WaitTime         time.Duration
 }
 
 func (ins LHInstruction) String() string {
@@ -109,7 +109,6 @@ func newLHInstruction(idGen *id.IDGenerator) *LHInstruction {
 	var lhi LHInstruction
 	lhi.ID = idGen.NextID()
 	lhi.Majorlayoutgroup = -1
-	lhi.PassThrough = make(map[string]*Liquid, 1)
 	return &lhi
 }
 
