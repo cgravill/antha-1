@@ -93,7 +93,12 @@ func (p *Provider) migrateElementParameters(fm *effects.FileManager, process *pr
 			if len(ref) == 0 {
 				return pset, fmt.Errorf("Param %v has no data and no reference", param.GetName())
 			}
-			// TODO: do something with ref. But what??
+			// TODO: do something with ref. But what? Looks like it could be a datarepo: URL
+			// (https://github.com/Synthace/antha-runner/search?q=Param_Reference&unscoped_q=Param_Reference)
+			// - but that code path no longer exists in the feature/future_sanity world.
+			//
+			// 1. Is that use case still valid?
+			// 2. Are there any other use cases for reference params?
 		}
 	}
 
