@@ -184,9 +184,19 @@ func (p *Provider) GetElements() (workflow.Elements, error) {
 	}, nil
 }
 
+func translatePlateTypes(plateTypes []*inventorypb.PlateType) wtype.PlateTypes {
+	result := wtype.PlateTypes{}
+
+	// TODO: translate from one plate type format to the other. Not trivial from
+	// what I can see.
+
+	return result
+}
+
 func (p *Provider) GetInventory() (workflow.Inventory, error) {
-	// TODO: implement
-	return workflow.Inventory{}, nil
+	return workflow.Inventory{
+		PlateTypes: translatePlateTypes(p.pb.GetPlateTypes()),
+	}, nil
 }
 
 func translatePlates(plates []*inventorypb.Plate) []*wtype.Plate {
@@ -292,6 +302,6 @@ func (p *Provider) GetConfig() (workflow.Config, error) {
 }
 
 func (p *Provider) GetTesting() (workflow.Testing, error) {
-	// TODO: implement
+	// No-op for this provider type, it doesn't model test results
 	return workflow.Testing{}, nil
 }
