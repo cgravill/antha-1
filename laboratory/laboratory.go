@@ -42,18 +42,23 @@ type LaboratoryBuilder struct {
 	outDir   string
 	Workflow *workflow.Workflow
 
-	// elemLock must be taken to access/mutate elemsUnrun and elements fields
+	// elemLock must be taken to access/mutate elemsRunning and elementToLab fields
 	elemLock      sync.Mutex
-	elemsUnrun    int64
+	elemsRunning  int
 	elementToLab  map[Element]*Laboratory
 	nextElementId uint64
 
 	// This lock is here to serialize access to errors (append and
-	// Pack()), and to avoid races around closing Errored chan
+	// Pack()), and to avoid races around closing errored chan
 	errLock sync.Mutex
 	errors  utils.ErrorSlice
-	Errored chan struct{}
+	// errored is closed as soon as an error is recorded. This can
+	// happen before Completed is closed.
+	errored chan struct{}
 
+	// Completed is closed when all the elements within the workflow
+	// have stopped (some may never have even started), regardless of
+	// whether any error occurred.
 	Completed chan struct{}
 
 	*lineMapManager
@@ -68,7 +73,7 @@ type LaboratoryBuilder struct {
 func EmptyLaboratoryBuilder() *LaboratoryBuilder {
 	labBuild := &LaboratoryBuilder{
 		elementToLab: make(map[Element]*Laboratory),
-		Errored:      make(chan struct{}),
+		errored:      make(chan struct{}),
 		Completed:    make(chan struct{}),
 
 		lineMapManager: NewLineMapManager(),
@@ -314,7 +319,6 @@ func (labBuild *LaboratoryBuilder) addElementLaboratory(e Element, lab *Laborato
 	labBuild.elemLock.Lock()
 	defer labBuild.elemLock.Unlock()
 	labBuild.elementToLab[e] = lab
-	labBuild.elemsUnrun++
 }
 
 func (labBuild *LaboratoryBuilder) AddConnection(src, dst Element, fun func()) error {
@@ -326,9 +330,11 @@ func (labBuild *LaboratoryBuilder) AddConnection(src, dst Element, fun func()) e
 		return fmt.Errorf("Unknown dst element: %v", dst)
 	} else {
 		labDst.addBlockedInput()
-		labSrc.addOnExit(func() {
-			fun()
-			labDst.inputReady()
+		labSrc.addOnExit(func(err error) {
+			if err == nil {
+				fun()
+				labDst.inputReady()
+			}
 		})
 		return nil
 	}
@@ -341,12 +347,14 @@ func (labBuild *LaboratoryBuilder) RunElements() {
 	}
 
 	labBuild.elemLock.Lock()
-	if labBuild.elemsUnrun == 0 {
+	labBuild.elemsRunning = len(labBuild.elementToLab)
+	if labBuild.elemsRunning == 0 {
 		labBuild.elemLock.Unlock()
 		close(labBuild.Completed)
 
 	} else {
 		for _, lab := range labBuild.elementToLab {
+			lab.addOnExit(labBuild.recordElementError)
 			lab.addOnExit(labBuild.elementCompleted)
 		}
 		for _, lab := range labBuild.elementToLab {
@@ -357,12 +365,24 @@ func (labBuild *LaboratoryBuilder) RunElements() {
 	}
 }
 
-func (labBuild *LaboratoryBuilder) elementCompleted() {
+// Our sole concern here is accounting of how many elements are still
+// unrun. So we totally ignore the error argument.
+func (labBuild *LaboratoryBuilder) elementCompleted(error) {
 	labBuild.elemLock.Lock()
 	defer labBuild.elemLock.Unlock()
-	labBuild.elemsUnrun--
-	if labBuild.elemsUnrun == 0 {
+	labBuild.elemsRunning--
+	if labBuild.elemsRunning == 0 {
 		close(labBuild.Completed)
+	}
+}
+
+// for top-level (i.e. workflow-defined) elements, if the element
+// produces an error then that error is fatal to the whole
+// workflow. It will have already been logged though so we don't need
+// to worry about that here.
+func (labBuild *LaboratoryBuilder) recordElementError(err error) {
+	if err != nil {
+		labBuild.RecordError(err, false)
 	}
 }
 
@@ -376,9 +396,9 @@ func (labBuild *LaboratoryBuilder) RecordError(err error, log bool) {
 	defer labBuild.errLock.Unlock()
 	labBuild.errors = append(labBuild.errors, err)
 	select { // we keep the lock here to avoid a race to close
-	case <-labBuild.Errored:
+	case <-labBuild.errored:
 	default:
-		close(labBuild.Errored)
+		close(labBuild.errored)
 	}
 }
 
@@ -386,7 +406,7 @@ func (labBuild *LaboratoryBuilder) RecordError(err error, log bool) {
 // does not block. Safe for concurrent use.
 func (labBuild *LaboratoryBuilder) Errors() error {
 	select {
-	case <-labBuild.Errored:
+	case <-labBuild.errored:
 		labBuild.errLock.Lock()
 		defer labBuild.errLock.Unlock()
 		return labBuild.errors.Pack()
@@ -413,7 +433,11 @@ type Laboratory struct {
 	// this gets closed when all inputs become ready
 	inputsReady chan struct{}
 	// funcs to run when this element is completed
-	onExit []func()
+	onExit []func(error)
+	// closed once the the element has started and then stopped
+	exited chan struct{}
+	// any error that was produced by the element itself
+	err error
 }
 
 func (labBuild *LaboratoryBuilder) makeLab(logger *logger.Logger, e Element) *Laboratory {
@@ -429,6 +453,7 @@ func (labBuild *LaboratoryBuilder) makeLab(logger *logger.Logger, e Element) *La
 		id:           id,
 		pendingCount: 1,
 		inputsReady:  make(chan struct{}),
+		exited:       make(chan struct{}),
 	}
 }
 
@@ -440,7 +465,9 @@ func (lab *Laboratory) InstallElement(e Element) {
 
 // CallSteps is only for use when you're in an element and want to
 // call another element. Note that in this case, only the Steps are
-// run.
+// run. Any error that the Steps of the element produces is logged and
+// returned. However, it is up to the calling element to determine
+// whether or not such an error is fatal to the workflow.
 func (lab *Laboratory) CallSteps(e Element) error {
 	// it should already be in the map because the element constructor
 	// will have called through to InstallElement which would have
@@ -452,24 +479,17 @@ func (lab *Laboratory) CallSteps(e Element) error {
 		return fmt.Errorf("CallSteps called on unknown element '%s'", e.Name())
 	}
 
-	finished := make(chan struct{})
-	eLab.addOnExit(func() { close(finished) })
+	lab.labBuild.elemsRunning++
 	eLab.addOnExit(lab.labBuild.elementCompleted)
 	lab.labBuild.elemLock.Unlock()
 
 	go eLab.run(eLab.element.Steps)
-	<-finished
+	<-eLab.exited
 
-	return lab.labBuild.Errors()
+	return eLab.err
 }
 
-func (lab *Laboratory) error(err error) {
-	lab.labBuild.RecordError(err, false)
-	lab.Logger.Log("error", err.Error())
-}
-
-func (lab *Laboratory) errorf(fmtStr string, args ...interface{}) {
-	lab.error(fmt.Errorf(fmtStr, args...))
+func (lab *Laboratory) recordError(err error) {
 }
 
 func (lab *Laboratory) run(funs ...func(*Laboratory) error) {
@@ -484,13 +504,14 @@ func (lab *Laboratory) run(funs ...func(*Laboratory) error) {
 		}
 	}
 
-	defer lab.exited()
+	defer lab.stopped()
 
 	defer func() {
 		if res := recover(); res != nil {
-			lab.errorf("panic: %v", res)
-			// Use println because of the embedded \n in the Stack Trace
-			fmt.Println(lab.labBuild.lineMapManager.ElementStackTrace())
+			// A panic is always fatal to the whole workflow, regardless of the element
+			fmt.Printf("panic: %v\n%s", res, lab.labBuild.lineMapManager.ElementStackTrace())
+			lab.err = fmt.Errorf("panic: %v", res)
+			lab.labBuild.RecordError(lab.err, false)
 		}
 	}()
 
@@ -498,42 +519,49 @@ func (lab *Laboratory) run(funs ...func(*Laboratory) error) {
 	case <-lab.inputsReady:
 		lab.Logger.Log("progress", "starting")
 		// this defer comes here because this defer will read all our
-		// inputs and parameters as part of the Save() call. This is
+		// inputs and parameters as part of the save() call. This is
 		// only safe (concurrency) once we know our inputs are ready.
 		defer lab.save()
 		for _, fun := range funs {
 			select {
-			case <-lab.labBuild.Errored:
+			case <-lab.labBuild.errored:
 				return
 			default:
 				if err := fun(lab); err != nil {
-					lab.error(err)
+					lab.err = err
 					return
 				}
 			}
 		}
-	case <-lab.labBuild.Errored:
+	case <-lab.labBuild.errored:
 		return
 	}
 }
 
-func (lab *Laboratory) exited() {
+// must only be called once (will panic if caused > once)
+func (lab *Laboratory) stopped() {
+	err := lab.err
+	if err == nil {
+		lab.Logger.Log("progress", "stopped")
+	} else {
+		lab.Logger.Log("progress", "stopped", "error", err)
+	}
+	close(lab.exited)
 	funs := lab.onExit
 	lab.onExit = nil
 	for _, fun := range funs {
-		fun()
+		fun(err)
 	}
 }
 
 func (lab *Laboratory) save() {
-	lab.Logger.Log("progress", "stopped")
 	p := filepath.Join(lab.labBuild.outDir, "elements", fmt.Sprintf("%d_%s.json", lab.id, lab.element.Name()))
 	if fh, err := utils.CreateFile(p, utils.ReadWrite); err != nil {
-		lab.error(err)
+		lab.labBuild.RecordError(err, true)
 	} else {
 		defer fh.Close()
 		if err := json.NewEncoder(fh).Encode(lab.element); err != nil {
-			lab.error(err)
+			lab.labBuild.RecordError(err, true)
 		}
 	}
 }
@@ -551,6 +579,8 @@ func (lab *Laboratory) addBlockedInput() {
 	atomic.AddInt64(&lab.pendingCount, 1)
 }
 
-func (lab *Laboratory) addOnExit(fun func()) {
+// nb, it is not safe for the callback fun to read the inputs /
+// parameters of this element unless there is no error.
+func (lab *Laboratory) addOnExit(fun func(error)) {
 	lab.onExit = append(lab.onExit, fun)
 }
