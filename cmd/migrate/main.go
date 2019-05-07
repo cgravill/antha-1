@@ -80,7 +80,7 @@ func main() {
 	case fromFormatProtobuf:
 		provider, err = simulaterequestpb.NewProvider(fromReader, fm, repoMap, gilsonDevice, l)
 	default:
-		logger.Fatal(l, fmt.Errorf("Unknown format '%v', valid formats are: %v", fromFormat, validFromFormats))
+		err = fmt.Errorf("Unknown format '%v', valid formats are: %v", fromFormat, validFromFormats)
 	}
 	if err != nil {
 		logger.Fatal(l, err)
