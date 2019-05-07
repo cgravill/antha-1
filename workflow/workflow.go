@@ -103,10 +103,8 @@ func WorkflowFromReaders(rs ...io.ReadCloser) (*Workflow, error) {
 func EmptyWorkflow() *Workflow {
 	return &Workflow{
 		SchemaVersion: CurrentSchemaVersion,
-		Meta: Meta{
-			Rest: make(map[string]json.RawMessage),
-		},
-		Repositories: make(Repositories),
+		Meta:          EmptyMeta(),
+		Repositories:  make(Repositories),
 		Elements: Elements{
 			Instances: make(ElementInstances),
 		},
@@ -128,7 +126,7 @@ func (wf *Workflow) EnsureWorkflowId() error {
 func (wf *Workflow) WriteToFile(p string, pretty bool) error {
 	if p == "" || p == "-" {
 		return wf.ToWriter(os.Stdout, pretty)
-	} else if fh, err := os.OpenFile(p, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0400); err != nil {
+	} else if fh, err := utils.CreateFile(p, utils.ReadWrite); err != nil {
 		return err
 	} else {
 		defer fh.Close()
@@ -147,6 +145,14 @@ func (wf *Workflow) ToWriter(w io.Writer, pretty bool) error {
 type Meta struct {
 	Name string                     `json:"Name,omitempty"`
 	Rest map[string]json.RawMessage `json:"-"`
+}
+
+// EmptyMeta returns a fresh but fully initialised Meta. In particular, all
+// directly accessible empty maps are non-nil.
+func EmptyMeta() Meta {
+	return Meta{
+		Rest: make(map[string]json.RawMessage),
+	}
 }
 
 // See https://golang.org/ref/spec#identifier However, we allow the
