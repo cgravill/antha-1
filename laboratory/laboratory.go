@@ -45,7 +45,7 @@ type LaboratoryBuilder struct {
 	// elemLock must be taken to access/mutate elemsUnrun and elements fields
 	elemLock      sync.Mutex
 	elemsUnrun    int64
-	elements      map[Element]*ElementBase
+	elementToLab  map[Element]*Laboratory
 	nextElementId uint64
 
 	// This lock is here to serialize access to errors (append and
@@ -67,9 +67,9 @@ type LaboratoryBuilder struct {
 
 func EmptyLaboratoryBuilder() *LaboratoryBuilder {
 	labBuild := &LaboratoryBuilder{
-		elements:  make(map[Element]*ElementBase),
-		Errored:   make(chan struct{}),
-		Completed: make(chan struct{}),
+		elementToLab: make(map[Element]*Laboratory),
+		Errored:      make(chan struct{}),
+		Completed:    make(chan struct{}),
 
 		lineMapManager: NewLineMapManager(),
 		Logger:         logger.NewLogger(),
@@ -307,25 +307,28 @@ type ElementInstaller interface {
 }
 
 func (labBuild *LaboratoryBuilder) InstallElement(e Element) {
-	eb := labBuild.NewElementBase(e)
+	labBuild.addElementLaboratory(e, labBuild.makeLab(labBuild.Logger, e))
+}
+
+func (labBuild *LaboratoryBuilder) addElementLaboratory(e Element, lab *Laboratory) {
 	labBuild.elemLock.Lock()
 	defer labBuild.elemLock.Unlock()
-	labBuild.elements[e] = eb
+	labBuild.elementToLab[e] = lab
 	labBuild.elemsUnrun++
 }
 
 func (labBuild *LaboratoryBuilder) AddConnection(src, dst Element, fun func()) error {
 	labBuild.elemLock.Lock()
 	defer labBuild.elemLock.Unlock()
-	if ebSrc, found := labBuild.elements[src]; !found {
+	if labSrc, found := labBuild.elementToLab[src]; !found {
 		return fmt.Errorf("Unknown src element: %v", src)
-	} else if ebDst, found := labBuild.elements[dst]; !found {
+	} else if labDst, found := labBuild.elementToLab[dst]; !found {
 		return fmt.Errorf("Unknown dst element: %v", dst)
 	} else {
-		ebDst.AddBlockedInput()
-		ebSrc.AddOnExit(func() {
+		labDst.addBlockedInput()
+		labSrc.addOnExit(func() {
 			fun()
-			ebDst.InputReady()
+			labDst.inputReady()
 		})
 		return nil
 	}
@@ -343,11 +346,11 @@ func (labBuild *LaboratoryBuilder) RunElements() {
 		close(labBuild.Completed)
 
 	} else {
-		for _, eb := range labBuild.elements {
-			eb.AddOnExit(labBuild.elementCompleted)
+		for _, lab := range labBuild.elementToLab {
+			lab.addOnExit(labBuild.elementCompleted)
 		}
-		for _, eb := range labBuild.elements {
-			go eb.Run(labBuild.makeLab(eb, labBuild.Logger))
+		for _, lab := range labBuild.elementToLab {
+			go lab.run()
 		}
 		labBuild.elemLock.Unlock()
 		<-labBuild.Completed
@@ -392,6 +395,9 @@ func (labBuild *LaboratoryBuilder) Errors() error {
 	}
 }
 
+// Laboratory. A separate laboratory exists for every element. It
+// provides each element with the ability to interact with the lab,
+// and to log.
 type Laboratory struct {
 	labBuild *LaboratoryBuilder
 	element  Element
@@ -399,43 +405,59 @@ type Laboratory struct {
 	Logger   *logger.Logger
 	Workflow *workflow.Workflow
 	*effects.LaboratoryEffects
+
+	// every element has a unique id to ensure we don't collide on names.
+	id uint64
+	// count of inputs that are not yet ready (plus 1)
+	pendingCount int64
+	// this gets closed when all inputs become ready
+	inputsReady chan struct{}
+	// funcs to run when this element is completed
+	onExit []func()
 }
 
-func (labBuild *LaboratoryBuilder) makeLab(eb *ElementBase, logger *logger.Logger) *Laboratory {
-	e := eb.element
+func (labBuild *LaboratoryBuilder) makeLab(logger *logger.Logger, e Element) *Laboratory {
+	id := atomic.AddUint64(&labBuild.nextElementId, 1)
 	return &Laboratory{
-		labBuild:          labBuild,
-		element:           e,
-		Logger:            logger.With("id", eb.id, "name", e.Name(), "type", e.TypeName()),
+		labBuild: labBuild,
+		element:  e,
+
+		Logger:            logger.With("id", id, "name", e.Name(), "type", e.TypeName()),
 		Workflow:          labBuild.Workflow,
 		LaboratoryEffects: labBuild.effects,
+
+		id:           id,
+		pendingCount: 1,
+		inputsReady:  make(chan struct{}),
 	}
 }
 
 func (lab *Laboratory) InstallElement(e Element) {
-	lab.labBuild.InstallElement(e)
+	// take the root logger (from labBuild) and build up from there.
+	logger := lab.labBuild.Logger.With("parentName", lab.element.Name(), "parentType", lab.element.TypeName())
+	lab.labBuild.addElementLaboratory(e, lab.labBuild.makeLab(logger, e))
 }
 
-// Only for use when you're in an element and want to call another element.
+// CallSteps is only for use when you're in an element and want to
+// call another element. Note that in this case, only the Steps are
+// run.
 func (lab *Laboratory) CallSteps(e Element) error {
 	// it should already be in the map because the element constructor
 	// will have called through to InstallElement which would have
 	// added it.
 	lab.labBuild.elemLock.Lock()
-	eb, found := lab.labBuild.elements[e]
+	eLab, found := lab.labBuild.elementToLab[e]
 	if !found {
 		lab.labBuild.elemLock.Unlock()
 		return fmt.Errorf("CallSteps called on unknown element '%s'", e.Name())
 	}
 
 	finished := make(chan struct{})
-	eb.AddOnExit(func() { close(finished) })
-	eb.AddOnExit(lab.labBuild.elementCompleted)
+	eLab.addOnExit(func() { close(finished) })
+	eLab.addOnExit(lab.labBuild.elementCompleted)
 	lab.labBuild.elemLock.Unlock()
 
-	// take the root logger (from labBuild) and build up from there.
-	logger := lab.labBuild.Logger.With("parentName", lab.element.Name(), "parentType", lab.element.TypeName())
-	go eb.Run(lab.labBuild.makeLab(eb, logger), eb.element.Steps)
+	go eLab.run(eLab.element.Steps)
 	<-finished
 
 	return lab.labBuild.Errors()
@@ -450,42 +472,19 @@ func (lab *Laboratory) errorf(fmtStr string, args ...interface{}) {
 	lab.error(fmt.Errorf(fmtStr, args...))
 }
 
-// ElementBase
-type ElementBase struct {
-	// every element has a unique id to ensure we don't collide on names.
-	id uint64
-	// count of inputs that are not yet ready (plus 1)
-	pendingCount int64
-	// this gets closed when all inputs become ready
-	InputsReady chan struct{}
-	// funcs to run when this element is completed
-	onExit []func()
-	// the actual element
-	element Element
-}
-
-func (labBuild *LaboratoryBuilder) NewElementBase(e Element) *ElementBase {
-	return &ElementBase{
-		id:           atomic.AddUint64(&labBuild.nextElementId, 1),
-		pendingCount: 1,
-		InputsReady:  make(chan struct{}),
-		element:      e,
-	}
-}
-
-func (eb *ElementBase) Run(lab *Laboratory, funs ...func(*Laboratory) error) {
-	eb.InputReady()
+func (lab *Laboratory) run(funs ...func(*Laboratory) error) {
+	lab.inputReady()
 
 	if len(funs) == 0 {
 		funs = []func(*Laboratory) error{
-			eb.element.Setup,
-			eb.element.Steps,
-			eb.element.Analysis,
-			eb.element.Validation,
+			lab.element.Setup,
+			lab.element.Steps,
+			lab.element.Analysis,
+			lab.element.Validation,
 		}
 	}
 
-	defer eb.Exited()
+	defer lab.exited()
 
 	defer func() {
 		if res := recover(); res != nil {
@@ -496,12 +495,12 @@ func (eb *ElementBase) Run(lab *Laboratory, funs ...func(*Laboratory) error) {
 	}()
 
 	select {
-	case <-eb.InputsReady:
+	case <-lab.inputsReady:
 		lab.Logger.Log("progress", "starting")
 		// this defer comes here because this defer will read all our
 		// inputs and parameters as part of the Save() call. This is
 		// only safe (concurrency) once we know our inputs are ready.
-		defer eb.Save(lab)
+		defer lab.save()
 		for _, fun := range funs {
 			select {
 			case <-lab.labBuild.Errored:
@@ -518,40 +517,40 @@ func (eb *ElementBase) Run(lab *Laboratory, funs ...func(*Laboratory) error) {
 	}
 }
 
-func (eb *ElementBase) Exited() {
-	funs := eb.onExit
-	eb.onExit = nil
+func (lab *Laboratory) exited() {
+	funs := lab.onExit
+	lab.onExit = nil
 	for _, fun := range funs {
 		fun()
 	}
 }
 
-func (eb *ElementBase) Save(lab *Laboratory) {
-	lab.Logger.Log("progress", "completed")
-	p := filepath.Join(lab.labBuild.outDir, "elements", fmt.Sprintf("%d_%s.json", eb.id, eb.element.Name()))
+func (lab *Laboratory) save() {
+	lab.Logger.Log("progress", "stopped")
+	p := filepath.Join(lab.labBuild.outDir, "elements", fmt.Sprintf("%d_%s.json", lab.id, lab.element.Name()))
 	if fh, err := os.OpenFile(p, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0400); err != nil {
 		lab.error(err)
 	} else {
 		defer fh.Close()
-		if err := json.NewEncoder(fh).Encode(eb.element); err != nil {
+		if err := json.NewEncoder(fh).Encode(lab.element); err != nil {
 			lab.error(err)
 		}
 	}
 }
 
-func (eb *ElementBase) InputReady() {
-	if atomic.AddInt64(&eb.pendingCount, -1) == 0 {
+func (lab *Laboratory) inputReady() {
+	if atomic.AddInt64(&lab.pendingCount, -1) == 0 {
 		// we've done the transition from 1 -> 0. By definition, we're
 		// the only routine that can do that, so we don't need to be
 		// careful.
-		close(eb.InputsReady)
+		close(lab.inputsReady)
 	}
 }
 
-func (eb *ElementBase) AddBlockedInput() {
-	atomic.AddInt64(&eb.pendingCount, 1)
+func (lab *Laboratory) addBlockedInput() {
+	atomic.AddInt64(&lab.pendingCount, 1)
 }
 
-func (eb *ElementBase) AddOnExit(fun func()) {
-	eb.onExit = append(eb.onExit, fun)
+func (lab *Laboratory) addOnExit(fun func()) {
+	lab.onExit = append(lab.onExit, fun)
 }
