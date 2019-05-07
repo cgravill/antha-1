@@ -88,17 +88,11 @@ func (p *Provider) migrateElementParameters(fm *effects.FileManager, process *pr
 			}
 			pset[workflow.ElementParameterName(param.GetName())] = pval
 		} else {
-			// It's a reference
-			ref := param.GetReference()
-			if len(ref) == 0 {
-				return pset, fmt.Errorf("Param %v has no data and no reference", param.GetName())
-			}
-			// TODO: do something with ref. But what? Looks like it could be a datarepo: URL
-			// (https://github.com/Synthace/antha-runner/search?q=Param_Reference&unscoped_q=Param_Reference)
-			// - but that code path no longer exists in the feature/future_sanity world.
-			//
-			// 1. Is that use case still valid?
-			// 2. Are there any other use cases for reference params?
+			// It _could_ be a reference (param.GetReference() could be
+			// non-empty), but we're pretty sure the reference stuff isn't used
+			// (https://github.com/antha-lang/antha/pull/1068#discussion_r281625589),
+			// so if there isn't a raw value, we return an error.
+			return pset, fmt.Errorf("Param %v has no data", param.GetName())
 		}
 	}
 
