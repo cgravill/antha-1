@@ -353,11 +353,13 @@ func (labBuild *LaboratoryBuilder) RunElements() {
 		close(labBuild.Completed)
 
 	} else {
-		for _, lab := range labBuild.elementToLab {
+		elemToLab := labBuild.elementToLab
+		labBuild.elementToLab = make(map[Element]*Laboratory)
+		for _, lab := range elemToLab {
 			lab.addOnExit(labBuild.recordElementError)
 			lab.addOnExit(labBuild.elementCompleted)
 		}
-		for _, lab := range labBuild.elementToLab {
+		for _, lab := range elemToLab {
 			go lab.run()
 		}
 		labBuild.elemLock.Unlock()
@@ -416,8 +418,8 @@ func (labBuild *LaboratoryBuilder) Errors() error {
 }
 
 // Laboratory. A separate laboratory exists for every element. It
-// provides each element with the ability to interact with the lab,
-// and to log.
+// provides each element with the ability to interact with the lab
+// effects, and to log.
 type Laboratory struct {
 	labBuild *LaboratoryBuilder
 	element  Element
@@ -434,7 +436,12 @@ type Laboratory struct {
 	inputsReady chan struct{}
 	// funcs to run when this element is completed
 	onExit []func(error)
-	// closed once the the element has started and then stopped
+	// closed once the the element has stopped. This closing does *not*
+	// imply that inputsReady will be closed. For example, the element
+	// can be blocked waiting for inputs to become ready when a
+	// workflow error occurs, causing labBuild.errored to close. That
+	// will be detected and will cause the element to close exited. But
+	// inputsReady will still remain unclosed.
 	exited chan struct{}
 	// any error that was produced by the element itself
 	err error
@@ -459,29 +466,34 @@ func (labBuild *LaboratoryBuilder) makeLab(logger *logger.Logger, e Element) *La
 
 func (lab *Laboratory) InstallElement(e Element) {
 	// take the root logger (from labBuild) and build up from there.
-	logger := lab.labBuild.Logger.With("parentName", lab.element.Name(), "parentType", lab.element.TypeName())
+	logger := lab.labBuild.Logger.With("parentId", lab.id, "parentName", lab.element.Name(), "parentType", lab.element.TypeName())
 	lab.labBuild.addElementLaboratory(e, lab.labBuild.makeLab(logger, e))
 }
 
 // CallSteps is only for use when you're in an element and want to
-// call another element. Note that in this case, only the Steps are
-// run. Any error that the Steps of the element produces is logged and
-// returned. However, it is up to the calling element to determine
-// whether or not such an error is fatal to the workflow.
+// call another element (a dynamically-called element). Note that in
+// this case, only the Steps are run. Any error that the Steps of the
+// element produces is logged and returned. However, it is up to the
+// calling element to determine whether or not such an error is fatal
+// to the workflow (if it is considered fatal, the calling element
+// should return it).
 func (lab *Laboratory) CallSteps(e Element) error {
 	// it should already be in the map because the element constructor
 	// will have called through to InstallElement which would have
 	// added it.
-	lab.labBuild.elemLock.Lock()
-	eLab, found := lab.labBuild.elementToLab[e]
+	labBuild := lab.labBuild
+	labBuild.elemLock.Lock()
+	eLab, found := labBuild.elementToLab[e]
 	if !found {
-		lab.labBuild.elemLock.Unlock()
-		return fmt.Errorf("CallSteps called on unknown element '%s'", e.Name())
+		labBuild.elemLock.Unlock()
+		panic(fmt.Errorf("CallSteps called on unknown element '%s'", e.Name()))
 	}
+	// delete it so it can't be run more than once
+	delete(labBuild.elementToLab, e)
 
-	lab.labBuild.elemsRunning++
+	labBuild.elemsRunning++
 	eLab.addOnExit(lab.labBuild.elementCompleted)
-	lab.labBuild.elemLock.Unlock()
+	labBuild.elemLock.Unlock()
 
 	go eLab.run(eLab.element.Steps)
 	<-eLab.exited
@@ -489,10 +501,12 @@ func (lab *Laboratory) CallSteps(e Element) error {
 	return eLab.err
 }
 
-func (lab *Laboratory) recordError(err error) {
-}
-
+// run() is designed to be called from a new go-routine (i.e. `go
+// lab.run()`), hence it does not return an error. If you wish to wait
+// for the element to stop and be safe to access, wait for the
+// lab.exited channel to be closed.
 func (lab *Laboratory) run(funs ...func(*Laboratory) error) {
+	lab.Logger.Log("progress", "waiting")
 	lab.inputReady()
 
 	if len(funs) == 0 {
@@ -538,7 +552,6 @@ func (lab *Laboratory) run(funs ...func(*Laboratory) error) {
 	}
 }
 
-// must only be called once (will panic if caused > once)
 func (lab *Laboratory) stopped() {
 	err := lab.err
 	if err == nil {
@@ -547,9 +560,7 @@ func (lab *Laboratory) stopped() {
 		lab.Logger.Log("progress", "stopped", "error", err)
 	}
 	close(lab.exited)
-	funs := lab.onExit
-	lab.onExit = nil
-	for _, fun := range funs {
+	for _, fun := range lab.onExit {
 		fun(err)
 	}
 }
@@ -569,8 +580,10 @@ func (lab *Laboratory) save() {
 func (lab *Laboratory) inputReady() {
 	if atomic.AddInt64(&lab.pendingCount, -1) == 0 {
 		// we've done the transition from 1 -> 0. By definition, we're
-		// the only routine that can do that, so we don't need to be
-		// careful.
+		// the only routine that can do that (given that wiring is
+		// finished before any element is started, so we cannot be
+		// racing with calls to addBlockedInput), so we don't need to be
+		// careful about double-close-panics.
 		close(lab.inputsReady)
 	}
 }
