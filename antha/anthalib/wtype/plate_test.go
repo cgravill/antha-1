@@ -3,6 +3,7 @@ package wtype
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/go-test/deep"
 	"reflect"
 	"strings"
 	"testing"
@@ -240,6 +241,30 @@ func TestMergeWith(t *testing.T) {
 
 	if !(p1.Wellcoords["A2"].WContents.CName == "Butter" && p1.Wellcoords["A2"].WContents.Vol == 80.0 && p1.Wellcoords["A2"].WContents.Vunit == "ul") {
 		t.Fatal("Error: MergeWith should add non user-allocated components to  plate merged with")
+	}
+}
+
+func TestPlateType(t *testing.T) {
+	idGen := id.NewIDGenerator(t.Name())
+	p := makeplatefortest(idGen)
+	p.SetConstrained("A", []string{"X"})
+
+	pt := p.ToPlateType()
+
+	idGen2 := id.NewIDGenerator(t.Name())
+
+	p2 := LHPlateFromType(idGen2, pt)
+
+	if diffs := deep.Equal(p, p2); len(diffs) != 0 {
+		t.Errorf("Plate reconsistuted from plate type not correct\n%v", strings.Join(diffs, "\n"))
+	}
+
+	// now check we get the right plate type out
+
+	pt2 := p2.ToPlateType()
+
+	if diffs := deep.Equal(pt, pt2); len(diffs) != 0 {
+		t.Errorf("Using a plate type to create a plate then extracting the plate type from that plate should result in the same plate type as the original. It didn't.\n%v", strings.Join(diffs, "\n"))
 	}
 }
 

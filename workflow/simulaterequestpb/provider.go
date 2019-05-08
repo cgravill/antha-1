@@ -6,11 +6,13 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/Synthace/antha-runner/aconv"
 	"github.com/Synthace/antha-runner/protobuf"
 	inventorypb "github.com/Synthace/microservice/cmd/inventory/protobuf"
 	"github.com/antha-lang/antha/antha/anthalib/wtype"
 	"github.com/antha-lang/antha/antha/anthalib/wtype/liquidtype"
 	"github.com/antha-lang/antha/laboratory/effects"
+	"github.com/antha-lang/antha/laboratory/effects/id"
 	"github.com/antha-lang/antha/logger"
 	"github.com/antha-lang/antha/workflow"
 	"github.com/antha-lang/antha/workflow/migrate"
@@ -184,18 +186,32 @@ func (p *Provider) GetElements() (workflow.Elements, error) {
 	}, nil
 }
 
-func translatePlateTypes(plateTypes []*inventorypb.PlateType) wtype.PlateTypes {
+func translatePlateTypes(idGen *id.IDGenerator, plateTypes []*inventorypb.PlateType) (wtype.PlateTypes, error) {
 	result := wtype.PlateTypes{}
 
-	// TODO: translate from one plate type format to the other. Not trivial from
-	// what I can see.
+	for _, pt := range plateTypes {
+		plate, err := aconv.LHPlateTypeFromProtobuf(idGen, pt)
+		if err != nil {
+			return result, err
+		}
+		anthaPlateType := plate.ToPlateType()
+		result[anthaPlateType.Name] = anthaPlateType
+	}
 
-	return result
+	return result, nil
 }
 
 func (p *Provider) GetInventory() (workflow.Inventory, error) {
+	idGen := id.NewIDGenerator("temp")
+
+	pt, err := translatePlateTypes(idGen, p.pb.GetPlateTypes())
+
+	if err != nil {
+		return workflow.Inventory{}, err
+	}
+
 	return workflow.Inventory{
-		PlateTypes: translatePlateTypes(p.pb.GetPlateTypes()),
+		PlateTypes: pt,
 	}, nil
 }
 
