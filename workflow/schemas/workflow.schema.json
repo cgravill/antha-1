@@ -28,9 +28,11 @@
             "type": ["object", "null"],
             "properties": {
                 "PlateTypes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/plateType"
+                    "type": "object",
+                    "patternProperties": {
+                        ".*": {
+                            "$ref": "#/definitions/plateType"
+                        }
                     }
                 }
             }
