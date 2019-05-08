@@ -1,20 +1,20 @@
-package simulaterequestpb_test
+package simulaterequestpb
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/antha-lang/antha/antha/anthalib/wtype"
 	"github.com/antha-lang/antha/laboratory/effects"
 	"github.com/antha-lang/antha/logger"
 	"github.com/antha-lang/antha/workflow"
-	"github.com/antha-lang/antha/workflow/migrate"
-	"github.com/antha-lang/antha/workflow/simulaterequestpb"
 )
 
-func getTestProvider() (migrate.WorkflowProvider, error) {
-	protobufFilePath := filepath.Join("testdata", "request.pb")
+func getTestProvider(filename string, elementTypeNames ...workflow.ElementTypeName) (*Provider, error) {
+	protobufFilePath := filepath.Join("testdata", filename)
 	tmpDir, err := ioutil.TempDir("", "tests")
 	if err != nil {
 		return nil, err
@@ -28,18 +28,9 @@ func getTestProvider() (migrate.WorkflowProvider, error) {
 		Directory: "/tmp",
 	}
 
-	elementNames := []string{
-		"Define_Liquid_Set",
-		"Define_Plate_Layout",
-		"Setup_QPCR_Plate",
-		"Upload_Plate_Layout_File_Single",
-		"Upload_QPCR_Design_File",
-	}
-
 	elementTypeMap := workflow.ElementTypeMap{}
-	for _, name := range elementNames {
-		etn := workflow.ElementTypeName(name)
-		ep := workflow.ElementPath("Elements/Test/" + name)
+	for _, etn := range elementTypeNames {
+		ep := workflow.ElementPath("Elements/Test/" + etn)
 		elementTypeMap[etn] = workflow.ElementType{
 			RepositoryName: "repos.antha.com/antha-test/elements-test",
 			ElementPath:    ep,
@@ -58,11 +49,12 @@ func getTestProvider() (migrate.WorkflowProvider, error) {
 	}
 	defer r.Close()
 
-	return simulaterequestpb.NewProvider(r, fm, repoMap, gilsonDeviceName, logger)
+	return NewProvider(r, fm, repoMap, gilsonDeviceName, logger)
 }
 
 func TestGetConfig(t *testing.T) {
-	p, err := getTestProvider()
+	p, err := getTestProvider("request.pb",
+		"Define_Liquid_Set", "Define_Plate_Layout", "Setup_QPCR_Plate", "Upload_Plate_Layout_File_Single", "Upload_QPCR_Design_File")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +74,8 @@ func TestGetConfig(t *testing.T) {
 }
 
 func TestGetElements(t *testing.T) {
-	p, err := getTestProvider()
+	p, err := getTestProvider("request.pb",
+		"Define_Liquid_Set", "Define_Plate_Layout", "Setup_QPCR_Plate", "Upload_Plate_Layout_File_Single", "Upload_QPCR_Design_File")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,5 +93,38 @@ func TestGetElements(t *testing.T) {
 	}
 	if len(els.InstancesConnections) == 0 {
 		t.Error("Didn't find any element connections")
+	}
+}
+
+func TestEmptyFileParam(t *testing.T) {
+	p, err := getTestProvider("requestEmptyFile.pb", "Upload_QPCR_Design_File")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	els, err := p.GetElements()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(els.Types) != 1 {
+		t.Fatalf("Expected exactly 1 element type, got %d", len(els.Types))
+	} else if len(els.Instances) != 1 {
+		t.Fatalf("Expected exactly 1 element instance, got %d", len(els.Instances))
+	} else if elem, found := els.Instances["Upload QPCR Design File 1"]; !found {
+		t.Fatal("Couldn't find element instance named 'Upload QPCR Design File 1'")
+	} else if param, found := elem.Parameters["QPCRDesignFile"]; !found {
+		t.Fatal("Couldn't find parameter named 'QPCRDesignFile' for element instance 'Upload QPCR Design File 1'")
+	} else {
+		file := &wtype.File{}
+		if err := json.Unmarshal(param, file); err != nil {
+			t.Fatal(err)
+		} else if file.Name != "foo" {
+			t.Fatalf("Expected file parameter name 'foo', but got %s'", file.Name)
+		} else if bs, err := p.fm.ReadAll(file); err != nil {
+			t.Fatal(err)
+		} else if bs == nil || len(bs) != 0 {
+			t.Fatalf("Expected to find an empty non-nil byte array from reading file. But got '%#v'", bs)
+		}
 	}
 }
