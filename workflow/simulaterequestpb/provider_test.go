@@ -120,7 +120,7 @@ func TestEmptyFileParam(t *testing.T) {
 		if err := json.Unmarshal(param, file); err != nil {
 			t.Fatal(err)
 		} else if file.Name != "foo" {
-			t.Fatalf("Expected file parameter name 'foo', but got %s'", file.Name)
+			t.Fatalf("Expected file parameter name 'foo', but got '%s'", file.Name)
 		} else if bs, err := p.fm.ReadAll(file); err != nil {
 			t.Fatal(err)
 		} else if bs == nil || len(bs) != 0 {
