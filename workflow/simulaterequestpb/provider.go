@@ -260,8 +260,8 @@ func (p *Provider) getCommonMixerInstanceConfig() workflow.CommonMixerInstanceCo
 // Valid model strings in instruction-plugins/CyBio/factory/make_liquidhandler.go
 func (p *Provider) getCyBioInstanceConfig(model string) *workflow.CyBioInstanceConfig {
 	config := workflow.CyBioInstanceConfig{}
-	config.Model = model
 	config.CommonMixerInstanceConfig = p.getCommonMixerInstanceConfig()
+	config.Model = model
 	return &config
 }
 
@@ -284,16 +284,16 @@ func (p *Provider) getHamiltonInstanceConfig() *workflow.HamiltonInstanceConfig 
 // Valid model strings in instruction-plugins/LabcyteEcho/factory/make_liquidhandler.go
 func (p *Provider) getLabcyteInstanceConfig(model string) *workflow.LabcyteInstanceConfig {
 	config := workflow.LabcyteInstanceConfig{}
-	config.Model = model
 	config.CommonMixerInstanceConfig = p.getCommonMixerInstanceConfig()
+	config.Model = model
 	return &config
 }
 
 // Valid model strings in instruction-plugins/TecanScript/factory/make_liquidhandler.go
 func (p *Provider) getTecanInstanceConfig(model string) *workflow.TecanInstanceConfig {
 	config := workflow.TecanInstanceConfig{}
-	config.Model = model
 	config.CommonMixerInstanceConfig = p.getCommonMixerInstanceConfig()
+	config.Model = model
 	mc := p.pb.GetMixerConfig()
 	if mc != nil {
 		config.TipTypes = mc.TipTypes
