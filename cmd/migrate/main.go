@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -30,11 +31,15 @@ func main() {
 	flag.StringVar(&outDir, "outdir", "", "Directory to write to (default: a temporary directory will be created)")
 	flag.StringVar(&fromFile, "from", "-", "File to migrate from (default: will be read from stdin)")
 	flag.StringVar(&fromFormat, "format", fromFormatJSON, fmt.Sprintf("Format of the from file. One of: %v", validFromFormats))
-	flag.StringVar(&gilsonDevice, "gilson-device", "", "A gilson device name to use for migrated config. If not present, device specific configuration will not be migrated.")
+	flag.StringVar(&gilsonDevice, "gilson-device", "", "A gilson device name to use for migrated config. If not present, device specific configuration will not be migrated. Only relevant when migrating from json.")
 	flag.BoolVar(&validate, "validate", true, "Validate input and output files.")
 	flag.Parse()
 
 	l := logger.NewLogger()
+
+	if len(gilsonDevice) > 0 && fromFormat == fromFormatProtobuf {
+		logger.Fatal(l, errors.New("-gilson-device option can not be used when -format is protobuf"))
+	}
 
 	args := flag.Args()
 	rs, err := workflow.ReadersFromPaths(append(args, fromFile))
