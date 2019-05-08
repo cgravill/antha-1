@@ -18,11 +18,10 @@ import (
 )
 
 type Provider struct {
-	pb               *protobuf.SimulateRequest
-	fm               *effects.FileManager
-	repoMap          workflow.ElementTypesByRepository
-	gilsonDeviceName string
-	logger           *logger.Logger
+	pb      *protobuf.SimulateRequest
+	fm      *effects.FileManager
+	repoMap workflow.ElementTypesByRepository
+	logger  *logger.Logger
 }
 
 func NewProvider(
@@ -43,11 +42,10 @@ func NewProvider(
 	}
 
 	return &Provider{
-		pb:               pb,
-		fm:               fm,
-		repoMap:          repoMap,
-		gilsonDeviceName: gilsonDeviceName,
-		logger:           logger,
+		pb:      pb,
+		fm:      fm,
+		repoMap: repoMap,
+		logger:  logger,
 	}, nil
 }
 
@@ -261,23 +259,21 @@ func (p *Provider) getGilsonPipetMaxInstanceConfig() (*workflow.GilsonPipetMaxIn
 }
 
 func (p *Provider) getGilsonPipetMaxConfig() (workflow.GilsonPipetMaxConfig, error) {
-	if p.gilsonDeviceName == "" {
-		return workflow.GilsonPipetMaxConfig{}, nil
-	}
-
 	devices := map[workflow.DeviceInstanceID]*workflow.GilsonPipetMaxInstanceConfig{}
-	devID := workflow.DeviceInstanceID(p.gilsonDeviceName)
-
-	if _, found := devices[devID]; found {
-		p.logger.Log("warning", fmt.Sprintf("Gilson device %s already exists, and will have configuration replaced with migrated configuration.", p.gilsonDeviceName))
-	}
-
-	devConfig, err := p.getGilsonPipetMaxInstanceConfig()
+	gilsonPipetMaxInstanceConfig, err := p.getGilsonPipetMaxInstanceConfig()
 	if err != nil {
 		return workflow.GilsonPipetMaxConfig{}, err
 	}
 
-	devices[devID] = devConfig
+	for _, device := range p.pb.GetAvailable() {
+		class := device.GetClass()
+		switch class {
+		case "GilsonPipetMax":
+			devices[workflow.DeviceInstanceID(device.GetId())] = gilsonPipetMaxInstanceConfig
+		default:
+			return workflow.GilsonPipetMaxConfig{}, fmt.Errorf("Unsupported device class: %v", class)
+		}
+	}
 
 	return workflow.GilsonPipetMaxConfig{
 		Devices: devices,

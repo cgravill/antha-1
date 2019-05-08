@@ -79,6 +79,11 @@ func TestGetConfig(t *testing.T) {
 	if c.GlobalMixer.CustomPolicyRuleSet == nil {
 		t.Error("Expected a custom policy rule set, got nil")
 	}
+
+	expectedDeviceID := workflow.DeviceInstanceID("659YJFH42DMDWC6JAMPRXRM66Z")
+	if _, ok := c.GilsonPipetMax.Devices[expectedDeviceID]; !ok {
+		t.Errorf("Expected to find GilsonPipetMax device with ID %v", expectedDeviceID)
+	}
 }
 
 func TestGetElements(t *testing.T) {
