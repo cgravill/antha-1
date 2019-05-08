@@ -45,6 +45,9 @@ func (m *Migrator) Workflow() (*workflow.Workflow, error) {
 	}
 	wf.Elements = elements
 
+	// NB: we MUST call GetInventory before GetConfig because in some
+	// cases, we need GetInventory to populate internal tracking of
+	// plate types which are then required by mixer configs...
 	inventory, err := m.provider.GetInventory()
 	if err != nil {
 		return nil, err
