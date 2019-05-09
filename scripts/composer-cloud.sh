@@ -14,7 +14,7 @@ DATA_DIR=${DATA_DIR:-/data}
 < $DATA_DIR/inputReady
 trap "{ echo > $DATA_DIR/outputReady; }" EXIT
 
-$MIGRATE -from=${DATA_DIR}/input/workflow/request.pb -outdir=${DATA_DIR}/scratch -gilson-device=gillian -format=protobuf - <<<$WF_JSON
+$MIGRATE -from=${DATA_DIR}/input/workflow/request.pb -outdir=${DATA_DIR}/scratch -format=protobuf - <<<$WF_JSON
 
 cp -a ${DATA_DIR}/scratch/* ${DATA_DIR}/input
 
