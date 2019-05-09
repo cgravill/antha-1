@@ -197,7 +197,15 @@ func (cfg Config) validate() error {
 		cfg.QPCR.validate(seen),
 		cfg.ShakerIncubator.validate(seen),
 		cfg.PlateReader.validate(seen),
+		cfg.assertOnlyOneMixer(),
 	}.Pack()
+}
+
+func (cfg Config) assertOnlyOneMixer() error {
+	if count := len(cfg.GilsonPipetMax.Devices) + len(cfg.Tecan.Devices) + len(cfg.CyBio.Devices) + len(cfg.Labcyte.Devices) + len(cfg.Hamilton.Devices); count > 1 {
+		return fmt.Errorf("Currently a maximum of one mixer can be used per workflow. You have %d configured.", count)
+	}
+	return nil
 }
 
 type DeviceInstanceIDSet map[DeviceInstanceID]struct{}
