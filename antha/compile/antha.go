@@ -77,21 +77,72 @@ func throwErrorf(pos token.Pos, format string, args ...interface{}) {
 type Field struct {
 	*Antha
 	Name string
-	Type ast.Expr // Fully qualified go type name
+	Type ast.Expr // Not fully qualified!
 	Doc  string
 	Tag  string
 }
 
-func (f *Field) TypeString() (string, error) {
-	buf := new(bytes.Buffer)
-	compiler := &Config{
-		Mode:     printerMode,
-		Tabwidth: tabWidth,
+func (f *Field) FullyQualifiedTypeString() (string, error) {
+	return f.Antha.makeFullyQualifiedTypeString(f.Type)
+}
+
+func (p *Antha) makeFullyQualifiedTypeString(e ast.Expr) (string, error) {
+	switch t := e.(type) {
+
+	case nil:
+		return "", nil
+
+	case *ast.Ident:
+		return t.Name, nil
+
+	case *ast.SelectorExpr:
+		if x, err := p.makeFullyQualifiedTypeString(t.X); err != nil {
+			return "", err
+		} else {
+			res := fmt.Sprintf("%s.%s", x, t.Sel.Name)
+			if pkg, ok := t.X.(*ast.Ident); !ok {
+				return res, nil
+			} else if req, found := p.importByName[pkg.Name]; !found {
+				return res, nil
+			} else {
+				return fmt.Sprintf("%s.%s", req.Path, t.Sel.Name), nil
+			}
+		}
+
+	case *ast.BasicLit:
+		return t.Value, nil
+
+	case *ast.ArrayType:
+		if bound, err := p.makeFullyQualifiedTypeString(t.Len); err != nil {
+			return "", err
+		} else if elt, err := p.makeFullyQualifiedTypeString(t.Elt); err != nil {
+			return "", err
+		} else {
+			return fmt.Sprintf("[%s]%s", bound, elt), nil
+		}
+
+	case *ast.StarExpr:
+		if x, err := p.makeFullyQualifiedTypeString(t.X); err != nil {
+			return "", err
+		} else {
+			return fmt.Sprintf("*%s", x), nil
+		}
+
+	case *ast.MapType:
+		if key, err := p.makeFullyQualifiedTypeString(t.Key); err != nil {
+			return "", err
+		} else if val, err := p.makeFullyQualifiedTypeString(t.Value); err != nil {
+			return "", err
+		} else {
+			return fmt.Sprintf("map[%s]%s", key, val), nil
+		}
+
+	default:
+		return "", posError{
+			message: fmt.Sprintf("invalid type spec to get type of: %T", t),
+			pos:     e.Pos(),
+		}
 	}
-	if _, err := compiler.Fprint(buf, f.fileSet, f.Type); err != nil {
-		return "", err
-	}
-	return string(buf.Bytes()), nil
 }
 
 // A Message is an input or an output or user defined type
@@ -185,7 +236,7 @@ type Antha struct {
 	TokenByParamName map[string]token.Token
 	// Imports in protocol and imports to add
 	ImportReqs   ImportReqs
-	importByName map[string]struct{}
+	importByName map[string]*ImportReq
 	Meta         *Meta
 }
 
@@ -265,7 +316,7 @@ func NewAntha(fileSet *token.FileSet, src *ast.File, metaBs []byte) (*Antha, err
 		protocolName: src.Name.Name,
 		elementPath:  fileSet.File(src.Package).Name(),
 		description:  src.Doc.Text(),
-		importByName: make(map[string]struct{}),
+		importByName: make(map[string]*ImportReq),
 	}
 
 	// TODO: add usage tracking to replace useExpr
@@ -379,7 +430,7 @@ func (p *Antha) addImportReq(req *ImportReq) {
 	name := req.ImportName()
 	if _, found := p.importByName[name]; !found {
 		p.ImportReqs = append(p.ImportReqs, req)
-		p.importByName[name] = struct{}{}
+		p.importByName[name] = req
 	}
 }
 
