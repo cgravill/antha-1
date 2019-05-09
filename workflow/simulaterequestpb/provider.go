@@ -12,6 +12,7 @@ import (
 	"github.com/antha-lang/antha/antha/anthalib/wtype"
 	"github.com/antha-lang/antha/antha/anthalib/wtype/liquidtype"
 	"github.com/antha-lang/antha/laboratory/effects"
+	"github.com/antha-lang/antha/laboratory/effects/id"
 	"github.com/antha-lang/antha/logger"
 	"github.com/antha-lang/antha/workflow"
 	"github.com/antha-lang/antha/workflow/migrate"
@@ -258,8 +259,8 @@ func (p *Provider) getGlobalMixerConfig() (workflow.GlobalMixerConfig, error) {
 	return config, nil
 }
 
-func (p *Provider) getGilsonPipetMaxInstanceConfig() (*workflow.GilsonPipetMaxInstanceConfig, error) {
-	config := workflow.GilsonPipetMaxInstanceConfig{}
+func (p *Provider) getCommonMixerInstanceConfig() workflow.CommonMixerInstanceConfig {
+	config := workflow.CommonMixerInstanceConfig{}
 	mc := p.pb.GetMixerConfig()
 	if mc != nil {
 		config.InputPlateTypes = migrate.UpdatePlateTypes(mc.InputPlateTypes)
@@ -267,7 +268,6 @@ func (p *Provider) getGilsonPipetMaxInstanceConfig() (*workflow.GilsonPipetMaxIn
 		config.MaxWells = &mc.MaxWells
 		config.OutputPlateTypes = migrate.UpdatePlateTypes(mc.OutputPlateTypes)
 		config.ResidualVolumeWeight = &mc.ResidualVolumeWeight
-		config.TipTypes = mc.TipTypes
 		config.LayoutPreferences = &workflow.LayoutOpt{
 			Inputs:    mc.DriverSpecificInputPreferences,
 			Outputs:   mc.DriverSpecificOutputPreferences,
@@ -276,46 +276,105 @@ func (p *Provider) getGilsonPipetMaxInstanceConfig() (*workflow.GilsonPipetMaxIn
 			Washes:    mc.DriverSpecificWashPreferences,
 		}
 	}
-	return &config, nil
+	return config
 }
 
-func (p *Provider) getGilsonPipetMaxConfig() (workflow.GilsonPipetMaxConfig, error) {
-	devices := map[workflow.DeviceInstanceID]*workflow.GilsonPipetMaxInstanceConfig{}
-	gilsonPipetMaxInstanceConfig, err := p.getGilsonPipetMaxInstanceConfig()
-	if err != nil {
-		return workflow.GilsonPipetMaxConfig{}, err
-	}
+// Valid model strings in instruction-plugins/CyBio/factory/make_liquidhandler.go
+func (p *Provider) getCyBioInstanceConfig(model string) *workflow.CyBioInstanceConfig {
+	config := workflow.CyBioInstanceConfig{}
+	config.CommonMixerInstanceConfig = p.getCommonMixerInstanceConfig()
+	config.Model = model
+	return &config
+}
 
-	for _, device := range p.pb.GetAvailable() {
-		class := device.GetClass()
-		switch class {
-		case "GilsonPipetMax":
-			devices[workflow.DeviceInstanceID(device.GetId())] = gilsonPipetMaxInstanceConfig
-		default:
-			return workflow.GilsonPipetMaxConfig{}, fmt.Errorf("Unsupported device class: %v", class)
-		}
+func (p *Provider) getGilsonPipetMaxInstanceConfig() *workflow.GilsonPipetMaxInstanceConfig {
+	config := workflow.GilsonPipetMaxInstanceConfig{}
+	config.CommonMixerInstanceConfig = p.getCommonMixerInstanceConfig()
+	mc := p.pb.GetMixerConfig()
+	if mc != nil {
+		config.TipTypes = mc.TipTypes
 	}
+	return &config
+}
 
-	return workflow.GilsonPipetMaxConfig{
-		Devices: devices,
-	}, nil
+func (p *Provider) getHamiltonInstanceConfig() *workflow.HamiltonInstanceConfig {
+	config := workflow.HamiltonInstanceConfig{}
+	config.CommonMixerInstanceConfig = p.getCommonMixerInstanceConfig()
+	return &config
+}
+
+// Valid model strings in instruction-plugins/LabcyteEcho/factory/make_liquidhandler.go
+func (p *Provider) getLabcyteInstanceConfig(model string) *workflow.LabcyteInstanceConfig {
+	config := workflow.LabcyteInstanceConfig{}
+	config.CommonMixerInstanceConfig = p.getCommonMixerInstanceConfig()
+	config.Model = model
+	return &config
+}
+
+// Valid model strings in instruction-plugins/TecanScript/factory/make_liquidhandler.go
+func (p *Provider) getTecanInstanceConfig(model string) *workflow.TecanInstanceConfig {
+	config := workflow.TecanInstanceConfig{}
+	config.CommonMixerInstanceConfig = p.getCommonMixerInstanceConfig()
+	config.Model = model
+	mc := p.pb.GetMixerConfig()
+	if mc != nil {
+		config.TipTypes = mc.TipTypes
+	}
+	return &config
 }
 
 func (p *Provider) GetConfig() (workflow.Config, error) {
+	result := workflow.EmptyConfig()
+
 	gmc, err := p.getGlobalMixerConfig()
 	if err != nil {
 		return workflow.Config{}, err
 	}
+	result.GlobalMixer = gmc
 
-	gpmc, err := p.getGilsonPipetMaxConfig()
-	if err != nil {
-		return workflow.Config{}, err
+	for _, device := range p.pb.GetAvailable() {
+		id := workflow.DeviceInstanceID(device.GetId())
+		class := device.GetClass()
+		// class is the device class name as defined by the device microservice
+		// (where it's called the device *template* name.) The canonical list is
+		// therefore in the device.DeviceTemplate collection in Google Cloud
+		// Datastore.
+		switch class {
+		case "CyBioFelix":
+			result.CyBio.Devices[id] = p.getCyBioInstanceConfig("Felix")
+		case "CyBioGeneTheatre":
+			result.CyBio.Devices[id] = p.getCyBioInstanceConfig("GeneTheatre")
+		case "GilsonPipetMax":
+			result.GilsonPipetMax.Devices[id] = p.getGilsonPipetMaxInstanceConfig()
+		case "HamiltonMicrolabSTAR":
+			result.Hamilton.Devices[id] = p.getHamiltonInstanceConfig()
+		case "LabCyteEcho520":
+			result.Labcyte.Devices[id] = p.getLabcyteInstanceConfig("520")
+		case "LabCyteEcho525":
+			result.Labcyte.Devices[id] = p.getLabcyteInstanceConfig("525")
+		case "LabCyteEcho550":
+			result.Labcyte.Devices[id] = p.getLabcyteInstanceConfig("550")
+		case "LabCyteEcho555":
+			result.Labcyte.Devices[id] = p.getLabcyteInstanceConfig("555")
+		case "TecanLiquidHandler":
+			result.Tecan.Devices[id] = p.getTecanInstanceConfig("Evo")
+
+		// The following types are stored in maps where the values are empty
+		// structs. That's because  we need to know whether or not one of those
+		// devices exists, otherwise antha will error - if an element issues an
+		// instruction for a qpcr machine, we must see whether we actually have
+		// one in the lab. But there are no configuration options for any of
+		// those device classes currently, so we just store an empty struct.
+		case "QInstrumentsBioShake":
+			result.ShakerIncubator.Devices[id] = struct{}{}
+		case "QPCRDevice":
+			result.QPCR.Devices[id] = struct{}{}
+		case "WriteOnlyPlateReader":
+			result.PlateReader.Devices[id] = struct{}{}
+		}
 	}
 
-	return workflow.Config{
-		GlobalMixer:    gmc,
-		GilsonPipetMax: gpmc,
-	}, nil
+	return result, nil
 }
 
 func (p *Provider) GetTesting() (workflow.Testing, error) {
