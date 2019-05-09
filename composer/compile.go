@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -132,10 +131,7 @@ func (mc *mainComposer) runWorkflow() error {
 		return nil
 	}
 
-	runOutDir, err := ioutil.TempDir(mc.OutDir, "antha-run-outputs")
-	if err != nil {
-		return err
-	}
+	runOutDir := filepath.Join(mc.OutDir, "simulation")
 	mc.Logger.Log("progress", "running compiled workflow", "outdir", runOutDir, "indir", mc.InDir)
 	outBin := filepath.Join(mc.OutDir, "bin", "workflow")
 	cmd := exec.Command(outBin, "-outdir", runOutDir, "-indir", mc.InDir)

@@ -5,8 +5,7 @@ RUN printf "%s\n" "$NETRC" > /root/.netrc
 RUN mkdir /antha
 WORKDIR /antha
 RUN set -ex && go mod init antha && go mod edit "-require=github.com/antha-lang/antha@$COMMIT_SHA" && go mod download
-# Do these builds to pre-warm the build cache. This makes a HUGE difference to performance in the cloud
-RUN set -ex && go build github.com/antha-lang/antha/... github.com/Synthace/antha-runner/... github.com/Synthace/instruction-plugins/... && go install github.com/antha-lang/antha/cmd/...
+RUN set -ex && go install github.com/antha-lang/antha/cmd/...
 RUN set -ex && go test -c github.com/antha-lang/antha/cmd/elements
 COPY scripts/*.sh /antha/
 
@@ -23,5 +22,7 @@ COPY --from=tests /root/.cache /root/
 COPY --from=tests /go /go
 COPY --from=build /antha /antha
 WORKDIR /antha
+# Do these builds to pre-warm the build cache. This makes a HUGE difference to performance in the cloud
+RUN set -ex && go build github.com/antha-lang/antha/... github.com/Synthace/antha-runner/... github.com/Synthace/instruction-plugins/...
 # These are for the gitlab CI for elements:
 ONBUILD ADD . /elements

@@ -104,7 +104,7 @@ func renderTest(w io.Writer, twf *testWorkflow) error {
 		"name":         func() string { return name },
 		"inDir":        func() string { return tr.testWorkflow.inDir },
 		"outDir": func() string {
-			return filepath.Join(tr.testWorkflow.OutDir, "outputs", fmt.Sprintf("%s-%s", idStr, name))
+			return filepath.Join(tr.testWorkflow.OutDir, "simulations", fmt.Sprintf("%s-%s", idStr, name))
 		},
 	}
 	if t, err := template.New("maintpl").Funcs(funcs).Parse(maintpl); err != nil {
