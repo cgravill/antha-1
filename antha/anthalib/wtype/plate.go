@@ -643,6 +643,40 @@ func NewLHPlate(idGen *id.IDGenerator, platetype PlateTypeName, mfr string, nrow
 	return &lhp
 }
 
+func (p *Plate) ToPlateType() *PlateType {
+	dupExtra := func(ex map[string]interface{}) map[string]interface{} {
+		cp := map[string]interface{}{}
+		for k, v := range ex {
+			cp[k] = v
+		}
+		return cp
+	}
+	return &PlateType{
+		Name:         p.Type,
+		Manufacturer: p.Mnfr,
+		WellShape:    p.Welltype.WShape.Type.Name,
+		WellH:        p.Welltype.WShape.H,
+		WellW:        p.Welltype.WShape.W,
+		WellD:        p.Welltype.WShape.D,
+		MaxVol:       p.Welltype.MaxVol,
+		MinVol:       p.Welltype.Rvol,
+		BottomType:   p.Welltype.Bottom,
+		BottomH:      p.Welltype.Bottomh,
+		WellX:        p.Welltype.Bounds.Size.X,
+		WellY:        p.Welltype.Bounds.Size.Y,
+		WellZ:        p.Welltype.Bounds.Size.Z,
+		WellXOffset:  p.WellXOffset,
+		WellYOffset:  p.WellYOffset,
+		WellXStart:   p.WellXStart,
+		WellYStart:   p.WellYStart,
+		WellZStart:   p.WellZStart,
+		ColSize:      p.WlsY,
+		RowSize:      p.WlsX,
+		Height:       p.Height(),
+		Extra:        dupExtra(p.Welltype.Extra),
+	}
+}
+
 func LHPlateFromType(idGen *id.IDGenerator, pt *PlateType) *LHPlate {
 	newWellShape := NewShape(ShapeTypeFromName(pt.WellShape), "mm", pt.WellH, pt.WellW, pt.WellD)
 

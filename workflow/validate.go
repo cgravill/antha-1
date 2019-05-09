@@ -259,7 +259,7 @@ func (inst *GilsonPipetMaxInstanceConfig) validate(id DeviceInstanceID, isDefaul
 		return fmt.Errorf("Confusion: GilsonPipetMax device '%s' exists. Did you mean to set GilsonPipetMax.Defaults instead?", id)
 
 	}
-	return inst.commonMixerInstanceConfig.validate(id)
+	return inst.CommonMixerInstanceConfig.validate(id)
 }
 
 // Tecan
@@ -292,7 +292,7 @@ func (inst *TecanInstanceConfig) validate(id DeviceInstanceID, isDefaults bool) 
 		return fmt.Errorf("Confusion: Tecan device '%s' exists. Did you mean to set Tecan.Defaults instead?", id)
 
 	}
-	return inst.commonMixerInstanceConfig.validate(id)
+	return inst.CommonMixerInstanceConfig.validate(id)
 }
 
 // CyBio
@@ -325,7 +325,7 @@ func (inst *CyBioInstanceConfig) validate(id DeviceInstanceID, isDefaults bool) 
 		return fmt.Errorf("Confusion: CyBio device '%s' exists. Did you mean to set CyBio.Defaults instead?", id)
 
 	}
-	return inst.commonMixerInstanceConfig.validate(id)
+	return inst.CommonMixerInstanceConfig.validate(id)
 }
 
 // Labcyte
@@ -359,7 +359,7 @@ func (inst *LabcyteInstanceConfig) validate(id DeviceInstanceID, isDefaults bool
 
 	}
 	// NB because the instruction plugin itself does validation of the model, we don't do that here!
-	return inst.commonMixerInstanceConfig.validate(id)
+	return inst.CommonMixerInstanceConfig.validate(id)
 }
 
 // Hamilton
@@ -393,10 +393,10 @@ func (inst *HamiltonInstanceConfig) validate(id DeviceInstanceID, isDefaults boo
 
 	}
 	// NB because the instruction plugin itself does validation of the model, we don't do that here!
-	return inst.commonMixerInstanceConfig.validate(id)
+	return inst.CommonMixerInstanceConfig.validate(id)
 }
 
-func (inst *commonMixerInstanceConfig) validate(id DeviceInstanceID) error {
+func (inst *CommonMixerInstanceConfig) validate(id DeviceInstanceID) error {
 	if inst.ExecFile != "" {
 		if abs, err := exec.LookPath(inst.ExecFile); err != nil {
 			return fmt.Errorf("Error when trying to locate executable at %v for %v: %v", inst.ExecFile, id, err)

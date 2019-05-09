@@ -71,16 +71,16 @@ type GilsonPipetMaxConfig struct {
 }
 
 type GilsonPipetMaxInstanceConfig struct {
-	commonMixerInstanceConfig
+	CommonMixerInstanceConfig
 	tipsOnly
 }
 
 func (cfg *GilsonPipetMaxInstanceConfig) MarshalJSON() ([]byte, error) {
-	return MergeToMapAndMarshal(&cfg.commonMixerInstanceConfig, &cfg.tipsOnly)
+	return MergeToMapAndMarshal(&cfg.CommonMixerInstanceConfig, &cfg.tipsOnly)
 }
 
 func (cfg *GilsonPipetMaxInstanceConfig) UnmarshalJSON(bs []byte) error {
-	return UnmarshalMapsMerged(bs, &cfg.commonMixerInstanceConfig, &cfg.tipsOnly)
+	return UnmarshalMapsMerged(bs, &cfg.CommonMixerInstanceConfig, &cfg.tipsOnly)
 }
 
 // Tecan
@@ -91,16 +91,16 @@ type TecanConfig struct {
 
 type TecanInstanceConfig struct {
 	modelOnly
-	commonMixerInstanceConfig
+	CommonMixerInstanceConfig
 	tipsOnly
 }
 
 func (cfg *TecanInstanceConfig) MarshalJSON() ([]byte, error) {
-	return MergeToMapAndMarshal(&cfg.commonMixerInstanceConfig, &cfg.modelOnly, &cfg.tipsOnly)
+	return MergeToMapAndMarshal(&cfg.CommonMixerInstanceConfig, &cfg.modelOnly, &cfg.tipsOnly)
 }
 
 func (cfg *TecanInstanceConfig) UnmarshalJSON(bs []byte) error {
-	return UnmarshalMapsMerged(bs, &cfg.commonMixerInstanceConfig, &cfg.modelOnly, &cfg.tipsOnly)
+	return UnmarshalMapsMerged(bs, &cfg.CommonMixerInstanceConfig, &cfg.modelOnly, &cfg.tipsOnly)
 }
 
 // CyBio
@@ -111,16 +111,16 @@ type CyBioConfig struct {
 
 type CyBioInstanceConfig struct {
 	modelOnly
-	commonMixerInstanceConfig
+	CommonMixerInstanceConfig
 	tipsOnly
 }
 
 func (cfg *CyBioInstanceConfig) MarshalJSON() ([]byte, error) {
-	return MergeToMapAndMarshal(&cfg.commonMixerInstanceConfig, &cfg.modelOnly, &cfg.tipsOnly)
+	return MergeToMapAndMarshal(&cfg.CommonMixerInstanceConfig, &cfg.modelOnly, &cfg.tipsOnly)
 }
 
 func (cfg *CyBioInstanceConfig) UnmarshalJSON(bs []byte) error {
-	return UnmarshalMapsMerged(bs, &cfg.commonMixerInstanceConfig, &cfg.modelOnly, &cfg.tipsOnly)
+	return UnmarshalMapsMerged(bs, &cfg.CommonMixerInstanceConfig, &cfg.modelOnly, &cfg.tipsOnly)
 }
 
 // Labcyte
@@ -131,15 +131,15 @@ type LabcyteConfig struct {
 
 type LabcyteInstanceConfig struct {
 	modelOnly
-	commonMixerInstanceConfig
+	CommonMixerInstanceConfig
 }
 
 func (cfg *LabcyteInstanceConfig) MarshalJSON() ([]byte, error) {
-	return MergeToMapAndMarshal(&cfg.commonMixerInstanceConfig, &cfg.modelOnly)
+	return MergeToMapAndMarshal(&cfg.CommonMixerInstanceConfig, &cfg.modelOnly)
 }
 
 func (cfg *LabcyteInstanceConfig) UnmarshalJSON(bs []byte) error {
-	return UnmarshalMapsMerged(bs, &cfg.commonMixerInstanceConfig, &cfg.modelOnly)
+	return UnmarshalMapsMerged(bs, &cfg.CommonMixerInstanceConfig, &cfg.modelOnly)
 }
 
 // HamiltonConfig
@@ -149,19 +149,22 @@ type HamiltonConfig struct {
 }
 
 type HamiltonInstanceConfig struct {
-	commonMixerInstanceConfig
+	CommonMixerInstanceConfig
 	// tipsOnly - specifying tip types will be supported in later releases
 }
 
 func (cfg *HamiltonInstanceConfig) MarshalJSON() ([]byte, error) {
-	return MergeToMapAndMarshal(&cfg.commonMixerInstanceConfig)
+	return MergeToMapAndMarshal(&cfg.CommonMixerInstanceConfig)
 }
 
 func (cfg *HamiltonInstanceConfig) UnmarshalJSON(bs []byte) error {
-	return UnmarshalMapsMerged(bs, &cfg.commonMixerInstanceConfig)
+	return UnmarshalMapsMerged(bs, &cfg.CommonMixerInstanceConfig)
 }
 
-type commonMixerInstanceConfig struct {
+// CommonMixerInstanceConfig is the common base for all mixer configs. It is
+// intended to be embedded in a device-specific instance config struct, not
+// instantiated directly.
+type CommonMixerInstanceConfig struct {
 	Connection string `json:"Connection,omitempty"`
 
 	LayoutPreferences    *LayoutOpt            `json:"layoutPreferences,omitempty"`
@@ -190,9 +193,9 @@ type modelOnly struct {
 
 // type aliases do not inherit methods, so this is a cheap way to
 // avoid infinite recursion:
-type commonMixerInstanceConfigNoCustomMarshal commonMixerInstanceConfig
+type commonMixerInstanceConfigNoCustomMarshal CommonMixerInstanceConfig
 
-func (cfg *commonMixerInstanceConfig) MarshalJSON() ([]byte, error) {
+func (cfg *CommonMixerInstanceConfig) MarshalJSON() ([]byte, error) {
 	switch {
 	case cfg.HostPort != "":
 		cfg.Connection = cfg.HostPort
@@ -205,12 +208,12 @@ func (cfg *commonMixerInstanceConfig) MarshalJSON() ([]byte, error) {
 	return json.Marshal(cfg2)
 }
 
-func (cfg *commonMixerInstanceConfig) UnmarshalJSON(bs []byte) error {
+func (cfg *CommonMixerInstanceConfig) UnmarshalJSON(bs []byte) error {
 	cfg2 := commonMixerInstanceConfigNoCustomMarshal{}
 	if err := json.Unmarshal(bs, &cfg2); err != nil {
 		return err
 	}
-	*cfg = commonMixerInstanceConfig(cfg2)
+	*cfg = CommonMixerInstanceConfig(cfg2)
 
 	if u, err := url.Parse(cfg.Connection); err == nil && u.Scheme == "go" {
 		cfg.CompileAndRun = u.Host + u.Path

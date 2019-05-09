@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -11,6 +12,7 @@ import (
 	"github.com/antha-lang/antha/logger"
 	"github.com/antha-lang/antha/workflow"
 	"github.com/antha-lang/antha/workflow/migrate"
+	"github.com/antha-lang/antha/workflow/simulaterequestpb"
 	"github.com/antha-lang/antha/workflow/v1_2"
 )
 
@@ -29,11 +31,15 @@ func main() {
 	flag.StringVar(&outDir, "outdir", "", "Directory to write to (default: a temporary directory will be created)")
 	flag.StringVar(&fromFile, "from", "-", "File to migrate from (default: will be read from stdin)")
 	flag.StringVar(&fromFormat, "format", fromFormatJSON, fmt.Sprintf("Format of the from file. One of: %v", validFromFormats))
-	flag.StringVar(&gilsonDevice, "gilson-device", "", "A gilson device name to use for migrated config. If not present, device specific configuration will not be migrated.")
+	flag.StringVar(&gilsonDevice, "gilson-device", "", "A gilson device name to use for migrated config. If not present, device specific configuration will not be migrated. Only relevant when migrating from json.")
 	flag.BoolVar(&validate, "validate", true, "Validate input and output files.")
 	flag.Parse()
 
 	l := logger.NewLogger()
+
+	if len(gilsonDevice) > 0 && fromFormat == fromFormatProtobuf {
+		logger.Fatal(l, errors.New("-gilson-device option can not be used when -format is protobuf"))
+	}
 
 	args := flag.Args()
 	rs, err := workflow.ReadersFromPaths(append(args, fromFile))
@@ -75,20 +81,14 @@ func main() {
 	var provider migrate.WorkflowProvider
 	switch fromFormat {
 	case fromFormatJSON:
-		{
-			provider, err = v1_2.NewProvider(fromReader, fm, repoMap, gilsonDevice, l)
-			if err != nil {
-				logger.Fatal(l, err)
-			}
-		}
+		provider, err = v1_2.NewProvider(fromReader, fm, repoMap, gilsonDevice, l)
 	case fromFormatProtobuf:
-		{
-			logger.Fatal(l, fmt.Errorf("Format not implemented"))
-		}
+		provider, err = simulaterequestpb.NewProvider(fromReader, fm, repoMap, gilsonDevice, l)
 	default:
-		{
-			logger.Fatal(l, fmt.Errorf("Unknown format '%v', valid formats are: %v", fromFormat, validFromFormats))
-		}
+		err = fmt.Errorf("Unknown format '%v', valid formats are: %v", fromFormat, validFromFormats)
+	}
+	if err != nil {
+		logger.Fatal(l, err)
 	}
 
 	m := migrate.NewMigrator(provider)
