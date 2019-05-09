@@ -148,3 +148,28 @@ func TestEmptyFileParam(t *testing.T) {
 		}
 	}
 }
+
+func TestInputPlates(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "tests")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+	p, err := getTestProvider(tmpDir, "requestInputPlates.pb",
+		"AutoGenerateStockSolutions", "AutoMergeFactors", "ExportDOEFile", "ParseDOEFile", "RunDOE", "Define_Liquid_Set", "Define_Plate_Layout")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if inv, err := p.GetInventory(); err != nil {
+		t.Fatal(err)
+	} else if _, found := inv.PlateTypes["TwistDNAPlate"]; !found {
+		t.Fatal("Failed to find in inventory plate type TwistDNAPlate")
+	} else if cfg, err := p.GetConfig(); err != nil {
+		t.Fatal(err)
+	} else if l := len(cfg.GlobalMixer.InputPlates); l != 1 {
+		t.Fatalf("Expected to find 1 InputPlate in the GlobalMixer config. Found %d", l)
+	} else if inputPlate := cfg.GlobalMixer.InputPlates[0]; inputPlate.Type != "TwistDNAPlate" {
+		t.Fatalf("Expected InputPlate in the GlobalMixer config to be of type 'TwistDNAPlate'. Found %s", inputPlate.Type)
+	}
+}
