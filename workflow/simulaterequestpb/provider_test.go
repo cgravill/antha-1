@@ -1,4 +1,4 @@
-package simulaterequestpb
+package simulaterequestpb_test
 
 import (
 	"encoding/json"
@@ -11,15 +11,13 @@ import (
 	"github.com/antha-lang/antha/laboratory/effects"
 	"github.com/antha-lang/antha/logger"
 	"github.com/antha-lang/antha/workflow"
+	"github.com/antha-lang/antha/workflow/migrate"
+	"github.com/antha-lang/antha/workflow/simulaterequestpb"
 )
 
-func getTestProvider(filename string, elementTypeNames ...workflow.ElementTypeName) (*Provider, error) {
-	protobufFilePath := filepath.Join("testdata", filename)
-	tmpDir, err := ioutil.TempDir("", "tests")
-	if err != nil {
-		return nil, err
-	}
-	fm, err := effects.NewFileManager(tmpDir, tmpDir)
+func getTestProvider(dir string, pbFileName string, elementTypeNames ...workflow.ElementTypeName) (migrate.WorkflowProvider, error) {
+	protobufFilePath := filepath.Join("testdata", pbFileName)
+	fm, err := effects.NewFileManager(dir, dir)
 	if err != nil {
 		return nil, err
 	}
@@ -49,11 +47,16 @@ func getTestProvider(filename string, elementTypeNames ...workflow.ElementTypeNa
 	}
 	defer r.Close()
 
-	return NewProvider(r, fm, repoMap, gilsonDeviceName, logger)
+	return simulaterequestpb.NewProvider(r, fm, repoMap, gilsonDeviceName, logger)
 }
 
 func TestGetConfig(t *testing.T) {
-	p, err := getTestProvider("request.pb",
+	tmpDir, err := ioutil.TempDir("", "tests")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+	p, err := getTestProvider(tmpDir, "request.pb",
 		"Define_Liquid_Set", "Define_Plate_Layout", "Setup_QPCR_Plate", "Upload_Plate_Layout_File_Single", "Upload_QPCR_Design_File")
 	if err != nil {
 		t.Fatal(err)
@@ -79,7 +82,12 @@ func TestGetConfig(t *testing.T) {
 }
 
 func TestGetElements(t *testing.T) {
-	p, err := getTestProvider("request.pb",
+	tmpDir, err := ioutil.TempDir("", "tests")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+	p, err := getTestProvider(tmpDir, "request.pb",
 		"Define_Liquid_Set", "Define_Plate_Layout", "Setup_QPCR_Plate", "Upload_Plate_Layout_File_Single", "Upload_QPCR_Design_File")
 	if err != nil {
 		t.Fatal(err)
@@ -102,7 +110,12 @@ func TestGetElements(t *testing.T) {
 }
 
 func TestEmptyFileParam(t *testing.T) {
-	p, err := getTestProvider("requestEmptyFile.pb", "Upload_QPCR_Design_File")
+	tmpDir, err := ioutil.TempDir("", "tests")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+	p, err := getTestProvider(tmpDir, "requestEmptyFile.pb", "Upload_QPCR_Design_File")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,13 +133,15 @@ func TestEmptyFileParam(t *testing.T) {
 		t.Fatal("Couldn't find element instance named 'Upload QPCR Design File 1'")
 	} else if param, found := elem.Parameters["QPCRDesignFile"]; !found {
 		t.Fatal("Couldn't find parameter named 'QPCRDesignFile' for element instance 'Upload QPCR Design File 1'")
+	} else if fm, err := effects.NewFileManager(tmpDir, tmpDir); err != nil {
+		t.Fatal(err)
 	} else {
 		file := &wtype.File{}
 		if err := json.Unmarshal(param, file); err != nil {
 			t.Fatal(err)
 		} else if file.Name != "foo" {
 			t.Fatalf("Expected file parameter name 'foo', but got '%s'", file.Name)
-		} else if bs, err := p.fm.ReadAll(file); err != nil {
+		} else if bs, err := fm.ReadAll(file); err != nil {
 			t.Fatal(err)
 		} else if bs == nil || len(bs) != 0 {
 			t.Fatalf("Expected to find an empty non-nil byte array from reading file. But got '%#v'", bs)
