@@ -12,7 +12,6 @@ import (
 	"github.com/antha-lang/antha/antha/anthalib/wtype"
 	"github.com/antha-lang/antha/antha/anthalib/wtype/liquidtype"
 	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/laboratory/effects/id"
 	"github.com/antha-lang/antha/logger"
 	"github.com/antha-lang/antha/workflow"
 	"github.com/antha-lang/antha/workflow/migrate"
@@ -20,10 +19,10 @@ import (
 )
 
 type Provider struct {
-	pb      *protobuf.SimulateRequest
-	fm      *effects.FileManager
-	repoMap workflow.ElementTypesByRepository
-	logger  *logger.Logger
+	pb         *protobuf.SimulateRequest
+	labEffects *effects.LaboratoryEffects
+	repoMap    workflow.ElementTypesByRepository
+	logger     *logger.Logger
 }
 
 func NewProvider(
@@ -43,11 +42,16 @@ func NewProvider(
 		return nil, err
 	}
 
+	id, err := workflow.RandomBasicId("simulaterequestpb")
+	if err != nil {
+		return nil, err
+	}
+
 	return &Provider{
-		pb:      pb,
-		fm:      fm,
-		repoMap: repoMap,
-		logger:  logger,
+		pb:         pb,
+		labEffects: effects.NewLaboratoryEffects(nil, id, fm),
+		repoMap:    repoMap,
+		logger:     logger,
 	}, nil
 }
 
@@ -116,7 +120,7 @@ func (p *Provider) getElementInstances() (workflow.ElementInstances, error) {
 	instances := workflow.ElementInstances{}
 	for _, process := range p.pb.Processes {
 		name := workflow.ElementInstanceName(process.Id)
-		ei, err := p.migrateElement(p.fm, process)
+		ei, err := p.migrateElement(p.labEffects.FileManager, process)
 		if err != nil {
 			return nil, err
 		}
@@ -184,56 +188,52 @@ func (p *Provider) GetElements() (workflow.Elements, error) {
 	}, nil
 }
 
-func translatePlateTypes(idGen *id.IDGenerator, plateTypes []*inventorypb.PlateType) (wtype.PlateTypes, error) {
+func (p *Provider) translatePlateTypes(plateTypes []*inventorypb.PlateType) (wtype.PlateTypes, error) {
 	result := wtype.PlateTypes{}
 
-	for _, pt := range plateTypes {
-		plate, err := aconv.LHPlateTypeFromProtobuf(idGen, pt)
+	for _, plateTypePB := range plateTypes {
+		plateType, err := aconv.LHPlateTypeFromProtobuf(p.labEffects.IDGenerator, plateTypePB)
 		if err != nil {
-			return result, err
+			return nil, err
 		}
-		anthaPlateType := plate.ToPlateType()
-		result[anthaPlateType.Name] = anthaPlateType
+		result[plateType.Name] = plateType
 	}
+
+	p.labEffects.Inventory.Plates.SetPlateTypes(result)
 
 	return result, nil
 }
 
+// as a side effect, this populates the provider's inventory, so this
+// MUST be called before we translate the mixer config (which has
+// input plates, which will rely on xref into the inventory)
 func (p *Provider) GetInventory() (workflow.Inventory, error) {
-	idGen := id.NewIDGenerator("temp")
-
-	pt, err := translatePlateTypes(idGen, p.pb.GetPlateTypes())
-
+	plateTypes, err := p.translatePlateTypes(p.pb.GetPlateTypes())
 	if err != nil {
 		return workflow.Inventory{}, err
 	}
-
 	return workflow.Inventory{
-		PlateTypes: pt,
+		PlateTypes: plateTypes,
 	}, nil
 }
 
-func translatePlates(plates []*inventorypb.Plate) []*wtype.Plate {
+func (p *Provider) translatePlates(plates []*inventorypb.Plate) ([]*wtype.Plate, error) {
 	result := make([]*wtype.Plate, len(plates))
-	for i, plate := range plates {
-		result[i] = &wtype.Plate{
-			ID:         plate.Id,
-			Type:       wtype.PlateTypeName(plate.Type),
-			PlateName:  plate.Name,
-			Loc:        plate.Location,
-			WlsX:       int(plate.WlsX),
-			WlsY:       int(plate.WlsY),
-			Wellcoords: nil, // FIXME! Expecting []*wtype.LHWell, plate.WellCoords is []string
-			// TODO: Do we need to do anything with plate.Contents and plate.Barcodes??
+	for i, platePB := range plates {
+		plate, err := aconv.LHPlateFromProtobuf(p.labEffects, platePB)
+		if err != nil {
+			return nil, err
 		}
+		result[i] = plate
 	}
-	return result
+	return result, nil
 }
 
 func (p *Provider) getGlobalMixerConfig() (workflow.GlobalMixerConfig, error) {
 	config := workflow.GlobalMixerConfig{}
 	mc := p.pb.GetMixerConfig()
 	if mc != nil {
+
 		if mc.LiquidHandlingPolicyXlsxJmpFile != nil {
 			policyMap, err := liquidtype.PolicyMakerFromBytes(mc.LiquidHandlingPolicyXlsxJmpFile, wtype.PolicyName(liquidtype.BASEPolicy))
 			if err != nil {
@@ -246,8 +246,13 @@ func (p *Provider) getGlobalMixerConfig() (workflow.GlobalMixerConfig, error) {
 			}
 			config.CustomPolicyRuleSet = lhpr
 		}
+
 		config.IgnorePhysicalSimulation = mc.IgnorePhysicalSimulation
-		config.InputPlates = translatePlates(mc.GetInputPlateVals().GetPlates())
+		if inputPlates, err := p.translatePlates(mc.GetInputPlateVals().GetPlates()); err != nil {
+			return workflow.GlobalMixerConfig{}, err
+		} else {
+			config.InputPlates = inputPlates
+		}
 		config.UseDriverTipTracking = mc.UseDriverTipTracking
 	}
 	return config, nil

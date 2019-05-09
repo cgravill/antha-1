@@ -644,7 +644,7 @@ func NewLHPlate(idGen *id.IDGenerator, platetype PlateTypeName, mfr string, nrow
 }
 
 func (p *Plate) ToPlateType() *PlateType {
-	dupEx := func(ex map[string]interface{}) map[string]interface{} {
+	dupExtra := func(ex map[string]interface{}) map[string]interface{} {
 		cp := map[string]interface{}{}
 		for k, v := range ex {
 			cp[k] = v
@@ -673,7 +673,7 @@ func (p *Plate) ToPlateType() *PlateType {
 		ColSize:      p.WlsY,
 		RowSize:      p.WlsX,
 		Height:       p.Height(),
-		Extra:        dupEx(p.Welltype.Extra),
+		Extra:        dupExtra(p.Welltype.Extra),
 	}
 }
 
