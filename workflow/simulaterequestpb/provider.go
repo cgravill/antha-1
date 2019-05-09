@@ -331,32 +331,47 @@ func (p *Provider) GetConfig() (workflow.Config, error) {
 	}
 	result.GlobalMixer = gmc
 
+	// In the case where GetAvailable() returns > 1 mixer then we only migrate
+	// the first one, and just ignore the rest. (This matches existing behaviour
+	// in the old antha-runner codebase.)
+	hasAddedMixer := false
+
 	for _, device := range p.pb.GetAvailable() {
 		id := workflow.DeviceInstanceID(device.GetId())
 		class := device.GetClass()
+
 		// class is the device class name as defined by the device microservice
 		// (where it's called the device *template* name.) The canonical list is
 		// therefore in the device.DeviceTemplate collection in Google Cloud
 		// Datastore.
-		switch class {
-		case "CyBioFelix":
+		switch true {
+		case class == "CyBioFelix" && !hasAddedMixer:
 			result.CyBio.Devices[id] = p.getCyBioInstanceConfig("Felix")
-		case "CyBioGeneTheatre":
+			hasAddedMixer = true
+		case class == "CyBioGeneTheatre" && !hasAddedMixer:
 			result.CyBio.Devices[id] = p.getCyBioInstanceConfig("GeneTheatre")
-		case "GilsonPipetMax":
+			hasAddedMixer = true
+		case class == "GilsonPipetMax" && !hasAddedMixer:
 			result.GilsonPipetMax.Devices[id] = p.getGilsonPipetMaxInstanceConfig()
-		case "HamiltonMicrolabSTAR":
+			hasAddedMixer = true
+		case class == "HamiltonMicrolabSTAR" && !hasAddedMixer:
 			result.Hamilton.Devices[id] = p.getHamiltonInstanceConfig()
-		case "LabCyteEcho520":
+			hasAddedMixer = true
+		case class == "LabCyteEcho520" && !hasAddedMixer:
 			result.Labcyte.Devices[id] = p.getLabcyteInstanceConfig("520")
-		case "LabCyteEcho525":
+			hasAddedMixer = true
+		case class == "LabCyteEcho525" && !hasAddedMixer:
 			result.Labcyte.Devices[id] = p.getLabcyteInstanceConfig("525")
-		case "LabCyteEcho550":
+			hasAddedMixer = true
+		case class == "LabCyteEcho550" && !hasAddedMixer:
 			result.Labcyte.Devices[id] = p.getLabcyteInstanceConfig("550")
-		case "LabCyteEcho555":
+			hasAddedMixer = true
+		case class == "LabCyteEcho555" && !hasAddedMixer:
 			result.Labcyte.Devices[id] = p.getLabcyteInstanceConfig("555")
-		case "TecanLiquidHandler":
+			hasAddedMixer = true
+		case class == "TecanLiquidHandler" && !hasAddedMixer:
 			result.Tecan.Devices[id] = p.getTecanInstanceConfig("Evo")
+			hasAddedMixer = true
 
 		// The following types are stored in maps where the values are empty
 		// structs. That's because  we need to know whether or not one of those
@@ -364,11 +379,11 @@ func (p *Provider) GetConfig() (workflow.Config, error) {
 		// instruction for a qpcr machine, we must see whether we actually have
 		// one in the lab. But there are no configuration options for any of
 		// those device classes currently, so we just store an empty struct.
-		case "QInstrumentsBioShake":
+		case class == "QInstrumentsBioShake":
 			result.ShakerIncubator.Devices[id] = struct{}{}
-		case "QPCRDevice":
+		case class == "QPCRDevice":
 			result.QPCR.Devices[id] = struct{}{}
-		case "WriteOnlyPlateReader":
+		case class == "WriteOnlyPlateReader":
 			result.PlateReader.Devices[id] = struct{}{}
 		}
 	}
