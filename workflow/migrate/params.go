@@ -11,7 +11,7 @@ import (
 
 type bakedInFile struct {
 	Name  string `json:"name"`
-	Bytes struct {
+	Bytes *struct {
 		Bytes []byte `json:"bytes"`
 	} `json:"bytes"`
 }
@@ -67,7 +67,7 @@ func maybeMigrateFileFlat(fm *effects.FileManager, param json.RawMessage) (json.
 
 // hasData checks that structure is a valid bakedInFile (rather than an empty struct)
 func (bif *bakedInFile) hasData() bool {
-	return bif != nil && bif.Name != "" && len(bif.Bytes.Bytes) > 0
+	return bif != nil && bif.Name != "" && bif.Bytes != nil
 }
 
 func (bif *bakedInFile) moveDataToFile(fm *effects.FileManager) (*wtype.File, error) {
