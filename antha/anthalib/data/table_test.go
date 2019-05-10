@@ -712,75 +712,149 @@ func TestJoin(t *testing.T) {
 
 func TestAppend(t *testing.T) {
 	runSubTests(t, func(t *testing.T, makeSeries makeSeriesType) {
-		// Append
+		// Append.Inner
 		t1 := NewTable(
 			makeSeries("a", []int64{1, 2}, nil),
 			makeSeries("b", []float64{3, 4}, nil),
 		)
 		t2 := NewTable(
-			makeSeries("c", []int64{10}, nil),
-			makeSeries("d", []float64{20}, nil),
+			makeSeries("b", []float64{10}, nil),
+			makeSeries("c", []int64{20}, nil),
 		)
-		appended := t1.Must().Append(t2)
+		appended := Must().Append(t1, t2).Inner()
 		appendedRef := NewTable(
+			makeSeries("b", []float64{3, 4, 10}, nil),
+		)
+		assertEqual(t, appendedRef, appended, "Append.Inner")
+
+		appended = Must().Append(NewTable(
+			makeSeries("a", []int64{1}, nil),
+			makeSeries("a", []float64{2}, nil),
+		), NewTable(
+			makeSeries("a", []int64{3}, nil),
+		)).Inner()
+		appendedRef = NewTable(
+			makeSeries("a", []int64{1, 3}, nil),
+		)
+		assertEqual(t, appendedRef, appended, "Append.Inner - duplicate column names")
+
+		appended = Must().Append(NewTable(
+			makeSeries("a", []int64{1}, nil),
+			makeSeries("a", []int64{2}, nil),
+		), NewTable(
+			makeSeries("a", []int64{3}, nil),
+		)).Inner()
+		appendedRef = NewTable(
+			makeSeries("a", []int64{1, 3}, nil),
+		)
+		assertEqual(t, appendedRef, appended, "Append.Inner - duplicate column names and column types")
+
+		appended = Must().Append(NewTable(
+			makeSeries("a", []int64{1, 2}, nil),
+		), NewTable(
+			makeSeries("b", []float64{3, 4}, nil),
+		)).Inner()
+		assertEqual(t, NewTable(), appended, "Append.Inner - empty result")
+
+		// Append.Outer
+		appended = Must().Append(t1, t2).Outer()
+		appendedRef = NewTable(
+			makeSeries("a", []int64{1, 2, -1}, []bool{true, true, false}),
+			makeSeries("b", []float64{3, 4, 10}, nil),
+			makeSeries("c", []int64{-1, -1, 20}, []bool{false, false, true}),
+		)
+		assertEqual(t, appendedRef, appended, "Append.Outer")
+
+		// Append.Exact
+		t1 = NewTable(
+			makeSeries("a", []int64{1, 2}, nil),
+			makeSeries("b", []float64{3, 4}, nil),
+		)
+		t2 = NewTable(
+			makeSeries("b", []float64{20}, nil),
+			makeSeries("a", []int64{10}, nil),
+		)
+		appended = Must().Append(t1, t2).Exact()
+		appendedRef = NewTable(
 			makeSeries("a", []int64{1, 2, 10}, nil),
 			makeSeries("b", []float64{3, 4, 20}, nil),
 		)
-		assertEqual(t, appendedRef, appended, "Append")
+		assertEqual(t, appendedRef, appended, "Append.Exact")
 
-		// AppendMany
+		_, err := Append(NewTable(
+			makeSeries("a", []float64{1}, nil),
+		), NewTable(
+			makeSeries("a", []int64{1}, nil),
+		)).Exact()
+		if err == nil {
+			t.Error("no err, Append.Exact with different columns types")
+		}
+
+		// Append.Positional
+		t1 = NewTable(
+			makeSeries("a", []int64{1, 2}, nil),
+			makeSeries("b", []float64{3, 4}, nil),
+		)
+		t2 = NewTable(
+			makeSeries("c", []int64{10}, nil),
+			makeSeries("d", []float64{20}, nil),
+		)
+		appended = Must().Append(t1, t2).Positional()
+		appendedRef = NewTable(
+			makeSeries("a", []int64{1, 2, 10}, nil),
+			makeSeries("b", []float64{3, 4, 20}, nil),
+		)
+		assertEqual(t, appendedRef, appended, "Append.Positional")
+
+		_, err = Append(NewTable(
+			makeSeries("a", []float64{1}, nil),
+		), NewTable(
+			makeSeries("a", []int64{1}, nil),
+		)).Positional()
+		if err == nil {
+			t.Error("no err, Append.Positional with different columns types")
+		}
+
+		_, err = Append(NewTable(
+			makeSeries("a", []float64{1}, nil),
+		), NewTable(
+			makeSeries("a", []float64{1}, nil),
+			makeSeries("b", []int64{1}, nil),
+		)).Positional()
+		if err == nil {
+			t.Error("no err, Append.Positional with different number of columns")
+		}
+
+		appended = t1.Must().Append(NewTable(
+			makeSeries("a", []int64{}, nil),
+			makeSeries("b", []float64{}, nil),
+		)).Positional()
+		assertEqual(t, t1, appended, "Append an empty table")
+
+		// Append multiple tables
 		t3 := NewTable(
 			makeSeries("e", []int64{100}, nil),
 			makeSeries("f", []float64{200}, nil),
 		)
-		appended = t1.Must().Append(t2).Must().Append(t3)
+		appended = Must().Append(t1, t2, t3).Positional()
 		appendedRef = NewTable(
 			makeSeries("a", []int64{1, 2, 10, 100}, nil),
 			makeSeries("b", []float64{3, 4, 20, 200}, nil),
 		)
-		assertEqual(t, appendedRef, appended, "AppendMany")
+		assertEqual(t, appendedRef, appended, "Append multiple tables")
 
-		// t1.Append(t2).Append(t3) == AppendMany(t1, t2, t3)
-		appended = t1.Must().Append(t2).Must().Append(t3)
-		assertEqual(t, appendedRef, appended, "Append*Append differs from AppendMany internally")
+		appended = t1.Must().Append(t2).Positional().Must().Append(t3).Positional()
+		assertEqual(t, appendedRef, appended, "t1.Append(t2).Append(t3) == Append(t1, t2, t3)")
 
-		// the result of t1.Append(t2).Append(t3) should be similar to AppendMany(t1, t2, t3) internally as well
+		// the result of t1.Append(t2).Append(t3) should be similar to Append(t1, t2, t3) internally as well
 		// (i.e. it should create a single node instead of multiple ones)
 		if len(appended.series[0].meta.(*appendSeriesMeta).sources) != 3 {
 			t.Error("t1.Append(t2).Append(t3) optimization doesn't work")
 		}
 
-		// append an empty table
-		appended = t1.Must().Append(NewTable(
-			makeSeries("a", []int64{}, nil),
-			makeSeries("b", []float64{}, nil),
-		))
-		assertEqual(t, t1, appended, "Append an empty table")
-
-		// error cases
-
-		_, err := AppendMany()
+		_, err = Append().Inner()
 		if err == nil {
-			t.Error("no err, AppendMany empty tables list")
-		}
-
-		_, err = NewTable(
-			makeSeries("a", []float64{1}, nil),
-		).Append(NewTable(
-			makeSeries("a", []int64{1}, nil),
-		))
-		if err == nil {
-			t.Error("no err, Append tables with different columns types")
-		}
-
-		_, err = NewTable(
-			makeSeries("a", []float64{1}, nil),
-		).Append(NewTable(
-			makeSeries("a", []float64{1}, nil),
-			makeSeries("b", []int64{1}, nil),
-		))
-		if err == nil {
-			t.Error("no err, Append tables with different number of columns")
+			t.Error("no err, Append empty tables list")
 		}
 	})
 }

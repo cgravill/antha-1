@@ -147,13 +147,26 @@ func (e *Extension) ConstantType(value interface{}, typ reflect.Type) (*Table, e
 }
 
 // NewConstantSeries returns an unbounded repetition of the same value, using
-// the dynamic type of the given value.
+// the dynamic type of the given value. Panics if the value is null.
 func NewConstantSeries(col ColumnName, value interface{}) *Series {
 	iter := &constIterator{value: value}
 	return &Series{
 		col:  col,
 		meta: &combinedSeriesMeta{isMaterialized: true},
 		typ:  reflect.TypeOf(value),
+		read: func(_ *seriesIterCache) iterator {
+			return iter
+		},
+	}
+}
+
+// NewNullSeries returns an unbounded series containing null values of the given type.
+func NewNullSeries(col ColumnName, typ reflect.Type) *Series {
+	iter := &constIterator{value: nil}
+	return &Series{
+		col:  col,
+		meta: &combinedSeriesMeta{isMaterialized: true},
+		typ:  typ,
 		read: func(_ *seriesIterCache) iterator {
 			return iter
 		},

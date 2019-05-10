@@ -294,18 +294,51 @@ func (jo *MustJoinOn) LeftOuter(t *Table, cols ...ColumnName) *Table {
 
 // Append
 
-// Append panics unless Table.Append.
-func (m MustTable) Append(other *Table) *Table {
-	t, err := m.Table.Append(other)
+// Append returns a proxy for *Table.Append.
+func (m MustTable) Append(other *Table) *MustAppendSelection {
+	return &MustAppendSelection{m.Table.Append(other)}
+}
+
+// MustAppendSelection is a proxy for AppendSelection.
+type MustAppendSelection struct {
+	*AppendSelection
+}
+
+// Inner append: appends tables vertically, matches their columns by names, types and ordinals.
+// The resulting table contains intersecting columns only.
+func (s *MustAppendSelection) Inner() *Table {
+	t, err := s.AppendSelection.Inner()
 	handle(err)
 	return t
 }
 
-// AppendMany panics unless (global) AppendMany.
-func (m MustGlobal) AppendMany(tables ...*Table) *Table {
-	t, err := AppendMany(tables...)
+// Outer append: appends tables vertically, matches their columns by names, types and ordinals.
+// The resulting table contains union of columns.
+func (s *MustAppendSelection) Outer() *Table {
+	t, err := s.AppendSelection.Outer()
 	handle(err)
 	return t
+}
+
+// Exact append: appends tables vertically, matches their columns by names, types and ordinals.
+// All the source tables must have the same schemas (except the columns order).
+func (s *MustAppendSelection) Exact() *Table {
+	t, err := s.AppendSelection.Exact()
+	handle(err)
+	return t
+}
+
+// Positional append: appends tables vertically, matches their columns by positions.
+// All the source tables must have the same schemas (except the columns names).
+func (s *MustAppendSelection) Positional() *Table {
+	t, err := s.AppendSelection.Positional()
+	handle(err)
+	return t
+}
+
+// Append returns a proxy for (global) Append.
+func (m MustGlobal) Append(tables ...*Table) *MustAppendSelection {
+	return &MustAppendSelection{Append(tables...)}
 }
 
 // Foreach

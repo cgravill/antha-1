@@ -490,12 +490,45 @@ func ExampleTable_Join_inner() {
 	// |0|doubloon|      1|    1200|    doubloon|                 0.5|
 }
 
-func ExampleTable_Append() {
+func ExampleTable_Append_inner() {
+	morePirateBootyNames, _ := pirateBooty.Append(NewTable(
+		Must().NewSeriesFromSlice("Name", []string{"piastre"}, nil),
+	)).Inner()
+	fmt.Println(morePirateBootyNames.ToRows())
+	// Output: 5 Row(s):
+	// | |    Name|
+	// | |  string|
+	// ------------
+	// |0|doubloon|
+	// |1|    grog|
+	// |2| cutlass|
+	// |3|   chest|
+	// |4| piastre|
+}
+
+func ExampleTable_Append_outer() {
 	morePirateBooty, _ := pirateBooty.Append(NewTable(
 		Must().NewSeriesFromSlice("Name", []string{"piastre"}, nil),
-		Must().NewSeriesFromSlice("Price", []float64{1.5}, nil),
 		Must().NewSeriesFromSlice("Quantity", []int64{1000}, nil),
-	))
+	)).Outer()
+	fmt.Println(morePirateBooty.ToRows())
+	// Output: 5 Row(s):
+	// | |    Name|  Price|Quantity|
+	// | |  string|float64|   int64|
+	// -----------------------------
+	// |0|doubloon|      1|    1200|
+	// |1|    grog|  <nil>|      44|
+	// |2| cutlass|    5.5|      30|
+	// |3|   chest|    600|       2|
+	// |4| piastre|  <nil>|    1000|
+}
+
+func ExampleTable_Append_exact() {
+	morePirateBooty, _ := pirateBooty.Append(NewTable(
+		Must().NewSeriesFromSlice("Price", []float64{1.5}, nil),
+		Must().NewSeriesFromSlice("Name", []string{"piastre"}, nil),
+		Must().NewSeriesFromSlice("Quantity", []int64{1000}, nil),
+	)).Exact()
 	fmt.Println(morePirateBooty.ToRows())
 	// Output: 5 Row(s):
 	// | |    Name|  Price|Quantity|
@@ -508,8 +541,66 @@ func ExampleTable_Append() {
 	// |4| piastre|    1.5|    1000|
 }
 
-func ExampleAppendMany() {
-	morePirateBooty, _ := AppendMany(pirateBooty, NewTable(
+func ExampleTable_Append_positional() {
+	morePirateBooty, _ := pirateBooty.Append(NewTable(
+		Must().NewSeriesFromSlice("Name", []string{"piastre"}, nil),
+		Must().NewSeriesFromSlice("Price", []float64{1.5}, nil),
+		Must().NewSeriesFromSlice("QuantityRenamed", []int64{1000}, nil),
+	)).Positional()
+	fmt.Println(morePirateBooty.ToRows())
+	// Output: 5 Row(s):
+	// | |    Name|  Price|Quantity|
+	// | |  string|float64|   int64|
+	// -----------------------------
+	// |0|doubloon|      1|    1200|
+	// |1|    grog|  <nil>|      44|
+	// |2| cutlass|    5.5|      30|
+	// |3|   chest|    600|       2|
+	// |4| piastre|    1.5|    1000|
+}
+
+func ExampleAppend_inner() {
+	morePirateBootyNames, _ := Append(pirateBooty, NewTable(
+		Must().NewSeriesFromSlice("Name", []string{"piastre"}, nil),
+		Must().NewSeriesFromSlice("Price", []float64{1.5}, nil),
+	), NewTable(
+		Must().NewSeriesFromSlice("Name", []string{"guinea"}, nil),
+	)).Inner()
+	fmt.Println(morePirateBootyNames.ToRows())
+	// Output: 6 Row(s):
+	// | |    Name|
+	// | |  string|
+	// ------------
+	// |0|doubloon|
+	// |1|    grog|
+	// |2| cutlass|
+	// |3|   chest|
+	// |4| piastre|
+	// |5|  guinea|
+}
+
+func ExampleAppend_outer() {
+	morePirateBooty, _ := Append(pirateBooty, NewTable(
+		Must().NewSeriesFromSlice("Name", []string{"piastre"}, nil),
+		Must().NewSeriesFromSlice("Price", []float64{1.5}, nil),
+	), NewTable(
+		Must().NewSeriesFromSlice("Name", []string{"guinea"}, nil),
+	)).Outer()
+	fmt.Println(morePirateBooty.ToRows())
+	// Output: 6 Row(s):
+	// | |    Name|  Price|Quantity|
+	// | |  string|float64|   int64|
+	// -----------------------------
+	// |0|doubloon|      1|    1200|
+	// |1|    grog|  <nil>|      44|
+	// |2| cutlass|    5.5|      30|
+	// |3|   chest|    600|       2|
+	// |4| piastre|    1.5|   <nil>|
+	// |5|  guinea|  <nil>|   <nil>|
+}
+
+func ExampleAppend_exact() {
+	morePirateBooty, _ := Append(pirateBooty, NewTable(
 		Must().NewSeriesFromSlice("Name", []string{"piastre"}, nil),
 		Must().NewSeriesFromSlice("Price", []float64{1.5}, nil),
 		Must().NewSeriesFromSlice("Quantity", []int64{1000}, nil),
@@ -517,7 +608,30 @@ func ExampleAppendMany() {
 		Must().NewSeriesFromSlice("Name", []string{"guinea"}, nil),
 		Must().NewSeriesFromSlice("Price", []float64{0.5}, nil),
 		Must().NewSeriesFromSlice("Quantity", []int64{100}, nil),
-	))
+	)).Exact()
+	fmt.Println(morePirateBooty.ToRows())
+	// Output: 6 Row(s):
+	// | |    Name|  Price|Quantity|
+	// | |  string|float64|   int64|
+	// -----------------------------
+	// |0|doubloon|      1|    1200|
+	// |1|    grog|  <nil>|      44|
+	// |2| cutlass|    5.5|      30|
+	// |3|   chest|    600|       2|
+	// |4| piastre|    1.5|    1000|
+	// |5|  guinea|    0.5|     100|
+}
+
+func ExampleAppend_positional() {
+	morePirateBooty, _ := Append(pirateBooty, NewTable(
+		Must().NewSeriesFromSlice("Name", []string{"piastre"}, nil),
+		Must().NewSeriesFromSlice("Price", []float64{1.5}, nil),
+		Must().NewSeriesFromSlice("Quantity", []int64{1000}, nil),
+	), NewTable(
+		Must().NewSeriesFromSlice("Name", []string{"guinea"}, nil),
+		Must().NewSeriesFromSlice("PriceModified", []float64{0.5}, nil),
+		Must().NewSeriesFromSlice("Quantity", []int64{100}, nil),
+	)).Positional()
 	fmt.Println(morePirateBooty.ToRows())
 	// Output: 6 Row(s):
 	// | |    Name|  Price|Quantity|

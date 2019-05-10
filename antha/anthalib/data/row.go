@@ -57,7 +57,7 @@ func (r Row) ValueAt(colIndex int) Value {
 	}
 }
 
-// Values retreivies all the columns values from a Row.
+// Values retrieves all the columns values from a Row.
 func (r Row) Values() []Value {
 	values := make([]Value, len(r.values))
 	for i := range values {
@@ -117,7 +117,10 @@ func (r raw) project(p projection) raw {
 	return newR
 }
 
-// projection efficiently (without dealing with strings) defines an ordered subset of the set of columns
+// projection defines an ordered subset of the set of columns.
+// It is recommended to use projections internally instead of lists of column names, because
+// - they are faster (because they don't contain strings)
+// - they can handle duplicate column names
 type projection struct {
 	newToOld []int // new column index -> old column index
 }
