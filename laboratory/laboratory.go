@@ -56,6 +56,8 @@ type LaboratoryBuilder struct {
 	// happen before Completed is closed.
 	errored chan struct{}
 
+	throttle chan struct{}
+
 	// Completed is closed when all the elements within the workflow
 	// have stopped (some may never have even started), regardless of
 	// whether any error occurred.
@@ -71,13 +73,21 @@ type LaboratoryBuilder struct {
 }
 
 func EmptyLaboratoryBuilder() *LaboratoryBuilder {
+	// Hopefully temporary. See AC-72
+	const concurrencyLevel = 1
+
 	labBuild := &LaboratoryBuilder{
 		elementToLab: make(map[Element]*Laboratory),
 		errored:      make(chan struct{}),
+		throttle:     make(chan struct{}, concurrencyLevel),
 		Completed:    make(chan struct{}),
 
 		lineMapManager: NewLineMapManager(),
 		Logger:         logger.NewLogger(),
+	}
+	token := struct{}{}
+	for c := 0; c < concurrencyLevel; c++ {
+		labBuild.throttle <- token
 	}
 	return labBuild
 }
@@ -312,7 +322,7 @@ type ElementInstaller interface {
 }
 
 func (labBuild *LaboratoryBuilder) InstallElement(e Element) {
-	labBuild.addElementLaboratory(e, labBuild.makeLab(labBuild.Logger, e))
+	labBuild.addElementLaboratory(e, labBuild.makeLab(labBuild.Logger, e, nil))
 }
 
 func (labBuild *LaboratoryBuilder) addElementLaboratory(e Element, lab *Laboratory) {
@@ -422,7 +432,10 @@ func (labBuild *LaboratoryBuilder) Errors() error {
 // effects, and to log.
 type Laboratory struct {
 	labBuild *LaboratoryBuilder
-	element  Element
+	// if non-nil then this laboratory has a parent, which means it was
+	// not part of the workflow itself (i.e. CallSteps)
+	parent  *Laboratory
+	element Element
 
 	Logger   *logger.Logger
 	Workflow *workflow.Workflow
@@ -447,10 +460,11 @@ type Laboratory struct {
 	err error
 }
 
-func (labBuild *LaboratoryBuilder) makeLab(logger *logger.Logger, e Element) *Laboratory {
+func (labBuild *LaboratoryBuilder) makeLab(logger *logger.Logger, e Element, parent *Laboratory) *Laboratory {
 	id := atomic.AddUint64(&labBuild.nextElementId, 1)
 	return &Laboratory{
 		labBuild: labBuild,
+		parent:   parent,
 		element:  e,
 
 		Logger:            logger.With("id", id, "name", e.Name(), "type", e.TypeName()),
@@ -467,7 +481,7 @@ func (labBuild *LaboratoryBuilder) makeLab(logger *logger.Logger, e Element) *La
 func (lab *Laboratory) InstallElement(e Element) {
 	// take the root logger (from labBuild) and build up from there.
 	logger := lab.labBuild.Logger.With("parentId", lab.id, "parentName", lab.element.Name(), "parentType", lab.element.TypeName())
-	lab.labBuild.addElementLaboratory(e, lab.labBuild.makeLab(logger, e))
+	lab.labBuild.addElementLaboratory(e, lab.labBuild.makeLab(logger, e, lab))
 }
 
 // CallSteps is only for use when you're in an element and want to
@@ -531,6 +545,16 @@ func (lab *Laboratory) run(funs ...func(*Laboratory) error) {
 
 	select {
 	case <-lab.inputsReady:
+		if lab.parent == nil {
+			token := <-lab.labBuild.throttle
+			defer func() {
+				res := recover()
+				lab.labBuild.throttle <- token
+				if res != nil {
+					panic(res)
+				}
+			}()
+		}
 		lab.Logger.Log("progress", "starting")
 		// this defer comes here because this defer will read all our
 		// inputs and parameters as part of the save() call. This is
