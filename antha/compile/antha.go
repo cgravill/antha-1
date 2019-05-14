@@ -252,6 +252,7 @@ var (
 		"MixNamed":      "execute.MixNamed",
 		"MixTo":         "execute.MixTo",
 		"MixerPrompt":   "execute.MixerPrompt",
+		"MixerWait":     "execute.MixerWait",
 		"NewComponent":  "execute.NewComponent",
 		"NewPlate":      "execute.NewPlate",
 		"Prompt":        "execute.Prompt",

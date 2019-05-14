@@ -6,60 +6,65 @@ import (
 	"github.com/antha-lang/antha/antha/anthalib/wtype"
 	"github.com/antha-lang/antha/antha/anthalib/wunit"
 	"github.com/antha-lang/antha/laboratory"
+	"github.com/antha-lang/antha/laboratory/effects/id"
 	"github.com/antha-lang/antha/microArch/driver/liquidhandling"
 )
 
-func getTestBlow(ch *wtype.LHChannelParameter, multi int, tipType string) liquidhandling.RobotInstruction {
-	bi := liquidhandling.NewBlowInstruction()
-	bi.Multi = multi
-	bi.TipType = tipType
-	for i := 0; i < multi; i++ {
-		bi.What = append(bi.What, "soup")
-		bi.PltTo = append(bi.PltTo, "position_4")
-		bi.WellTo = append(bi.WellTo, "A1")
-		bi.Volume = append(bi.Volume, wunit.NewVolume(10.0, "ul"))
-		bi.TPlateType = append(bi.TPlateType, "pcrplate_skirted_riser40")
-		bi.TVolume = append(bi.TVolume, wunit.NewVolume(5.0, "ul"))
+func getTestBlow(idGen *id.IDGenerator, ch *wtype.LHChannelParameter, multi int, tipType string) liquidhandling.RobotInstruction {
+	cti := &liquidhandling.ChannelTransferInstruction{
+		Multi:      multi,
+		What:       make([]string, 0, multi),
+		PltTo:      make([]string, 0, multi),
+		WellTo:     make([]string, 0, multi),
+		Volume:     make([]wunit.Volume, 0, multi),
+		TPlateType: make([]string, 0, multi),
+		TVolume:    make([]wunit.Volume, 0, multi),
+		Prms:       make([]*wtype.LHChannelParameter, 0, multi),
+		TipType:    make([]string, 0, multi),
+		Component:  make([]string, 0, multi),
 	}
-	bi.Prms = ch
-	bi.Head = ch.Head
-	return bi
+
+	for i := 0; i < multi; i++ {
+		cti.What = append(cti.What, "soup")
+		cti.PltTo = append(cti.PltTo, "position_4")
+		cti.WellTo = append(cti.WellTo, "A1")
+		cti.Volume = append(cti.Volume, wunit.NewVolume(10.0, "ul"))
+		cti.TPlateType = append(cti.TPlateType, "DWST12")
+		cti.TVolume = append(cti.TVolume, wunit.NewVolume(20.0, "ul"))
+		cti.TipType = append(cti.TipType, tipType)
+		cti.Prms = append(cti.Prms, ch)
+		cti.Component = append(cti.Component, "minestrone")
+	}
+
+	return liquidhandling.NewBlowInstruction(idGen, cti)
 }
 
-func getTestSuck(ch *wtype.LHChannelParameter, multi int, tipType string) liquidhandling.RobotInstruction {
-	ret := liquidhandling.NewSuckInstruction()
-	ret.Multi = multi
-	ret.TipType = tipType
-	for i := 0; i < multi; i++ {
-		ret.What = append(ret.What, "soup")
-		ret.PltFrom = append(ret.PltFrom, "position_4")
-		ret.WellFrom = append(ret.WellFrom, "A1")
-		ret.Volume = append(ret.Volume, wunit.NewVolume(10.0, "ul"))
-		ret.FPlateType = append(ret.FPlateType, "DWST12")
-		ret.FVolume = append(ret.FVolume, wunit.NewVolume(20.0, "ul"))
+func getTestSuck(idGen *id.IDGenerator, ch *wtype.LHChannelParameter, multi int, tipType string, plateType string, wellCoords []string) liquidhandling.RobotInstruction {
+	cti := &liquidhandling.ChannelTransferInstruction{
+		Multi:      multi,
+		What:       make([]string, 0, multi),
+		PltFrom:    make([]string, 0, multi),
+		WellFrom:   wellCoords,
+		Volume:     make([]wunit.Volume, 0, multi),
+		FPlateType: make([]string, 0, multi),
+		FVolume:    make([]wunit.Volume, 0, multi),
+		Prms:       make([]*wtype.LHChannelParameter, 0, multi),
+		TipType:    make([]string, 0, multi),
+		Component:  make([]string, 0, multi),
 	}
-	ret.Prms = ch
-	ret.Head = ch.Head
-	return ret
-}
 
-func getLLFTestSuck(ch *wtype.LHChannelParameter, multi int, tipType string) liquidhandling.RobotInstruction {
-	ret := liquidhandling.NewSuckInstruction()
-	ret.Multi = multi
-	ret.TipType = tipType
-	wc := wtype.MakeWellCoords("A1")
 	for i := 0; i < multi; i++ {
-		ret.What = append(ret.What, "soup")
-		ret.PltFrom = append(ret.PltFrom, "position_4")
-		wc.Y = i
-		ret.WellFrom = append(ret.WellFrom, wc.FormatA1())
-		ret.Volume = append(ret.Volume, wunit.NewVolume(10.0, "ul"))
-		ret.FPlateType = append(ret.FPlateType, "pcrplate_skirted_riser18")
-		ret.FVolume = append(ret.FVolume, wunit.NewVolume(100.0, "ul"))
+		cti.What = append(cti.What, "soup")
+		cti.PltFrom = append(cti.PltFrom, "position_4")
+		cti.Volume = append(cti.Volume, wunit.NewVolume(10.0, "ul"))
+		cti.FPlateType = append(cti.FPlateType, "plateType")
+		cti.FVolume = append(cti.FVolume, wunit.NewVolume(100.0, "ul"))
+		cti.TipType = append(cti.TipType, tipType)
+		cti.Prms = append(cti.Prms, ch)
+		cti.Component = append(cti.Component, "minestrone")
 	}
-	ret.Prms = ch
-	ret.Head = ch.Head
-	return ret
+
+	return liquidhandling.NewSuckInstruction(idGen, cti)
 }
 
 // what, pltfrom, pltto, wellfrom, wellto, fplatetype, tplatetype []string, volume, fvolume, tvolume []wunit.Volume, FPlateWX, FPlateWY, TPlateWX, TPlateWY []int, Components []string, policies []wtype.LHPolicy
@@ -107,7 +112,7 @@ func TestBlowMixing(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20")
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,DSP,MOV,MIX,MOV,BLO]",
@@ -139,7 +144,7 @@ func TestBlowMixing(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 8, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 8, "Gilson20")
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,DSP,MOV,MIX,MOV,BLO]",
@@ -172,7 +177,7 @@ func TestBlowMixing(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20")
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,DSP,SPS,MOV,MIX,SPS,MOV,BLO]",
@@ -229,7 +234,7 @@ func TestBlowMixing(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20")
 				return nil
 			},
 			Error: "setting post mix pipetting speed: value 150.000000 out of range 0.022500 - 3.750000",
@@ -262,7 +267,7 @@ func TestSuckMixing(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestSuck(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20", "pcrplate_skirted_riser18", []string{"A1"})
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,MIX,MOV,ASP]",
@@ -294,7 +299,7 @@ func TestSuckMixing(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 8, "Gilson20")
+				self.Instruction = getTestSuck(lab.IDGenerator, getLVConfig(lab.IDGenerator), 8, "Gilson20", "pcrplate_skirted_riser18", []string{"A1"})
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,MIX,MOV,ASP]",
@@ -327,7 +332,7 @@ func TestSuckMixing(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestSuck(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20", "pcrplate_skirted_riser18", []string{"A1"})
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,SPS,MOV,MIX,SPS,MOV,ASP]",
@@ -384,7 +389,7 @@ func TestSuckMixing(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestSuck(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20", "pcrplate_skirted_riser18", []string{"A1"})
 				return nil
 			},
 			Error: "setting pre mix pipetting speed: value 150.000000 out of range 0.022500 - 3.750000",
@@ -415,7 +420,7 @@ func TestZOffset(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20")
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,DSP,MOV,BLO]",
@@ -443,7 +448,7 @@ func TestZOffset(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20")
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,DSP,MOV,BLO]",
@@ -473,7 +478,7 @@ func TestZOffset(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestSuck(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20", "pcrplate_skirted_riser18", []string{"A1"})
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,ASP]",
@@ -501,7 +506,7 @@ func TestZOffset(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestSuck(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20", "pcrplate_skirted_riser18", []string{"A1"})
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,ASP]",
@@ -540,7 +545,7 @@ func TestEntrySpeed(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20")
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,SDS,MOV,DSP,SDS,MOV,BLO]",
@@ -578,7 +583,7 @@ func TestEntrySpeed(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestSuck(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20", "pcrplate_skirted_riser18", []string{"A1"})
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,SDS,MOV,ASP,MOV,SDS]",
@@ -630,7 +635,7 @@ func TestDSPPipetSpeed(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20")
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,DSP,MOV,BLO]",
@@ -662,7 +667,7 @@ func TestDSPPipetSpeed(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20")
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,DSP,MOV,BLO]",
@@ -694,7 +699,7 @@ func TestDSPPipetSpeed(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20")
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,SPS,DSP,SPS,MOV,BLO]",
@@ -743,7 +748,7 @@ func TestDSPPipetSpeed(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20")
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,SPS,DSP,SPS,MOV,BLO]",
@@ -792,7 +797,7 @@ func TestDSPPipetSpeed(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20")
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,SPS,DSP,SPS,MOV,BLO]",
@@ -841,7 +846,7 @@ func TestDSPPipetSpeed(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20")
 				return nil
 			},
 			Error: "setting pipette dispense speed: value 4.750000 out of range 0.022500 - 3.750000",
@@ -864,7 +869,7 @@ func TestDSPPipetSpeed(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20")
 				return nil
 			},
 			Error: "setting pipette dispense speed: value 0.010000 out of range 0.022500 - 3.750000",
@@ -893,7 +898,7 @@ func TestASPPipetSpeed(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestSuck(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20", "pcrplate_skirted_riser18", []string{"A1"})
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,ASP]",
@@ -925,7 +930,7 @@ func TestASPPipetSpeed(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestSuck(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20", "pcrplate_skirted_riser18", []string{"A1"})
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,ASP]",
@@ -957,7 +962,7 @@ func TestASPPipetSpeed(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestSuck(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20", "pcrplate_skirted_riser18", []string{"A1"})
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,SPS,ASP,SPS]",
@@ -1006,7 +1011,7 @@ func TestASPPipetSpeed(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestSuck(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20", "pcrplate_skirted_riser18", []string{"A1"})
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,SPS,ASP,SPS]",
@@ -1055,7 +1060,7 @@ func TestASPPipetSpeed(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestSuck(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20", "pcrplate_skirted_riser18", []string{"A1"})
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,SPS,ASP,SPS]",
@@ -1104,7 +1109,7 @@ func TestASPPipetSpeed(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestSuck(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20", "pcrplate_skirted_riser18", []string{"A1"})
 				return nil
 			},
 			Error: "setting pipette aspirate speed: value 4.750000 out of range 0.022500 - 3.750000",
@@ -1127,7 +1132,7 @@ func TestASPPipetSpeed(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestSuck(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20", "pcrplate_skirted_riser18", []string{"A1"})
 				return nil
 			},
 			Error: "setting pipette aspirate speed: value 0.010000 out of range 0.022500 - 3.750000",
@@ -1217,7 +1222,7 @@ func TestAspWait(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestSuck(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20", "pcrplate_skirted_riser18", []string{"A1"})
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,ASP,WAI]",
@@ -1247,7 +1252,7 @@ func TestAspWait(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 8, "Gilson20")
+				self.Instruction = getTestSuck(lab.IDGenerator, getLVConfig(lab.IDGenerator), 8, "Gilson20", "pcrplate_skirted_riser18", []string{"A1"})
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,ASP,WAI]",
@@ -1256,178 +1261,6 @@ func TestAspWait(t *testing.T) {
 					Instruction: 4, //Wait
 					Values: map[liquidhandling.InstructionParameter]interface{}{
 						"TIME": 3.0,
-					},
-				},
-			},
-		},
-	}
-
-	for _, test := range tests {
-		test.Run(t)
-	}
-}
-
-func TestAspLLF(t *testing.T) {
-	tests := []*PolicyTest{
-		{
-			Name: "asp withLLF",
-			Rules: []*Rule{
-				{
-					Name: "soup",
-					Conditions: []Condition{
-						&CategoryCondition{
-							Attribute: "LIQUIDCLASS",
-							Value:     "soup",
-						},
-					},
-					Policy: map[liquidhandling.InstructionParameter]interface{}{
-						"USE_LLF": true,
-					},
-				},
-			},
-			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getLLFTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
-				self.Robot = MakeGilsonWithPlatesAndTipboxesForTest(lab, "pcrplate_skirted_riser18")
-				return nil
-			},
-			ExpectedInstructions: "[SPS,SDS,MOV,ASP]",
-			Assertions: []*InstructionAssertion{
-				{
-					Instruction: 3, //Asp
-					Values: map[liquidhandling.InstructionParameter]interface{}{
-						"LLF": []bool{true},
-					},
-				},
-			},
-		},
-		{
-			Name: "asp withLLF multi",
-			Rules: []*Rule{
-				{
-					Name: "soup",
-					Conditions: []Condition{
-						&CategoryCondition{
-							Attribute: "LIQUIDCLASS",
-							Value:     "soup",
-						},
-					},
-					Policy: map[liquidhandling.InstructionParameter]interface{}{
-						"USE_LLF": true,
-					},
-				},
-			},
-			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getLLFTestSuck(getLVConfig(lab.IDGenerator), 8, "Gilson20")
-				self.Robot = MakeGilsonWithPlatesAndTipboxesForTest(lab, "pcrplate_skirted_riser18")
-				return nil
-			},
-			ExpectedInstructions: "[SPS,SDS,MOV,ASP]",
-			Assertions: []*InstructionAssertion{
-				{
-					Instruction: 3, //Asp
-					Values: map[liquidhandling.InstructionParameter]interface{}{
-						"LLF": []bool{true, true, true, true, true, true, true, true},
-					},
-				},
-			},
-		},
-		{
-			Name: "asp withLLF but plate doesn't support",
-			Rules: []*Rule{
-				{
-					Name: "soup",
-					Conditions: []Condition{
-						&CategoryCondition{
-							Attribute: "LIQUIDCLASS",
-							Value:     "soup",
-						},
-					},
-					Policy: map[liquidhandling.InstructionParameter]interface{}{
-						"USE_LLF": true,
-					},
-				},
-			},
-			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
-				return nil
-			},
-			ExpectedInstructions: "[SPS,SDS,MOV,ASP]",
-			Assertions: []*InstructionAssertion{
-				{
-					Instruction: 3, //Asp
-					Values: map[liquidhandling.InstructionParameter]interface{}{
-						"LLF": []bool{false},
-					},
-				},
-			},
-		},
-		{
-			Name: "asp withLLF f volume too small",
-			Rules: []*Rule{
-				{
-					Name: "soup",
-					Conditions: []Condition{
-						&CategoryCondition{
-							Attribute: "LIQUIDCLASS",
-							Value:     "soup",
-						},
-					},
-					Policy: map[liquidhandling.InstructionParameter]interface{}{
-						"USE_LLF": true,
-					},
-				},
-			},
-			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
-				self.Robot = MakeGilsonWithPlatesAndTipboxesForTest(lab, "pcrplate_skirted_riser18")
-				return nil
-			},
-			ExpectedInstructions: "[SPS,SDS,MOV,ASP]",
-			Assertions: []*InstructionAssertion{
-				{
-					Instruction: 3, //Asp
-					Values: map[liquidhandling.InstructionParameter]interface{}{
-						"LLF": []bool{false},
-					},
-				},
-			},
-		},
-	}
-
-	for _, test := range tests {
-		test.Run(t)
-	}
-}
-
-func TestDspLLF(t *testing.T) {
-	tests := []*PolicyTest{
-		{
-			Name: "dsp with LLF",
-			Rules: []*Rule{
-				{
-					Name: "soup",
-					Conditions: []Condition{
-						&CategoryCondition{
-							Attribute: "LIQUIDCLASS",
-							Value:     "soup",
-						},
-					},
-					Policy: map[liquidhandling.InstructionParameter]interface{}{
-						"USE_LLF": true,
-					},
-				},
-			},
-			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
-				self.Robot = MakeGilsonWithPlatesAndTipboxesForTest(lab, "pcrplate_skirted_riser18")
-				return nil
-			},
-			ExpectedInstructions: "[SPS,SDS,MOV,DSP,MOV,BLO]",
-			Assertions: []*InstructionAssertion{
-				{
-					Instruction: 3, //Dispense
-					Values: map[liquidhandling.InstructionParameter]interface{}{
-						"LLF": []bool{true},
 					},
 				},
 			},
@@ -1458,7 +1291,7 @@ func TestDspWait(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20")
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,DSP,WAI,MOV,BLO]",
@@ -1488,7 +1321,7 @@ func TestDspWait(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 8, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 8, "Gilson20")
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,DSP,WAI,MOV,BLO]",
@@ -1528,7 +1361,7 @@ func TestTouchoff(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20")
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,DSP,MOV,MOV,BLO]",
@@ -1567,7 +1400,7 @@ func TestTouchoff(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20")
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,DSP,MOV,MOV,BLO]",
@@ -1614,7 +1447,7 @@ func TestExtraVolumes(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestSuck(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestSuck(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20", "pcrplate_skirted_riser18", []string{"A1"})
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,ASP]",
@@ -1644,7 +1477,7 @@ func TestExtraVolumes(t *testing.T) {
 				},
 			},
 			Setup: func(self *PolicyTest, lab *laboratory.Laboratory) error {
-				self.Instruction = getTestBlow(getLVConfig(lab.IDGenerator), 1, "Gilson20")
+				self.Instruction = getTestBlow(lab.IDGenerator, getLVConfig(lab.IDGenerator), 1, "Gilson20")
 				return nil
 			},
 			ExpectedInstructions: "[SPS,SDS,MOV,DSP,MOV,BLO]",

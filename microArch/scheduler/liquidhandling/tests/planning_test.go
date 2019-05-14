@@ -162,7 +162,7 @@ func (test *PlanningTest) checkPositionConsistency(lab *laboratory.Laboratory) e
 				if w1, w2 := pp1.Wellcoords[it.Curr().FormatA1()], pp2.Wellcoords[it.Curr().FormatA1()]; w1.IsEmpty(lab.IDGenerator) && w2.IsEmpty(lab.IDGenerator) {
 					continue
 				} else if w1.WContents.ID == w2.WContents.ID {
-					fmt.Errorf("IDs before and after must differ: %v", w1.WContents.ID)
+					return fmt.Errorf("IDs before and after must differ: %v", w1.WContents.ID)
 				}
 			}
 		case *wtype.LHTipbox:
@@ -508,12 +508,15 @@ func Mixes(outputPlateType wtype.PlateTypeName, components TestMixComponents) In
 		ret := make([]*wtype.LHInstruction, 0, len(samplesByWell))
 
 		for well, samples := range samplesByWell {
-			ret = append(ret, mixer.GenericMix(lab, mixer.MixOptions{
+			ins := mixer.GenericMix(lab, mixer.MixOptions{
 				Inputs:    samples,
 				PlateType: outputPlateType,
 				Address:   well,
 				PlateName: "outputplate",
-			}))
+			})
+			// set the name of the output liquid
+			ins.Outputs[0].SetName(fmt.Sprintf("testoutput_%s", well))
+			ret = append(ret, ins)
 		}
 
 		return ret, nil

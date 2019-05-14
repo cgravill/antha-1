@@ -356,6 +356,7 @@ func (mo mixOpts) mix() (*target.Mix, error) {
 		if handler.Properties.Mnfr != "" {
 			mimetype = "application/" + strings.ToLower(handler.Properties.Mnfr)
 		}
+
 		mix := &target.Mix{
 			Device:          mo.Device,
 			Request:         req,
@@ -373,13 +374,11 @@ func (mo mixOpts) mix() (*target.Mix, error) {
 		dir := filepath.Join(mo.OutDir, mix.Id(), string(mo.Device.Id()))
 		if err := utils.MkdirAll(dir); err != nil {
 			return nil, err
-		} else if layoutBs, err := mix.SummarizeLayout(idGen); err != nil {
+		} else if err := mix.EnsureMixSummary(idGen); err != nil {
 			return nil, err
-		} else if actionsBs, err := mix.SummarizeActions(idGen); err != nil {
+		} else if err := utils.CreateAndWriteFile(filepath.Join(dir, "layout.json"), mix.Summary.Layout, utils.ReadWrite); err != nil {
 			return nil, err
-		} else if err := utils.CreateAndWriteFile(filepath.Join(dir, "layout.json"), layoutBs, utils.ReadWrite); err != nil {
-			return nil, err
-		} else if err := utils.CreateAndWriteFile(filepath.Join(dir, "actions.json"), actionsBs, utils.ReadWrite); err != nil {
+		} else if err := utils.CreateAndWriteFile(filepath.Join(dir, "actions.json"), mix.Summary.Actions, utils.ReadWrite); err != nil {
 			return nil, err
 		} else if err := utils.CreateAndWriteFile(filepath.Join(dir, mo.ContentName), rawBs, utils.ReadWrite); err != nil {
 			return nil, err

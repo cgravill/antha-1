@@ -532,9 +532,6 @@ func compareInitFinalStates(lab *laboratory.Laboratory, lh *lh.Liquidhandler, ex
 	for k, v := range expected {
 		if len(v) != 0 {
 			return fmt.Errorf("Unmatched components of type %s : %d total", k, len(v))
-			for _, vv := range v {
-				return fmt.Errorf("%+v", vv)
-			}
 		}
 	}
 	return nil

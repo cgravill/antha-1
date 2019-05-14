@@ -20,7 +20,8 @@ type Extension struct {
 	t *Table
 }
 
-// By allows dynamic access to observations
+// By performs extension using the whole table row as input.
+// For wide tables this might be inefficient, consider using On(...) instead.
 func (e *Extension) By(f func(r Row) interface{}, newType reflect.Type) *Table {
 	// TODO: either reflectively infer newType, or assert/verify the f return type
 	series := append(append([]*Series(nil), e.t.series...), &Series{
@@ -142,17 +143,30 @@ func (e *Extension) ConstantType(value interface{}, typ reflect.Type) (*Table, e
 		},
 	}
 
-	return NewTable(append(e.t.series, ser)), nil
+	return NewTable(append(e.t.series, ser)...), nil
 }
 
 // NewConstantSeries returns an unbounded repetition of the same value, using
-// the dynamic type of the given value.
+// the dynamic type of the given value. Panics if the value is null.
 func NewConstantSeries(col ColumnName, value interface{}) *Series {
 	iter := &constIterator{value: value}
 	return &Series{
 		col:  col,
 		meta: &combinedSeriesMeta{isMaterialized: true},
 		typ:  reflect.TypeOf(value),
+		read: func(_ *seriesIterCache) iterator {
+			return iter
+		},
+	}
+}
+
+// NewNullSeries returns an unbounded series containing null values of the given type.
+func NewNullSeries(col ColumnName, typ reflect.Type) *Series {
+	iter := &constIterator{value: nil}
+	return &Series{
+		col:  col,
+		meta: &combinedSeriesMeta{isMaterialized: true},
+		typ:  typ,
 		read: func(_ *seriesIterCache) iterator {
 			return iter
 		},
