@@ -114,7 +114,7 @@ func MixerPrompt(lab *laboratory.Laboratory, message string, in ...*wtype.Liquid
 }
 
 // MixerWait prompts user with a message during mixer execution and waits for the specifed time before resuming.
-func MixerWait(ctx context.Context, time wunit.Time, message string, in ...*wtype.Liquid) []*wtype.Liquid {
+func MixerWait(lab *laboratory.Laboratory, time wunit.Time, message string, in ...*wtype.Liquid) []*wtype.Liquid {
 	inst := mixerPrompt(ctx,
 		mixerPromptOpts{
 			Components:   updateLiquidIDs(ctx, in),
@@ -124,8 +124,8 @@ func MixerWait(ctx context.Context, time wunit.Time, message string, in ...*wtyp
 		},
 	)
 
-	Issue(ctx, inst)
-	return inst.result
+	lab.Trace.Issue(inst)
+	return inst.Result
 }
 
 // ExecuteMixes will ensure that all mix activities

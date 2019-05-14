@@ -2,11 +2,11 @@ package wtype
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/antha-lang/antha/antha/anthalib/wunit"
 	"github.com/antha-lang/antha/laboratory/effects/id"
 	"github.com/antha-lang/antha/utils"
+	"strings"
+	"time"
 )
 
 // enum of instruction types
