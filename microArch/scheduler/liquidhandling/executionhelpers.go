@@ -112,8 +112,15 @@ func reachable(ar []*wtype.LHInstruction, ins *wtype.LHInstruction, reachability
 	return false
 }
 
+//
+// --> appendSensitively appends ins to iar
+// iar is a set of sets of instructions
+// instructions in each set are candidates for merger
+// and we can only merge if this doesn't create a cycle, hence
 // we can only append if we don't create cycles
-// this function makes sure this is OK
+// so this adds to the first set it finds which permits this,
+// creating a new one if none is found
+//
 func appendSensitively(iar [][]*wtype.LHInstruction, ins *wtype.LHInstruction, reachability graph.Reachability) [][]*wtype.LHInstruction {
 	done := false
 	for i := 0; i < len(iar); i++ {
@@ -168,21 +175,17 @@ func aggregatePromptsWithSameMessage(idGen *id.IDGenerator, inss []*wtype.LHInst
 	}
 
 	// aggregate instructions
-	// TODO --> user control of scope of this aggregation
-	//          i.e. break every plate, some other subset
-
+	// in case we see sequential identical prompts / waits
+	// we aggregate them here
 	for prompter, iar := range prMessage {
 		// single message may appear multiply in the chain
 		for _, ar := range iar {
 			ins := wtype.NewLHPromptInstruction(idGen)
 			ins.Message = prompter.Message
 			ins.WaitTime = prompter.WaitTime
-			ins.AddOutput(wtype.NewLHComponent(idGen))
 			for _, ins2 := range ar {
-				for _, cmp := range ins2.Inputs {
-					ins.Inputs = append(ins.Inputs, cmp)
-					ins.PassThrough[cmp.ID] = ins2.Outputs[0]
-				}
+				ins.Inputs = append(ins.Inputs, ins2.Inputs...)
+				ins.Outputs = append(ins.Outputs, ins2.Outputs...)
 			}
 			insOut = append(insOut, graph.Node(ins))
 		}

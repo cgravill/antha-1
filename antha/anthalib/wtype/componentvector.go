@@ -91,6 +91,9 @@ func (cv ComponentVector) GetVols() []wunit.Volume {
 	for i, c := range cv {
 		if c == nil {
 			ret[i] = wunit.ZeroVolume()
+		} else if c.Vunit == "" {
+			ret[i] = wunit.NewVolume(c.Vol, "ul")
+
 		} else {
 			ret[i] = wunit.NewVolume(c.Vol, c.Vunit)
 		}

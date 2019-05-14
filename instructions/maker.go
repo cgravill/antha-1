@@ -11,8 +11,6 @@ type Maker struct {
 	lock sync.Mutex
 	// Map from old LHComponent id to new id after instruction (typically 1)
 	afterInst map[string][]string
-	// Map from old LHComponent id to new id after sample
-	afterSample map[string][]string
 	// Map from from wtype world to ast world
 	byComp map[*wtype.Liquid]*UseComp
 	byID   map[string][]*UseComp
@@ -20,10 +18,9 @@ type Maker struct {
 
 func NewMaker() *Maker {
 	return &Maker{
-		afterInst:   make(map[string][]string),
-		afterSample: make(map[string][]string),
-		byComp:      make(map[*wtype.Liquid]*UseComp),
-		byID:        make(map[string][]*UseComp),
+		afterInst: make(map[string][]string),
+		byComp:    make(map[*wtype.Liquid]*UseComp),
+		byID:      make(map[string][]*UseComp),
 	}
 }
 
@@ -135,18 +132,8 @@ func (a *Maker) MakeNodes(insts []*CommandInst) ([]Node, error) {
 		nodes = append(nodes, a.makeCommand(inst))
 	}
 
-	for comp := range a.byComp {
-		// Contains all descendents rather then direct ones
-		for kid := range comp.DaughtersID {
-			if comp.ID != kid {
-				a.afterSample[comp.ID] = append(a.afterSample[comp.ID], kid)
-			}
-		}
-	}
-
 	a.resolveReuses()
 	a.resolveUpdates(a.afterInst)
-	a.resolveUpdates(a.afterSample)
 	a.removeMultiEdges()
 
 	return nodes, nil
