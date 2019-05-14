@@ -236,6 +236,7 @@ func NewAntha(root *AnthaRoot) *Antha {
 		"DeviceMetadata":       "api.DeviceMetadata",
 		"Energy":               "wunit.Energy",
 		"File":                 "wtype.File",
+		"FileSeries":           "wtype.FileSeries",
 		"FlowRate":             "wunit.FlowRate",
 		"Force":                "wunit.Force",
 		"JobID":                "jobfile.JobID",
