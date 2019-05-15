@@ -210,6 +210,10 @@ func (labBuild *LaboratoryBuilder) Decommission() error {
 		labBuild.RecordError(err, true)
 	}
 
+	if err := export(labBuild.effects.IDGenerator, labBuild.inDir, labBuild.outDir, labBuild.instrs, labBuild.Errors()); err != nil {
+		labBuild.RecordError(err, true)
+	}
+
 	if labBuild.logFH != nil {
 		labBuild.Logger.SwapWriters(os.Stderr)
 		if err := labBuild.logFH.Sync(); err != nil {
@@ -305,12 +309,6 @@ func (labBuild *LaboratoryBuilder) connectDevices() (*target.Target, error) {
 		} else {
 			return tgt, nil
 		}
-	}
-}
-
-func (labBuild *LaboratoryBuilder) Export() {
-	if err := export(labBuild.effects.IDGenerator, labBuild.inDir, labBuild.outDir, labBuild.instrs, labBuild.Errors()); err != nil {
-		labBuild.RecordError(err, true)
 	}
 }
 

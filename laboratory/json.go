@@ -72,13 +72,14 @@ func (tj *tipboxJson) UpdateExt(dst interface{}, src interface{}) {
 	}
 }
 
-func (labBuild *LaboratoryBuilder) RegisterJsonExtensions(jh *codec.JsonHandle) error {
+func (labBuild *LaboratoryBuilder) RegisterJsonExtensions(jh *codec.JsonHandle) {
 	if err := jh.SetInterfaceExt(reflect.TypeOf(wtype.Liquid{}), 0, &liquidJson{labBuild: labBuild}); err != nil {
 		labBuild.RecordError(err, true)
-	} else if err := jh.SetInterfaceExt(reflect.TypeOf(wtype.Plate{}), 0, &plateJson{labBuild: labBuild}); err != nil {
-		labBuild.RecordError(err, true)
-	} else if err := jh.SetInterfaceExt(reflect.TypeOf(wtype.LHTipbox{}), 0, &tipboxJson{labBuild: labBuild}); err != nil {
+	}
+	if err := jh.SetInterfaceExt(reflect.TypeOf(wtype.Plate{}), 0, &plateJson{labBuild: labBuild}); err != nil {
 		labBuild.RecordError(err, true)
 	}
-	return labBuild.Errors()
+	if err := jh.SetInterfaceExt(reflect.TypeOf(wtype.LHTipbox{}), 0, &tipboxJson{labBuild: labBuild}); err != nil {
+		labBuild.RecordError(err, true)
+	}
 }

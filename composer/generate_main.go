@@ -183,9 +183,7 @@ package main
 
 {{define "run-workflow"}}func runWorkflow{{id}}(labBuild *laboratory.LaboratoryBuilder) {
 	jh := &codec.JsonHandle{}
-	if err := labBuild.RegisterJsonExtensions(jh); err != nil {
-		return
-	}
+	labBuild.RegisterJsonExtensions(jh)
 
 	// Register line maps for the elements we're using
 {{range elementTypes}}{{if .IsAnthaElement}}	{{.Name}}.RegisterLineMap(labBuild)
@@ -200,13 +198,11 @@ package main
 {{range $name, $inst := .Elements.Instances}}{{range $param, $value := $inst.Parameters}}	if err := codec.NewDecoderBytes([]byte({{printf "%q" $value}}), jh).Decode(&{{varName $name}}.{{token $name $param}}.{{$param}}); err != nil {
 		// This will catch things like invalid json where we error before we hit any of our own code.
 		labBuild.RecordError(err, true)
-		return
 	}
 {{end}}{{end}}
 	// Run!
 	labBuild.RunElements()
 	labBuild.Compile()
-	labBuild.Export()
 }
 {{end}}
 
