@@ -2,9 +2,8 @@ package instructions
 
 import (
 	"encoding/json"
-	"sync"
-
 	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"sync"
 )
 
 type Maker struct {

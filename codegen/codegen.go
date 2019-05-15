@@ -14,6 +14,7 @@ import (
 	"github.com/antha-lang/antha/laboratory/effects"
 	"github.com/antha-lang/antha/laboratory/effects/id"
 	"github.com/antha-lang/antha/target"
+	"github.com/antha-lang/antha/target/human"
 )
 
 // Intermediate representation.
@@ -151,7 +152,7 @@ func (a partitionByHuman) Less(i, j int) bool {
 // Assign runs of a device to each ApplyExpr. Construct initial plan by
 // by maximally coalescing ApplyExprs with the same device into the same
 // device run.
-func (a *ir) assignDevices(t *target.Target) error {
+func (a *ir) assignDevices(idGen *id.IDGenerator, t *target.Target) error {
 	// A bundle's requests is the sum of its children
 	bundleReqs := func(n *instructions.Bundle) (reqs []instructions.Request) {
 		for i, inum := 0, a.Commands.NumOuts(n); i < inum; i++ {
@@ -167,18 +168,24 @@ func (a *ir) assignDevices(t *target.Target) error {
 	for i, inum := 0, a.Commands.NumNodes(); i < inum; i++ {
 		n := a.Commands.Node(i).(instructions.Node)
 		var reqs []instructions.Request
+		isBundle := false
 		if c, ok := n.(*instructions.Command); ok {
 			reqs = append(reqs, c.Request)
 		} else if b, ok := n.(*instructions.Bundle); ok {
 			// Try to find device that can do everything
 			reqs = bundleReqs(b)
+			isBundle = true
 		} else {
 			return fmt.Errorf("unknown node %T", n)
 		}
 		devices := t.CanCompile(reqs...)
 
 		if len(devices) == 0 {
-			return fmt.Errorf("no device can handle constraints %v", instructions.Meet(reqs...))
+			if isBundle {
+				devices = append(devices, human.New(idGen))
+			} else {
+				return fmt.Errorf("no device can handle constraints %v", instructions.Meet(reqs...))
+			}
 		}
 		sort.Stable(partitionByHuman(devices))
 		colors[n] = devices
@@ -425,7 +432,7 @@ func Compile(labEffects *effects.LaboratoryEffects, dir string, t *target.Target
 	if err != nil {
 		return nil, fmt.Errorf("Trying to generate intermediate representation from raw instruction graph, encountered invalid program: %s", err)
 	}
-	if err := ir.assignDevices(t); err != nil {
+	if err := ir.assignDevices(labEffects.IDGenerator, t); err != nil {
 		return nil, fmt.Errorf("error assigning devices with target configuration %s: %s", t, err)
 	}
 	if err := ir.tryPlan(labEffects, dir); err != nil {
