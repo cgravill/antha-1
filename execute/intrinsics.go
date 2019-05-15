@@ -88,6 +88,7 @@ type mixerPromptOpts struct {
 	Components   []*wtype.Liquid
 	ComponentsIn []*wtype.Liquid
 	Message      string
+	WaitTime     wunit.Time
 }
 
 func updateLiquidIDs(lab *laboratory.Laboratory, in []*wtype.Liquid) []*wtype.Liquid {
@@ -115,9 +116,9 @@ func MixerPrompt(lab *laboratory.Laboratory, message string, in ...*wtype.Liquid
 
 // MixerWait prompts user with a message during mixer execution and waits for the specifed time before resuming.
 func MixerWait(lab *laboratory.Laboratory, time wunit.Time, message string, in ...*wtype.Liquid) []*wtype.Liquid {
-	inst := mixerPrompt(ctx,
+	inst := mixerPrompt(lab,
 		mixerPromptOpts{
-			Components:   updateLiquidIDs(ctx, in),
+			Components:   updateLiquidIDs(lab, in),
 			ComponentsIn: in,
 			Message:      message,
 			WaitTime:     time,
