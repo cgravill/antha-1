@@ -2,8 +2,10 @@ package main
 
 import (
 	"flag"
+	"os/exec"
 	"path/filepath"
 
+	runner "github.com/Synthace/antha-runner/export"
 	"github.com/antha-lang/antha/composer"
 	"github.com/antha-lang/antha/logger"
 	"github.com/antha-lang/antha/workflow"
@@ -24,6 +26,15 @@ func main() {
 	l := logger.NewLogger()
 
 	if err := compose(l, inDir, outDir, keep, run, linkedDrivers); err != nil {
+		// if the workflow ran but failed then we trust it to export its
+		// own errors. So we only need to export errors if:
+		// - the err is not an ExitError (i.e. we didn't even run the workflow)
+		// - or the exit code is unexpected (not 1 or 0)
+		if exitErr, ok := err.(*exec.ExitError); !ok || exitErr.ExitCode() != 1 {
+			if exportErr := runner.Export(nil, inDir, outDir, nil, err); exportErr != nil {
+				l.Log("exportError", exportErr)
+			}
+		}
 		logger.Fatal(l, err)
 	} else {
 		l.Log("progress", "complete")

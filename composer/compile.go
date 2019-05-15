@@ -42,7 +42,7 @@ func (mc *mainComposer) goBuild() error {
 	outBin := filepath.Join(mc.OutDir, "bin", "workflow")
 	cmd := exec.Command("go", "build", "-mod", "readonly", "-o", outBin)
 	if mc.LinkedDrivers {
-		cmd.Args = append(cmd.Args, "-tags", "linkedDrivers protobuf")
+		cmd.Args = append(cmd.Args, "-tags", "linkedDrivers")
 	}
 	cmd.Dir = filepath.Join(mc.OutDir, "workflow")
 

@@ -12,7 +12,7 @@
 
         "Instances": {
             "my_aliquot": {
-                "ElementTypeName": "Aliquot_Liquidaxc",
+                "ElementTypeName": "Aliquot_Liquid",
                 "Meta": {
                     "x": 140,
                     "y": 553

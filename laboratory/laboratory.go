@@ -12,6 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	runner "github.com/Synthace/antha-runner/export"
 	"github.com/antha-lang/antha/codegen"
 	"github.com/antha-lang/antha/composer"
 	"github.com/antha-lang/antha/instructions"
@@ -210,7 +211,7 @@ func (labBuild *LaboratoryBuilder) Decommission() error {
 		labBuild.RecordError(err, true)
 	}
 
-	if err := export(labBuild.effects.IDGenerator, labBuild.inDir, labBuild.outDir, labBuild.instrs, labBuild.Errors()); err != nil {
+	if err := runner.Export(labBuild.effects.IDGenerator, labBuild.inDir, labBuild.outDir, labBuild.instrs, labBuild.Errors()); err != nil {
 		labBuild.RecordError(err, true)
 	}
 
