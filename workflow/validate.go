@@ -79,7 +79,9 @@ func (r *Repository) validate() error {
 		return err
 	} else if !info.Mode().IsDir() {
 		return fmt.Errorf("Validation error: Repository Directory is not a directory: '%s'", r.Directory)
-	} else if err := r.maybeResolveGit(); err != nil {
+	} else if err := r.maybeResolveBranch(); err != nil {
+		return err
+	} else if _, err := r.maybeResolveCommit(); err != nil {
 		return err
 	} else {
 		return nil
