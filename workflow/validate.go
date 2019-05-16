@@ -494,6 +494,10 @@ func (sim *Simulation) validate(wf *Workflow) error {
 					return fmt.Errorf("Validation error: Simulation records top-level element instance (id: %v) with type %v, but that type is unknown in the workflow.",
 						elemId, simElem.ElementTypeName)
 				}
+				if _, found := wf.Elements.Instances[simElem.ElementInstanceName]; !found {
+					return fmt.Errorf("Validation error: Simulation records top-level element instance (id: %v) with name %v, but that name is unknown in the workflow.",
+						elemId, simElem.ElementInstanceName)
+				}
 
 			} else if _, found := sim.Elements[simElem.ParentElementId]; !found {
 				return fmt.Errorf("Validation error: Simulation records element instance (id: %v) with parent (id: %v), but the parent doesn't seem to exist",
