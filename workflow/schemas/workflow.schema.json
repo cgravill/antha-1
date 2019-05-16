@@ -12,10 +12,6 @@
             "type": "string",
             "pattern": "^[a-zA-Z0-9_ -]*$"
         },
-        "SimulationId": {
-            "type": "string",
-            "pattern": "^[a-zA-Z0-9_ -]*$"
-        },
         "Meta": {
             "type": ["object", "null"],
             "properties": {
@@ -119,6 +115,32 @@
                     }
                 }
             }
+        },
+        "Simulation": {
+            "type": ["object", "null"],
+            "properties": {
+                "SimulationId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9_ -]*$"
+                },
+                "Version": { "type": "string" },
+                "Start": { "type": "string" },
+                "End": { "type": "string" },
+                "Elements": {
+                    "type": "object",
+                    "propertyNames": {
+                        "$comment": "Element instance ids",
+                        "pattern": "^[a-zA-Z0-9]+$"
+                    },
+                    "patternProperties": {
+                        ".*": {
+                            "$ref": "#/definitions/simulatedElement"
+                        }
+                    }
+                }
+            },
+            "additionalProperties": false,
+            "required": []
         }
     },
     "definitions": {
@@ -262,6 +284,19 @@
                 "WellYStart": { "type": "number" },
                 "WellZStart": { "type": "number" },
                 "Extra": { "type": "object" }
+            }
+        },
+        "simulatedElement": {
+            "type": "object",
+            "properties": {
+                "ElementInstanceName": { "type": "string" },
+                "ElementTypeName": { "type": "string" },
+                "StatePath": { "type": "string" },
+                "ParentElementId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9]*$"
+                },
+                "Error": { "type": "string" }
             }
         }
     }

@@ -28,10 +28,6 @@ type Workflow struct {
 	// The WorkflowId is the unique Id of this workflow itself, and is
 	// not modified by the event of simulation.
 	WorkflowId BasicId `json:"WorkflowId,omitempty"`
-	// The SimulationId is an Id created by the act of simulation. Thus
-	// a workflow that is simulated twice will have the same WorkflowId
-	// but different SimulationIds.
-	SimulationId BasicId `json:"SimulationId,omitempty"`
 
 	Meta Meta `json:"Meta,omitempty"`
 
@@ -43,6 +39,8 @@ type Workflow struct {
 	Config Config `json:"Config"`
 
 	Testing Testing `json:"Testing,omitempty"`
+
+	Simulation Simulation `json:"Simulation,omitempty"`
 
 	typeNames map[ElementTypeName]*ElementType
 }

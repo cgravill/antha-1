@@ -44,10 +44,11 @@ type LaboratoryBuilder struct {
 	Workflow *workflow.Workflow
 
 	// elemLock must be taken to access/mutate elemsRunning and elementToLab fields
-	elemLock      sync.Mutex
-	elemsRunning  int
-	elementToLab  map[Element]*Laboratory
-	nextElementId uint64
+	elemLock       sync.Mutex
+	elemsRunning   int
+	elementToLab   map[Element]*Laboratory
+	nextElementId  uint64
+	elemsCompleted []*Laboratory
 
 	// This lock is here to serialize access to errors (append and
 	// Pack()), and to avoid races around closing errored chan
@@ -125,23 +126,18 @@ func (labBuild *LaboratoryBuilder) SetupWorkflow(fh io.ReadCloser) error {
 		return err
 	} else if err := wf.Validate(); err != nil {
 		return err
-	} else if simId, err := workflow.RandomBasicId(wf.WorkflowId); err != nil {
+	} else if err := wf.NewSimulation(); err != nil {
 		return err
 	} else {
-		wf.SimulationId = simId
-		labBuild.Logger = labBuild.Logger.With("simulationId", simId)
+		labBuild.Logger = labBuild.Logger.With("simulationId", wf.Simulation.SimulationId)
 		if anthaMod := composer.AnthaModule(); anthaMod != nil && len(anthaMod.Version) != 0 {
-			if err := wf.Meta.Set("SimulatorVersion", anthaMod.Version); err != nil {
-				return err
-			}
+			wf.Simulation.Version = anthaMod.Version
 			labBuild.Logger.Log("simulatorVersion", anthaMod.Version)
 		} else {
-			if err := wf.Meta.Set("SimulatorVersion", "unknown"); err != nil {
-				return err
-			}
+			wf.Simulation.Version = "unknown"
 			labBuild.Logger.Log("simulatorVersion", "unknown")
 		}
-		wf.Meta.Set("SimulationStart", time.Now().Format(time.RFC3339Nano))
+		wf.Simulation.Start = time.Now().Format(time.RFC3339Nano)
 
 		labBuild.Workflow = wf
 		return nil
@@ -195,14 +191,32 @@ func (labBuild *LaboratoryBuilder) SetupEffects() error {
 	if fm, err := effects.NewFileManager(filepath.Join(labBuild.inDir, "data"), filepath.Join(labBuild.outDir, "data")); err != nil {
 		return err
 	} else {
-		labBuild.effects = effects.NewLaboratoryEffects(labBuild.Workflow, labBuild.Workflow.SimulationId, fm)
+		labBuild.effects = effects.NewLaboratoryEffects(labBuild.Workflow, labBuild.Workflow.Simulation.SimulationId, fm)
 		return nil
 	}
 }
 
 // Returns all the errors that were encountered and recorded in this lab's existence
 func (labBuild *LaboratoryBuilder) Decommission() error {
-	labBuild.Workflow.Meta.Set("SimulationEnd", time.Now().Format(time.RFC3339Nano))
+	labBuild.Workflow.Simulation.End = time.Now().Format(time.RFC3339Nano)
+
+	labBuild.elemLock.Lock()
+	for _, lab := range labBuild.elemsCompleted {
+		simElem := &workflow.SimulatedElement{
+			ElementInstanceName: lab.element.Name(),
+			ElementTypeName:     lab.element.TypeName(),
+			StatePath:           lab.statePath,
+		}
+		if lab.parent != nil {
+			simElem.ParentElementId = workflow.ElementId(fmt.Sprint(lab.parent.id))
+		}
+		if lab.err != nil {
+			simElem.Error = lab.err.Error()
+		}
+		labBuild.Workflow.Simulation.Elements[workflow.ElementId(fmt.Sprint(lab.id))] = simElem
+	}
+	labBuild.elemLock.Unlock()
+
 	if err := labBuild.saveWorkflow(); err != nil {
 		labBuild.RecordError(err, true)
 	}
@@ -339,8 +353,8 @@ func (labBuild *LaboratoryBuilder) AddConnection(src, dst Element, fun func()) e
 		return fmt.Errorf("Unknown dst element: %v", dst)
 	} else {
 		labDst.addBlockedInput()
-		labSrc.addOnExit(func(err error) {
-			if err == nil {
+		labSrc.addOnExit(func(lab *Laboratory) {
+			if lab.err == nil {
 				fun()
 				labDst.inputReady()
 			}
@@ -377,10 +391,11 @@ func (labBuild *LaboratoryBuilder) RunElements() {
 }
 
 // Our sole concern here is accounting of how many elements are still
-// unrun. So we totally ignore the error argument.
-func (labBuild *LaboratoryBuilder) elementCompleted(error) {
+// unrun.
+func (labBuild *LaboratoryBuilder) elementCompleted(lab *Laboratory) {
 	labBuild.elemLock.Lock()
 	defer labBuild.elemLock.Unlock()
+	labBuild.elemsCompleted = append(labBuild.elemsCompleted, lab)
 	labBuild.elemsRunning--
 	if labBuild.elemsRunning == 0 {
 		close(labBuild.Completed)
@@ -391,9 +406,9 @@ func (labBuild *LaboratoryBuilder) elementCompleted(error) {
 // produces an error then that error is fatal to the whole
 // workflow. It will have already been logged though so we don't need
 // to worry about that here.
-func (labBuild *LaboratoryBuilder) recordElementError(err error) {
-	if err != nil {
-		labBuild.RecordError(err, false)
+func (labBuild *LaboratoryBuilder) recordElementError(lab *Laboratory) {
+	if lab.err != nil {
+		labBuild.RecordError(lab.err, false)
 	}
 }
 
@@ -447,7 +462,7 @@ type Laboratory struct {
 	// this gets closed when all inputs become ready
 	inputsReady chan struct{}
 	// funcs to run when this element is completed
-	onExit []func(error)
+	onExit []func(*Laboratory)
 	// closed once the the element has stopped. This closing does *not*
 	// imply that inputsReady will be closed. For example, the element
 	// can be blocked waiting for inputs to become ready when a
@@ -457,6 +472,10 @@ type Laboratory struct {
 	exited chan struct{}
 	// any error that was produced by the element itself
 	err error
+
+	// name of file (leaf) where we've written out the state of the
+	// element once it's completed
+	statePath string
 }
 
 func (labBuild *LaboratoryBuilder) makeLab(logger *logger.Logger, e Element, parent *Laboratory) *Laboratory {
@@ -584,18 +603,21 @@ func (lab *Laboratory) stopped() {
 	}
 	close(lab.exited)
 	for _, fun := range lab.onExit {
-		fun(err)
+		fun(lab)
 	}
 }
 
 func (lab *Laboratory) save() {
-	p := filepath.Join(lab.labBuild.outDir, "elements", fmt.Sprintf("%d_%s.json", lab.id, lab.element.Name()))
+	leaf := fmt.Sprintf("%d_%s.json", lab.id, lab.element.Name())
+	p := filepath.Join(lab.labBuild.outDir, "elements", leaf)
 	if fh, err := utils.CreateFile(p, utils.ReadWrite); err != nil {
 		lab.labBuild.RecordError(err, true)
 	} else {
 		defer fh.Close()
 		if err := json.NewEncoder(fh).Encode(lab.element); err != nil {
 			lab.labBuild.RecordError(err, true)
+		} else {
+			lab.statePath = leaf
 		}
 	}
 }
@@ -617,6 +639,6 @@ func (lab *Laboratory) addBlockedInput() {
 
 // nb, it is not safe for the callback fun to read the inputs /
 // parameters of this element unless there is no error.
-func (lab *Laboratory) addOnExit(fun func(error)) {
+func (lab *Laboratory) addOnExit(fun func(*Laboratory)) {
 	lab.onExit = append(lab.onExit, fun)
 }
