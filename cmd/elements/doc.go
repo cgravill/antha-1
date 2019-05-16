@@ -109,7 +109,7 @@
 //   transpiled source directories. Thus normal go tests within the
 //   elements repositories are run.
 //
-//  2. TestElements/Bundles/*
+//  2. TestElements/Workflows
 //   For the purposes of this documentation, a bundle is a workflow
 //   which also contains expected outputs of the planner.
 //
@@ -119,11 +119,20 @@
 //   outputs provided by the bundle file, and thus the success of the
 //   test is determined.
 //
-// Example:
+//   For this test, there is a -regex flag, which if provided is
+//   matched against the path of the bundle.
 //
-//  go test -v -args repositories.json
+// Examples:
 //
-// Note you must be in this directory to run this, and the -args flag
-// is necessary to separate args to the go test system from args to
-// our tests.
+//  Run all the tests described above:
+//
+//    go test -v -args -outdir /tmp/myTests repositories.json
+//
+//  Run only the Workflow test, and within that, only those workflows
+//  who's path contains AddFluorescenceTimeCourse:
+//
+//    go test -v -run=Elements/Workflows -args -regex=AddFluorescenceTimeCourse -outdir=/tmp/myTests
+//
+// The -args flag is necessary to separate args to the go test system
+// from args to our tests.
 package main

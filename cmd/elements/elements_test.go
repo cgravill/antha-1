@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	"github.com/antha-lang/antha/composer"
@@ -19,6 +20,7 @@ var (
 	keepPtr   = flag.Bool("keep", false, "Keep the test environment even if testing is successful")
 	inDirPtr  = flag.String("indir", "", "Directory from which to read files (optional)")
 	outDirPtr = flag.String("outdir", "", "Directory to write to (default: a temporary directory will be created)")
+	regexPtr  = flag.String("regex", "", "Regular expression to match against element test workflow (optional; applies only to TestWorkflows)")
 )
 
 func TestElements(t *testing.T) {
@@ -45,6 +47,11 @@ func TestElements(t *testing.T) {
 		t.Skip("No workflow provided.")
 	}
 
+	regex, err := regexp.Compile(*regexPtr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if wf, err := makeWorkflow(l, nil, inDir, ""); err != nil {
 		t.Fatal(err)
 	} else if err := wf.Validate(); err != nil {
@@ -69,8 +76,8 @@ func TestElements(t *testing.T) {
 		})
 
 		t.Run("Workflows", func(t *testing.T) {
-			testingDir := filepath.Join(outDir, "testWorkflows")
-			if err := workflows(l, inDir, testingDir, wf); err != nil {
+			testingDir := filepath.Join(outDir, "workflows")
+			if err := workflows(l, inDir, testingDir, wf, regex); err != nil {
 				t.Fatal(err)
 			}
 			if keepPtr == nil || !*keepPtr {
@@ -115,7 +122,7 @@ func goTest(l *logger.Logger, outDir string, wf *workflow.Workflow, coverPkgs st
 	return nil
 }
 
-func workflows(l *logger.Logger, inDir, outDir string, wf *workflow.Workflow) error {
+func workflows(l *logger.Logger, inDir, outDir string, wf *workflow.Workflow, regex *regexp.Regexp) error {
 	if cb, err := composer.NewComposerBase(l, inDir, outDir); err != nil {
 		return err
 	} else {
@@ -131,7 +138,9 @@ func workflows(l *logger.Logger, inDir, outDir string, wf *workflow.Workflow) er
 				if filepath.Ext(f.Name) == ".json" {
 					// attempt to parse it as a workflow, but don't worry too
 					// much if we fail.
-					if rc, err := f.Contents(); err != nil {
+					if !regex.MatchString(f.Name) {
+						return nil
+					} else if rc, err := f.Contents(); err != nil {
 						return err // this is an error we need to report on!
 					} else if rs, err := workflow.ReadersFromPaths(wfPaths); err != nil {
 						return err
