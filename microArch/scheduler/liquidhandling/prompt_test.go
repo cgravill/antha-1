@@ -3,6 +3,7 @@ package liquidhandling
 import (
 	"fmt"
 	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/antha-lang/antha/laboratory/effects/id"
 	"testing"
 )
 
@@ -10,6 +11,7 @@ type promptTest struct {
 	Name         string
 	Instructions []*wtype.LHInstruction
 	Chain        *wtype.IChain
+	IDGen        *id.IDGenerator
 }
 
 var promptTests = []promptTest{
@@ -20,20 +22,19 @@ var promptTests = []promptTest{
 	makeFifthPromptTest(),
 }
 
-func makeComponents(names ...string) []*wtype.LHComponent {
+func makeComponents(idGen *id.IDGenerator, names ...string) []*wtype.LHComponent {
 	ret := make([]*wtype.LHComponent, 0, len(names))
 	for _, name := range names {
-		ret = append(ret, makeComponent(name))
+		ret = append(ret, makeComponent(idGen, name))
 	}
 
 	return ret
 }
 
-func makeComponent(name string) *wtype.LHComponent {
-	return &wtype.LHComponent{
-		CName: name,
-		ID:    name,
-	}
+func makeComponent(idGen *id.IDGenerator, name string) *wtype.LHComponent {
+	cmp := wtype.NewLHComponent(idGen)
+	cmp.CName = name
+	return cmp
 }
 
 var counter int = 0
@@ -72,8 +73,9 @@ func prompt(components ...*wtype.LHComponent) *wtype.LHInstruction {
 
 // B = MIX(A) C = PROMPT(B) D = MIX(C)
 func makeFirstPromptTest() promptTest {
+	idg := id.NewIDGenerator("test")
 	name := "Simple - three layers, mix-prompt-mix"
-	cmps := makeComponents("A", "B", "C", "D")
+	cmps := makeComponents(idg, "A", "B", "C", "D")
 	insx := []*wtype.LHInstruction{
 		mix(cmps[0], cmps[1]), prompt(cmps[1], cmps[2]), mix(cmps[2], cmps[3]),
 	}
@@ -83,6 +85,7 @@ func makeFirstPromptTest() promptTest {
 		Name:         name,
 		Instructions: insx,
 		Chain:        chain,
+		IDGen:        idg,
 	}
 }
 
@@ -91,8 +94,8 @@ func makeFirstPromptTest() promptTest {
 // MIX(A)->B MIX(C)->D PROMPT(B,D)->(E,F) MIX(E)->G MIX(F)->H
 func makeSecondPromptTest() promptTest {
 	name := "Multi-component prompts"
-
-	cmps := makeComponents("A", "B", "C", "D", "E", "F", "G", "H")
+	idg := id.NewIDGenerator("test")
+	cmps := makeComponents(idg, "A", "B", "C", "D", "E", "F", "G", "H")
 
 	insx := []*wtype.LHInstruction{mix(cmps[0], cmps[1]), mix(cmps[2], cmps[3]), prompt(cmps[1], cmps[3], cmps[4], cmps[5]), mix(cmps[4], cmps[6]), mix(cmps[5], cmps[7])}
 
@@ -105,14 +108,15 @@ func makeSecondPromptTest() promptTest {
 		Name:         name,
 		Instructions: insx,
 		Chain:        chain,
+		IDGen:        idg,
 	}
 }
 
 // MIX(A)->B MIX(C)->D PROMPT(B,D)->(E,F) MIX(E)->G MIX(F)->H
 func makeThirdPromptTest() promptTest {
 	name := "Aggregation test 1 : simple merger"
-
-	cmps := makeComponents("A", "B", "C", "D", "E", "F", "G", "H")
+	idg := id.NewIDGenerator("test")
+	cmps := makeComponents(idg, "A", "B", "C", "D", "E", "F", "G", "H")
 
 	insx := []*wtype.LHInstruction{mix(cmps[0], cmps[1]), mix(cmps[2], cmps[3]), prompt(cmps[1], cmps[4]), prompt(cmps[3], cmps[5]), mix(cmps[4], cmps[6]), mix(cmps[5], cmps[7])}
 
@@ -125,6 +129,7 @@ func makeThirdPromptTest() promptTest {
 		Name:         name,
 		Instructions: insx,
 		Chain:        chain,
+		IDGen:        idg,
 	}
 }
 
@@ -135,7 +140,8 @@ func makeThirdPromptTest() promptTest {
 // prompt(E) -> F MIX(F) ->G
 func makeFourthPromptTest() promptTest {
 	name := "Aggregation test 2 : prompts separated by mix"
-	cmps := makeComponents("A", "B", "C", "D", "E", "F", "G")
+	idg := id.NewIDGenerator("test")
+	cmps := makeComponents(idg, "A", "B", "C", "D", "E", "F", "G")
 	insx := []*wtype.LHInstruction{prompt(cmps[0], cmps[1]), prompt(cmps[1], cmps[2]), mix(cmps[2], cmps[3]), prompt(cmps[4], cmps[5]), mix(cmps[5], cmps[6])}
 	insgs := [][]*wtype.LHInstruction{{prompt(cmps[0], cmps[4], cmps[1], cmps[5])}, {insx[4]}, {insx[1]}, {insx[2]}}
 
@@ -145,6 +151,7 @@ func makeFourthPromptTest() promptTest {
 		Name:         name,
 		Instructions: insx,
 		Chain:        chain,
+		IDGen:        idg,
 	}
 
 }
@@ -154,8 +161,9 @@ func makeFourthPromptTest() promptTest {
 // prompt(A) -> B prompt(B,E) -> (C,F) MIX(C) -> D
 // MIX(F) ->G
 func makeFifthPromptTest() promptTest {
+	idg := id.NewIDGenerator("test")
 	name := "multi-component prompt - should occur at correct location in chain"
-	cmps := makeComponents("A", "B", "C", "D", "E", "F", "G")
+	cmps := makeComponents(idg, "A", "B", "C", "D", "E", "F", "G")
 
 	insx := []*wtype.LHInstruction{prompt(cmps[0], cmps[1]), prompt(cmps[1], cmps[4], cmps[2], cmps[5]), mix(cmps[2], cmps[3]), mix(cmps[5], cmps[6])}
 	insgs := [][]*wtype.LHInstruction{{insx[0]}, {insx[1]}, {insx[2], insx[3]}}
@@ -166,6 +174,7 @@ func makeFifthPromptTest() promptTest {
 		Name:         name,
 		Instructions: insx,
 		Chain:        chain,
+		IDGen:        idg,
 	}
 }
 
@@ -289,7 +298,7 @@ func asMap(inss []*wtype.LHInstruction) map[string]*wtype.LHInstruction {
 func TestPrompts(t *testing.T) {
 	for _, pt := range promptTests {
 		t.Run(pt.Name, func(t *testing.T) {
-			ch, err := buildInstructionChain(asMap(pt.Instructions))
+			ch, err := BuildInstructionChain(pt.IDGen, asMap(pt.Instructions))
 
 			if err != nil {
 				t.Errorf("Got error building instruction chain: %v", err)

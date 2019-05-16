@@ -92,10 +92,10 @@ type mixerPromptOpts struct {
 }
 
 func updateLiquidIDs(lab *laboratory.Laboratory, in []*wtype.Liquid) []*wtype.Liquid {
-	r := []*wtype.Liquid{}
+	r := make([]*wtype.Liquid, len(in))
 
-	for _, c := range in {
-		r = append(r, updateLiquidID(lab, c))
+	for i := range in {
+		r[i] = updateLiquidID(lab, r[i])
 	}
 
 	return r
