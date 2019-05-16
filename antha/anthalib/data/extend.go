@@ -71,7 +71,7 @@ func (e *Extension) On(cols ...ColumnName) *ExtendOn {
 
 // Interface adds a column of an arbitrary type using inputs of arbitrary types.
 func (e *ExtendOn) Interface(f func(v ...interface{}) interface{}, newType reflect.Type) (*Table, error) {
-	inputs, err := e.inputs(newType)
+	inputs, err := e.inputs(nil)
 	if err != nil {
 		return nil, err
 	}
