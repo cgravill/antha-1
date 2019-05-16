@@ -95,7 +95,7 @@ func updateLiquidIDs(lab *laboratory.Laboratory, in []*wtype.Liquid) []*wtype.Li
 	r := make([]*wtype.Liquid, len(in))
 
 	for i := range in {
-		r[i] = updateLiquidID(lab, r[i])
+		r[i] = updateLiquidID(lab, in[i])
 	}
 
 	return r
