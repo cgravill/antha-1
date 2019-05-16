@@ -20,28 +20,14 @@ func (a *Workflow) Merge(b *Workflow) error {
 	return utils.ErrorSlice{
 		b.SchemaVersion.Validate(), // every snippet must have a valid SchemaVersion
 		a.WorkflowId.Merge(b.WorkflowId),
-		a.SimulationId.Merge(b.SimulationId),
 		a.Meta.merge(b.Meta),
 		a.Repositories.Merge(b.Repositories),
 		a.Elements.merge(b.Elements),
 		a.Inventory.merge(b.Inventory),
 		a.Config.merge(b.Config),
 		a.Testing.merge(b.Testing),
+		a.Simulation.merge(b.Simulation),
 	}.Pack()
-}
-
-func (a *Testing) merge(b Testing) error {
-	if a == nil {
-		return nil
-	}
-
-	if len(a.MixTaskChecks) == 0 {
-		a.MixTaskChecks = b.MixTaskChecks
-	} else if len(b.MixTaskChecks) != 0 {
-		return errors.New("Cannot merge two sets of non-empty testing data")
-	}
-
-	return nil
 }
 
 func (a *BasicId) Merge(b BasicId) error {
@@ -384,4 +370,38 @@ func (a *PlateReaderConfig) Merge(b PlateReaderConfig) error {
 		a.Devices[id] = cfg
 	}
 	return nil
+}
+
+func (a *Testing) merge(b Testing) error {
+	if a == nil {
+		return nil
+	}
+
+	if len(a.MixTaskChecks) == 0 {
+		a.MixTaskChecks = b.MixTaskChecks
+	} else if len(b.MixTaskChecks) != 0 {
+		return errors.New("Cannot merge two sets of non-empty testing data")
+	}
+
+	return nil
+}
+
+func (a *Simulation) merge(b Simulation) error {
+	return utils.ErrorSlice{
+		a.SimulationId.Merge(b.SimulationId),
+		a.Elements.merge(b.Elements),
+	}.Pack()
+}
+
+func (a SimulatedElements) merge(b SimulatedElements) error {
+	if len(b) == 0 {
+		return nil
+	} else if len(a) != 0 {
+		return errors.New("Cannot merge two sets of non-empty SimulatedElements")
+	} else {
+		for k, v := range b {
+			a[k] = v
+		}
+		return nil
+	}
 }

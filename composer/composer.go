@@ -176,8 +176,8 @@ type mainComposer struct {
 }
 
 func (cb *ComposerBase) ComposeMainAndRun(keep, run, linkedDrivers bool, wf *workflow.Workflow) error {
-	if wf.SimulationId != "" {
-		return fmt.Errorf("Workflow has already been simulated (SimulationId %v); aborting", wf.SimulationId)
+	if wf.Simulation.SimulationId != "" {
+		return fmt.Errorf("Workflow has already been simulated (SimulationId %v); aborting", wf.Simulation.SimulationId)
 	}
 
 	mc := &mainComposer{
@@ -248,8 +248,8 @@ func (cb *ComposerBase) NewTestsComposer(keep, run, linkedDrivers bool) *testCom
 }
 
 func (tc *testComposer) AddWorkflow(wf *workflow.Workflow, inDir string) error {
-	if wf.SimulationId != "" {
-		return fmt.Errorf("Workflow has already been simulated (SimulationId %v); aborting", wf.SimulationId)
+	if wf.Simulation.SimulationId != "" {
+		return fmt.Errorf("Workflow has already been simulated (SimulationId %v); aborting", wf.Simulation.SimulationId)
 	} else if _, found := tc.Workflows[wf.WorkflowId]; found {
 		return fmt.Errorf("Workflow with Id %v already added. Workflow Ids must be unique", wf.WorkflowId)
 	} else {
