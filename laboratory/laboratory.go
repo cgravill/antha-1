@@ -139,6 +139,9 @@ func (labBuild *LaboratoryBuilder) SetupWorkflow(fh io.ReadCloser) error {
 		}
 		wf.Simulation.Start = time.Now().Format(time.RFC3339Nano)
 
+		wf.Simulation.InDir = labBuild.inDir
+		wf.Simulation.OutDir = labBuild.outDir
+
 		labBuild.Workflow = wf
 		return nil
 	}
@@ -217,11 +220,14 @@ func (labBuild *LaboratoryBuilder) Decommission() error {
 	}
 	labBuild.elemLock.Unlock()
 
-	if err := labBuild.saveWorkflow(); err != nil {
-		labBuild.RecordError(err, true)
+	if labBuild.Errors() != nil {
+		// Because we've called Errors() we have gone through a memory
+		// barrier, so direct access to labBuild.errors is now safe,
+		// provided we are the only go-routine doing so, which we should
+		// be.
+		labBuild.Workflow.Simulation.Errors = labBuild.errors
 	}
-
-	if err := labBuild.saveErrors(); err != nil {
+	if err := labBuild.saveWorkflow(); err != nil {
 		labBuild.RecordError(err, true)
 	}
 
@@ -245,21 +251,6 @@ func (labBuild *LaboratoryBuilder) Decommission() error {
 
 func (labBuild *LaboratoryBuilder) saveWorkflow() error {
 	return labBuild.Workflow.WriteToFile(filepath.Join(labBuild.outDir, "workflow", "workflow.json"), false)
-}
-
-// returns non-nil error iff there is an error during the *saving*
-// process. I.e. this is not a reflection of whether there have been
-// errors recorded.
-func (labBuild *LaboratoryBuilder) saveErrors() error {
-	if labBuild.Errors() != nil {
-		// Because we've called Errors() we have gone through a memory
-		// barrier, so direct access to labBuild.errors is now safe,
-		// provided we are the only go-routine doing so, which we should
-		// be.
-		return labBuild.errors.WriteToFile(filepath.Join(labBuild.outDir, "errors.json"))
-	} else {
-		return nil
-	}
 }
 
 func (labBuild *LaboratoryBuilder) RemoveOutDir() error {

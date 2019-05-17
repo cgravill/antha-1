@@ -1,5 +1,7 @@
 package workflow
 
+import "github.com/antha-lang/antha/utils"
+
 func (wf *Workflow) NewSimulation() error {
 	if simId, err := RandomBasicId(wf.WorkflowId); err != nil {
 		return err
@@ -20,8 +22,12 @@ type Simulation struct {
 	Version      string  `json:"Version"`
 	Start        string  `json:"Start"`
 	End          string  `json:"End"`
+	InDir        string  `json:"InDir"`
+	OutDir       string  `json:"OutDir"`
 
 	Elements SimulatedElements `json:"Elements,omitempty"`
+
+	Errors utils.ErrorSlice `json:"Errors"`
 }
 
 type SimulatedElements map[ElementId]*SimulatedElement

@@ -126,6 +126,12 @@
                 "Version": { "type": "string" },
                 "Start": { "type": "string" },
                 "End": { "type": "string" },
+                "InDir": { "type": "string" },
+                "OutDir": { "type": "string" },
+                "Errors": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                },
                 "Elements": {
                     "type": "object",
                     "propertyNames": {
