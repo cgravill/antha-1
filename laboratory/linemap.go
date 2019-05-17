@@ -26,7 +26,7 @@ type elementMap struct {
 // Neither the goElementPath nor the anElementPath need to be full
 // paths, but they should be in filepath format, and they will be
 // tested as suffixes against the frames in the stack.
-func (lmm *lineMapManager) RegisterLineMap(goElementPath, anElementPath, elementTypeName string, lineMap map[int]int) {
+func (lmm *lineMapManager) RegisterLineMap(elementTypeName, goElementPath, anElementPath string, lineMap map[int]int) {
 	em := &elementMap{
 		anthaElementPath: anElementPath,
 		elementTypeName:  elementTypeName,

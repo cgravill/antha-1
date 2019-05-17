@@ -186,7 +186,7 @@ package main
 	labBuild.RegisterJsonExtensions(jh)
 
 	// Register line maps for the elements we're using
-{{range elementTypes}}{{if .IsAnthaElement}}	{{.Name}}.RegisterLineMap(labBuild)
+{{range elementTypes}}{{if .IsAnthaElement}}	labBuild.RegisterLineMap({{printf "%q" .Name}}, {{.Name}}.GoSrcPath, {{.Name}}.AnthaSrcPath, {{.Name}}.LineMap)
 {{end}}{{end}}
 	// Create the elements
 {{range $name, $inst := .Elements.Instances}}	{{if $inst.IsUsed}}{{varName $name}} := {{end}}{{$inst.ElementTypeName}}.New(labBuild, {{printf "%q" $name}})
@@ -196,7 +196,6 @@ package main
 {{end}}
 	// Set parameters
 {{range $name, $inst := .Elements.Instances}}{{range $param, $value := $inst.Parameters}}	if err := codec.NewDecoderBytes([]byte({{printf "%q" $value}}), jh).Decode(&{{varName $name}}.{{token $name $param}}.{{$param}}); err != nil {
-		// This will catch things like invalid json where we error before we hit any of our own code.
 		labBuild.RecordError(err, true)
 	}
 {{end}}{{end}}

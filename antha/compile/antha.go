@@ -610,6 +610,21 @@ func (p *Antha) addUses() {
 // printFunctions generates synthetic antha functions and data stuctures
 func (p *Antha) printFunctions(out io.Writer, lineMap map[int]int) error {
 	var tmpl = `
+var (
+{{range $x, $msg := .Messages}}	{{$msg.Kind}}FieldTypes = map[string]string{
+{{range $y, $field := $msg.Fields}}		{{printf "%q" $field.Name}}: {{printf "%q" $field.FullyQualifiedTypeString}},
+{{end}}	}
+{{end}}
+	LineMap = map[int]int{ // .go -> .an
+		{{range $key, $value := .LineMap}}{{$key}}: {{$value}}, {{end}}
+	}
+)
+
+const (
+	GoSrcPath = {{printf "%q" .GeneratedPath}}
+	AnthaSrcPath = {{printf "%q" .Path}}
+)
+
 type {{.ElementTypeName}} struct {
 	name workflow.ElementInstanceName
 
@@ -641,34 +656,23 @@ func Defaults(jh *codec.JsonHandle) (*{{.ElementTypeName}}, error) {
 {{end}}
 	return element, nil
 }
-
-func RegisterLineMap(labBuild *laboratory.LaboratoryBuilder) {
-	lineMap := map[int]int{
-		{{range $key, $value := .LineMap}}{{$key}}: {{$value}}, {{end}}
-	}
-	labBuild.RegisterLineMap(
-		{{printf "%q" .GeneratedPath}},
-		{{printf "%q" .Path}},
-		{{printf "%q" .ElementTypeName}},
-		lineMap)
-}
 `
 	type TVars struct {
-		antha           *Antha
 		ElementTypeName string
 		GeneratedPath   string
 		Path            string
 		LineMap         map[int]int
 		Defaults        map[string]json.RawMessage
+		Messages        []*Message
 	}
 
 	tv := TVars{
-		antha:           p,
 		ElementTypeName: p.protocolName,
 		GeneratedPath:   filepath.Join(filepath.Dir(p.elementPath), elementFilename),
 		Path:            p.elementPath,
 		LineMap:         lineMap,
 		Defaults:        p.Meta.Defaults,
+		Messages:        p.messages,
 	}
 	funcs := template.FuncMap{
 		"token": func(name string) string {
