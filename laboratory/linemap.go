@@ -103,14 +103,13 @@ func (lmm *lineMapManager) ElementStackTrace() string {
 				stackSplit = stackSplit[1:]
 				result = append(result, line)
 				if strings.HasPrefix(line, fmt.Sprintf("\t%s:%d", frame.File, frame.Line)) { // this line is the 2nd of every frame!
-					// the current line and previous line should be overwritten:
-					result = result[:len(result)-2]
+					// the current line overwritten:
+					result = result[:len(result)-1]
 					lineStr := "(unknown line)"
 					if line, foundLine := elem.lineMap[frame.Line]; foundLine {
 						lineStr = fmt.Sprint(line)
 					}
 					result = append(result,
-						frame.Function,
 						fmt.Sprintf("\t[ElementType %s] %s:%s", elem.elementTypeName, elem.anthaElementPath, lineStr),
 						fmt.Sprintf("\t[Go] %s:%d", frame.File, frame.Line))
 					break
