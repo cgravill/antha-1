@@ -36,14 +36,12 @@ func (lmm *lineMapManager) RegisterLineMap(elementTypeName, goElementPath, anEle
 }
 
 // ElementStackTrace creates a stack trace, detecting whether or not
-// the panic occured within an element. If the panic did not occur
-// within an element, then the normal debug.Stack() is
-// returned. Otherwise, we use the registered line maps to create a
-// stack trace which refers back to the original elements, with the
-// correct line numbers.
+// the panic occured within an element. Essentially, the normal
+// debug.Stack() is returned, but modified whenever the stack trace
+// passes through an element. We use the registered line maps to
+// create a stack trace which refers back to the original elements,
+// with the correct line numbers.
 func (lmm *lineMapManager) ElementStackTrace() string {
-	standard := string(debug.Stack())
-
 	// This is a magic number :( It limits us to dealing with stack
 	// traces that are 1000 frames deep. It is not expected this will
 	// be a problem in practice!
@@ -60,6 +58,9 @@ func (lmm *lineMapManager) ElementStackTrace() string {
 	// - Frame of function that panicked
 	// - ... rest of call stack ...
 	//
+	// If the panic is caught with a recover and then re-thrown, then
+	// that adds more frames to the top of the call stack.
+	//
 	// In the defer, if we call ElementStackTrace then that adds
 	// another frame, and then we further have to call runtime.Callers
 	// in order to generate the stack frame. At this point, the stack
@@ -67,75 +68,63 @@ func (lmm *lineMapManager) ElementStackTrace() string {
 	//
 	// - Frame of runtime.Callers
 	// - Frame of ElementStackTrace
-	// - Frame of defer-with-recover func
-	// - Frame of runtime.gopanic
+	// - Frame of defer-with-recover func  \___ maybe repeated
+	// - Frame of runtime.gopanic          /
 	// - (optional) One or more frames of panic detail, eg
 	//     runtime.panicdivide, runtime.panicmem, runtime.sigpanic
 	// - Frame of function that panicked
 	// - ... rest of call stack ...
 	//
-	// Now we want to find if the the panic happened within an
-	// element. To do that, we walk down until we find
-	// runtime.gopanic. We then keep walking until we find the first
-	// thing that doesn't start with runtime, and we inspect that!
 	num := runtime.Callers(0, cs)
+	stack := string(debug.Stack())
 	if num < 0 {
-		return standard
+		return stack
 	}
+	// Now, the Go runtime API doesn't allow us to construct the stack
+	// trace in the same way as debug.Stack(). So rather than trying,
+	// we simply walk through the frames, find any that refer to
+	// elements, and try to locate and modify the corresponding lines.
+	stackSplit := strings.Split(stack, "\n")
+	result := make([]string, 0, len(stackSplit))
+
 	frames := runtime.CallersFrames(cs[:num])
-	// skip over everything until we find the runtime.gopanic entry
 	frame, more := frames.Next()
 	for {
-		if !more {
-			return standard
-		} else if frame.Function == "runtime.gopanic" {
-			break
-		} else {
-			frame, more = frames.Next()
-		}
-	}
-	// now keep going until we find the first thing that is _not_ runtime.:
-	for {
-		if !more {
-			return standard
-		} else if !strings.HasPrefix(frame.Function, "runtime.") {
-			break
-		} else {
-			frame, more = frames.Next()
-		}
-	}
-
-	// For each of the remaining frames, we need to detect whether they
-	// are within an element or not. If the first of these remaining
-	// frames is *not* within an element, then strs will remain empty,
-	// and we will revert to using the standard stack trace.
-	var strs []string
-	for {
-		foundElement := false
+		var elem *elementMap
 		for suffix, em := range lmm.elementMaps {
 			if strings.HasSuffix(frame.File, suffix) {
-				foundElement = true
-				lineStr := "(unknown line)"
-				if line, foundLine := em.lineMap[frame.Line]; foundLine {
-					lineStr = fmt.Sprint(line)
-				}
-				strs = append(strs, fmt.Sprintf("- [ElementType %s] %s:%s", em.elementTypeName, em.anthaElementPath, lineStr))
-				strs = append(strs, fmt.Sprintf("              [Go] %s", frame.Function))
-				strs = append(strs, fmt.Sprintf("                   %s:%d", frame.File, frame.Line))
+				elem = em
 				break
 			}
 		}
-		if len(strs) == 0 { // we haven't been able to find any matching element, so use standard stack
-			return standard
+		if elem != nil {
+			for len(stackSplit) > 0 {
+				line := stackSplit[0]
+				stackSplit = stackSplit[1:]
+				result = append(result, line)
+				if strings.HasPrefix(line, fmt.Sprintf("\t%s:%d", frame.File, frame.Line)) { // this line is the 2nd of every frame!
+					// the current line and previous line should be overwritten:
+					result = result[:len(result)-2]
+					lineStr := "(unknown line)"
+					if line, foundLine := elem.lineMap[frame.Line]; foundLine {
+						lineStr = fmt.Sprint(line)
+					}
+					result = append(result,
+						frame.Function,
+						fmt.Sprintf("\t[ElementType %s] %s:%s", elem.elementTypeName, elem.anthaElementPath, lineStr),
+						fmt.Sprintf("\t[Go] %s:%d", frame.File, frame.Line))
+					break
+				}
+			}
 		}
-		if !foundElement {
-			strs = append(strs, fmt.Sprintf("- [Go] %s", frame.Function))
-			strs = append(strs, fmt.Sprintf("       %s:%d", frame.File, frame.Line))
+
+		if more {
+			frame, more = frames.Next()
+		} else {
+			result = append(result, stackSplit...)
+			return strings.Join(result, "\n")
 		}
-		if !more {
-			break
-		}
-		frame, more = frames.Next()
 	}
-	return strings.Join(strs, "\n")
+
+	return stack
 }
