@@ -611,20 +611,19 @@ func (p *Antha) addUses() {
 // printFunctions generates synthetic antha functions and data stuctures
 func (p *Antha) printFunctions(out io.Writer, lineMap map[int]int) error {
 	var tmpl = `
-var (
-{{range $x, $msg := .Messages}}	{{$msg.Kind}}FieldTypes = map[string]string{
-{{range $y, $field := $msg.Fields}}		{{printf "%q" $field.Name}}: {{printf "%q" $field.FullyQualifiedTypeString}},
-{{end}}	}
-{{end}}
-	LineMap = map[int]int{ // .go -> .an
-		{{range $key, $value := .LineMap}}{{$key}}: {{$value}}, {{end}}
-	}
-)
+var TypeMeta = &laboratory.ElementTypeMeta{
+	Name: {{printf "%q" .ElementTypeName}},
+	GoSrcPath: {{printf "%q" .GeneratedPath}},
+	AnthaSrcPath: {{printf "%q" .Path}},
 
-const (
-	GoSrcPath = {{printf "%q" .GeneratedPath}}
-	AnthaSrcPath = {{printf "%q" .Path}}
-)
+{{range $x, $msg := .Messages}}	{{$msg.Kind}}FieldTypes: map[string]string{
+{{range $y, $field := $msg.Fields}}		{{printf "%q" $field.Name}}: {{printf "%q" $field.FullyQualifiedTypeString}},
+{{end}}	},
+{{end}}
+	LineMap: map[int]int{ // .go -> .an
+		{{range $key, $value := .LineMap}}{{$key}}: {{$value}}, {{end}}
+	},
+}
 
 type {{.ElementTypeName}} struct {
 	name workflow.ElementInstanceName
@@ -645,8 +644,8 @@ func (element *{{.ElementTypeName}}) Name() workflow.ElementInstanceName {
 	return element.name
 }
 
-func (element *{{.ElementTypeName}}) TypeName() workflow.ElementTypeName {
-	return {{printf "%q" .ElementTypeName}}
+func (element *{{.ElementTypeName}}) TypeMeta() *laboratory.ElementTypeMeta {
+	return TypeMeta
 }
 
 func Defaults(jh *codec.JsonHandle) (*{{.ElementTypeName}}, error) {

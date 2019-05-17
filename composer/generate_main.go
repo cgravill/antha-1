@@ -186,7 +186,7 @@ package main
 	labBuild.RegisterJsonExtensions(jh)
 
 	// Register line maps for the elements we're using
-{{range elementTypes}}{{if .IsAnthaElement}}	labBuild.RegisterLineMap({{printf "%q" .Name}}, {{.Name}}.GoSrcPath, {{.Name}}.AnthaSrcPath, {{.Name}}.LineMap)
+{{range elementTypes}}{{if .IsAnthaElement}}	labBuild.RegisterElementType({{.Name}}.TypeMeta, {{printf "%q" .RepositoryName}}, {{printf "%q" .ElementPath}})
 {{end}}{{end}}
 	// Create the elements
 {{range $name, $inst := .Elements.Instances}}	{{if $inst.IsUsed}}{{varName $name}} := {{end}}{{$inst.ElementTypeName}}.New(labBuild, {{printf "%q" $name}})

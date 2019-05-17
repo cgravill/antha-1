@@ -148,8 +148,10 @@ func (te *TestElement) Name() workflow.ElementInstanceName {
 	return workflow.ElementInstanceName(name)
 }
 
-func (te *TestElement) TypeName() workflow.ElementTypeName {
-	return workflow.ElementTypeName("TestElement")
+func (te *TestElement) TypeMeta() *laboratory.ElementTypeMeta {
+	return &laboratory.ElementTypeMeta{
+		Name: "TestElement",
+	}
 }
 
 func (te *TestElement) Setup(lab *laboratory.Laboratory) error {

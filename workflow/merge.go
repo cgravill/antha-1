@@ -393,14 +393,35 @@ func (a *Simulation) merge(b Simulation) error {
 	}.Pack()
 }
 
-func (a SimulatedElements) merge(b SimulatedElements) error {
+func (a *SimulatedElements) merge(b SimulatedElements) error {
+	return utils.ErrorSlice{
+		a.Types.merge(b.Types),
+		a.Instances.merge(b.Instances),
+	}.Pack()
+}
+
+func (a SimulatedElementTypes) merge(b SimulatedElementTypes) error {
+	// because of the maps in SimulatedElementType, we can't do
+	// structural equality. So we're just going to error if there's any
+	// overlap of the keys.
+	for k, vB := range b {
+		if _, found := a[k]; found {
+			return fmt.Errorf("Cannot merge two SimulatedElementTypes: %v", k)
+		} else {
+			a[k] = vB
+		}
+	}
+	return nil
+}
+
+func (a SimulatedElementInstances) merge(b SimulatedElementInstances) error {
 	if len(b) == 0 {
 		return nil
 	} else if len(a) != 0 {
-		return errors.New("Cannot merge two sets of non-empty SimulatedElements")
+		return errors.New("Cannot merge two sets of non-empty SimulatedElementInstances")
 	} else {
-		for k, v := range b {
-			a[k] = v
+		for k, vB := range b {
+			a[k] = vB
 		}
 		return nil
 	}

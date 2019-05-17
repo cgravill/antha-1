@@ -106,7 +106,8 @@ func EmptyWorkflow() *Workflow {
 		Elements: Elements{
 			Instances: make(ElementInstances),
 		},
-		Config: EmptyConfig(),
+		Config:     EmptyConfig(),
+		Simulation: EmptySimulation(),
 	}
 }
 

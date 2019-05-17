@@ -481,31 +481,57 @@ func (sim *Simulation) validate(wf *Workflow) error {
 	// if there are simulated elements then we must have a simulation
 	// id. But this is not an iff, because we could have a simulation
 	// of no element instances...
-	if elemCount := len(sim.Elements); elemCount != 0 && sim.SimulationId == "" {
+	if elemCount := len(sim.Elements.Instances); elemCount != 0 && sim.SimulationId == "" {
 		return fmt.Errorf("Validation error: Simulation records %d simulated elements, but we have no SimulationId", elemCount)
 	} else if err := sim.SimulationId.Validate(elemCount == 0); err != nil {
 		return err
 	} else {
-		tns := wf.TypeNames()
-		for elemId, simElem := range sim.Elements {
-			if simElem.ParentElementId == "" {
-				// If there's no parent, then this is a top level
-				// element. Which means it must be declared directly in
-				// the workflow.
-				if _, found := tns[simElem.ElementTypeName]; !found {
-					return fmt.Errorf("Validation error: Simulation records top-level element instance (id: %v) with type %v, but that type is unknown in the workflow.",
-						elemId, simElem.ElementTypeName)
-				}
-				if _, found := wf.Elements.Instances[simElem.ElementInstanceName]; !found {
-					return fmt.Errorf("Validation error: Simulation records top-level element instance (id: %v) with name %v, but that name is unknown in the workflow.",
-						elemId, simElem.ElementInstanceName)
-				}
-
-			} else if _, found := sim.Elements[simElem.ParentElementId]; !found {
-				return fmt.Errorf("Validation error: Simulation records element instance (id: %v) with parent (id: %v), but the parent doesn't seem to exist",
-					elemId, simElem.ParentElementId)
-			}
-		}
-		return nil
+		return sim.Elements.validate(wf)
 	}
+}
+
+func (sim *SimulatedElements) validate(wf *Workflow) error {
+	return utils.ErrorSlice{
+		sim.Types.validate(wf),
+		sim.Instances.validate(wf),
+	}.Pack()
+}
+
+func (types SimulatedElementTypes) validate(wf *Workflow) error {
+	for name, elemTyp := range types {
+		if _, found := wf.Repositories[elemTyp.RepositoryName]; !found {
+			fmt.Errorf("Validation error: Simulation records use element type %v with repository %v which is unknown",
+				name, elemTyp.RepositoryName)
+		}
+	}
+	return nil
+}
+
+func (insts SimulatedElementInstances) validate(wf *Workflow) error {
+	tns := wf.TypeNames()
+	for elemInstId, elemInst := range insts {
+		if elemInst.ParentId == "" {
+			// If there's no parent, then this is a top level
+			// element. Which means it must be declared directly in
+			// the workflow.
+			if _, found := tns[elemInst.TypeName]; !found {
+				return fmt.Errorf("Validation error: Simulation records top-level element instance (id: %v) with type %v, but that type is unknown in the workflow.",
+					elemInstId, elemInst.TypeName)
+			}
+			if _, found := wf.Elements.Instances[elemInst.Name]; !found {
+				return fmt.Errorf("Validation error: Simulation records top-level element instance (id: %v) with name %v, but that name is unknown in the workflow.",
+					elemInst, elemInst.Name)
+			}
+
+		} else if _, found := insts[elemInst.ParentId]; !found {
+			return fmt.Errorf("Validation error: Simulation records element instance (id: %v) with parent (id: %v), but the parent doesn't seem to exist",
+				elemInstId, elemInst.ParentId)
+		}
+
+		if _, found := wf.Simulation.Elements.Types[elemInst.TypeName]; !found {
+			return fmt.Errorf("Validation error: Simulation records element instance (id: %v) with type %v, but that type is unknown in the simulation types.",
+				elemInstId, elemInst.TypeName)
+		}
+	}
+	return nil
 }

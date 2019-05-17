@@ -30,7 +30,7 @@ import (
 
 type Element interface {
 	Name() workflow.ElementInstanceName
-	TypeName() workflow.ElementTypeName
+	TypeMeta() *ElementTypeMeta
 
 	Setup(*Laboratory) error
 	Steps(*Laboratory) error
@@ -126,9 +126,11 @@ func (labBuild *LaboratoryBuilder) SetupWorkflow(fh io.ReadCloser) error {
 		return err
 	} else if err := wf.Validate(); err != nil {
 		return err
-	} else if err := wf.NewSimulation(); err != nil {
+	} else if simId, err := RandomBasicId(wf.WorkflowId); err != nil {
 		return err
 	} else {
+		wf.Simulation = EmptySimulation()
+		wf.Simulation.SimulationId = simId
 		labBuild.Logger = labBuild.Logger.With("simulationId", wf.Simulation.SimulationId)
 		if anthaMod := composer.AnthaModule(); anthaMod != nil && len(anthaMod.Version) != 0 {
 			wf.Simulation.Version = anthaMod.Version
@@ -205,18 +207,18 @@ func (labBuild *LaboratoryBuilder) Decommission() error {
 
 	labBuild.elemLock.Lock()
 	for _, lab := range labBuild.elemsCompleted {
-		simElem := &workflow.SimulatedElement{
-			ElementInstanceName: lab.element.Name(),
-			ElementTypeName:     lab.element.TypeName(),
-			StatePath:           lab.statePath,
+		simElem := workflow.SimulatedElementInstance{
+			Name:      lab.element.Name(),
+			TypeName:  lab.element.TypeMeta().Name,
+			StatePath: lab.statePath,
 		}
 		if lab.parent != nil {
-			simElem.ParentElementId = workflow.ElementId(fmt.Sprint(lab.parent.id))
+			simElem.ParentId = workflow.ElementInstanceId(fmt.Sprint(lab.parent.id))
 		}
 		if lab.err != nil {
 			simElem.Error = lab.err.Error()
 		}
-		labBuild.Workflow.Simulation.Elements[workflow.ElementId(fmt.Sprint(lab.id))] = simElem
+		labBuild.Workflow.Simulation.Elements.Instances[workflow.ElementInstanceId(fmt.Sprint(lab.id))] = simElem
 	}
 	labBuild.elemLock.Unlock()
 
@@ -476,7 +478,7 @@ func (labBuild *LaboratoryBuilder) makeLab(logger *logger.Logger, e Element, par
 		parent:   parent,
 		element:  e,
 
-		Logger:            logger.With("id", id, "name", e.Name(), "type", e.TypeName()),
+		Logger:            logger.With("id", id, "name", e.Name(), "type", e.TypeMeta().Name),
 		Workflow:          labBuild.Workflow,
 		LaboratoryEffects: labBuild.effects,
 
@@ -489,7 +491,7 @@ func (labBuild *LaboratoryBuilder) makeLab(logger *logger.Logger, e Element, par
 
 func (lab *Laboratory) InstallElement(e Element) {
 	// take the root logger (from labBuild) and build up from there.
-	logger := lab.labBuild.Logger.With("parentId", lab.id, "parentName", lab.element.Name(), "parentType", lab.element.TypeName())
+	logger := lab.labBuild.Logger.With("parentId", lab.id, "parentName", lab.element.Name(), "parentType", lab.element.TypeMeta().Name)
 	lab.labBuild.addElementLaboratory(e, lab.labBuild.makeLab(logger, e, lab))
 }
 
@@ -548,7 +550,7 @@ func (lab *Laboratory) run(funs ...func(*Laboratory) error) {
 			// A panic is always fatal to the whole workflow, regardless of the element
 			stackTrace := lab.labBuild.lineMapManager.ElementStackTrace()
 			fmt.Printf("panic %v:\nDuring element instance %q (id %v) (element type %q):\n%s\n",
-				res, lab.element.Name(), lab.id, lab.element.TypeName(), stackTrace)
+				res, lab.element.Name(), lab.id, lab.element.TypeMeta().Name, stackTrace)
 			lab.err = fmt.Errorf("panic: %v\n%s", res, stackTrace)
 			lab.labBuild.RecordError(lab.err, false)
 		}

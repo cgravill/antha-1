@@ -134,15 +134,29 @@
                 },
                 "Elements": {
                     "type": "object",
-                    "propertyNames": {
-                        "$comment": "Element instance ids",
-                        "pattern": "^[a-zA-Z0-9]+$"
-                    },
-                    "patternProperties": {
-                        ".*": {
-                            "$ref": "#/definitions/simulatedElement"
+                    "properties": {
+                        "Types": {
+                            "type": "object",
+                            "patternProperties": {
+                                ".*": {
+                                    "$ref": "#/definitions/simulatedElementType"
+                                }
+                            }
+                        },
+                        "Instances": {
+                            "type": "object",
+                            "propertyNames": {
+                                "$comment": "Element instance ids",
+                                "pattern": "^[a-zA-Z0-9]+$"
+                            },
+                            "patternProperties": {
+                                ".*": {
+                                    "$ref": "#/definitions/simulatedElementInstance"
+                                }
+                            }
                         }
-                    }
+                    },
+                    "additionalProperties": false
                 }
             },
             "additionalProperties": false,
@@ -292,17 +306,48 @@
                 "Extra": { "type": "object" }
             }
         },
-        "simulatedElement": {
+        "simulatedElementInstance": {
             "type": "object",
             "properties": {
-                "ElementInstanceName": { "type": "string" },
-                "ElementTypeName": { "type": "string" },
-                "StatePath": { "type": "string" },
-                "ParentElementId": {
+                "Name": { "type": "string" },
+                "TypeName": { "type": "string" },
+                "ParentId": {
                     "type": "string",
                     "pattern": "^[a-zA-Z0-9]*$"
                 },
-                "Error": { "type": "string" }
+                "Error": { "type": "string" },
+                "StatePath": { "type": "string" }
+            }
+        },
+        "simulatedElementType": {
+            "type": "object",
+            "properties": {
+                "GoSrcPath": { "type": "string" },
+                "AnthaSrcPath": { "type": "string" },
+                "InputsFieldTypes": {
+                    "type": "object",
+                    "patternProperties": {
+                        ".*": {"type": "string"}
+                    }
+                },
+                "OutputsFieldTypes": {
+                    "type": "object",
+                    "patternProperties": {
+                        ".*": {"type": "string"}
+                    }
+                },
+                "ParametersFieldTypes": {
+                    "type": "object",
+                    "patternProperties": {
+                        ".*": {"type": "string"}
+                    }
+                },
+                "DataFieldTypes": {
+                    "type": "object",
+                    "patternProperties": {
+                        ".*": {"type": "string"}
+                    }
+                }
             }
         }
     }

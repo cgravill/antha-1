@@ -8,31 +8,20 @@ import (
 )
 
 type lineMapManager struct {
-	elementMaps map[string]*elementMap
+	elementTypeByGoSrcPath map[string]*ElementTypeMeta
 }
 
 func NewLineMapManager() *lineMapManager {
 	return &lineMapManager{
-		elementMaps: make(map[string]*elementMap),
+		elementTypeByGoSrcPath: make(map[string]*ElementTypeMeta),
 	}
-}
-
-type elementMap struct {
-	anthaElementPath string
-	elementTypeName  string
-	lineMap          map[int]int
 }
 
 // Neither the goElementPath nor the anElementPath need to be full
 // paths, but they should be in filepath format, and they will be
 // tested as suffixes against the frames in the stack.
-func (lmm *lineMapManager) RegisterLineMap(elementTypeName, goElementPath, anElementPath string, lineMap map[int]int) {
-	em := &elementMap{
-		anthaElementPath: anElementPath,
-		elementTypeName:  elementTypeName,
-		lineMap:          lineMap,
-	}
-	lmm.elementMaps[goElementPath] = em
+func (lmm *lineMapManager) RegisterLineMap(elemType *ElementTypeMeta) {
+	lmm.elementTypeByGoSrcPath[elemType.GoSrcPath] = elemType
 }
 
 // ElementStackTrace creates a stack trace, detecting whether or not
@@ -90,14 +79,14 @@ func (lmm *lineMapManager) ElementStackTrace() string {
 	frames := runtime.CallersFrames(cs[:num])
 	frame, more := frames.Next()
 	for {
-		var elem *elementMap
-		for suffix, em := range lmm.elementMaps {
+		var elemType *ElementTypeMeta
+		for suffix, elem := range lmm.elementTypeByGoSrcPath {
 			if strings.HasSuffix(frame.File, suffix) {
-				elem = em
+				elemType = elem
 				break
 			}
 		}
-		if elem != nil {
+		if elemType != nil {
 			for len(stackSplit) > 0 {
 				line := stackSplit[0]
 				stackSplit = stackSplit[1:]
@@ -106,11 +95,11 @@ func (lmm *lineMapManager) ElementStackTrace() string {
 					// the current line overwritten:
 					result = result[:len(result)-1]
 					lineStr := "(unknown line)"
-					if line, foundLine := elem.lineMap[frame.Line]; foundLine {
+					if line, found := elemType.LineMap[frame.Line]; found {
 						lineStr = fmt.Sprint(line)
 					}
 					result = append(result,
-						fmt.Sprintf("\t[ElementType %s] %s:%s", elem.elementTypeName, elem.anthaElementPath, lineStr),
+						fmt.Sprintf("\t[ElementType %s] %s:%s", elemType.Name, elemType.AnthaSrcPath, lineStr),
 						fmt.Sprintf("\t[Go] %s:%d", frame.File, frame.Line))
 					break
 				}
