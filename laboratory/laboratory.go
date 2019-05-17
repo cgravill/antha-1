@@ -547,8 +547,8 @@ func (lab *Laboratory) run(funs ...func(*Laboratory) error) {
 		if res := recover(); res != nil {
 			// A panic is always fatal to the whole workflow, regardless of the element
 			stackTrace := lab.labBuild.lineMapManager.ElementStackTrace()
-			fmt.Printf("panic %v:\nDuring element instance %q (element type %q):\n%s\n",
-				res, lab.element.Name(), lab.element.TypeName(), stackTrace)
+			fmt.Printf("panic %v:\nDuring element instance %q (id %v) (element type %q):\n%s\n",
+				res, lab.element.Name(), lab.id, lab.element.TypeName(), stackTrace)
 			lab.err = fmt.Errorf("panic: %v\n%s", res, stackTrace)
 			lab.labBuild.RecordError(lab.err, false)
 		}
