@@ -64,7 +64,7 @@ func (m *Migrator) Workflow() (*workflow.Workflow, error) {
 	if err != nil {
 		return nil, err
 	}
-	wf.Testing = testing
+	wf.Testing = &testing
 
 	return wf, nil
 }

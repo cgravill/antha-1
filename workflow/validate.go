@@ -146,12 +146,12 @@ func (ei *ElementInstance) validate(wf *Workflow, name ElementInstanceName) erro
 		return fmt.Errorf("Validation error: Element Instance %v cannot be nil", name)
 	}
 	tns := wf.TypeNames()
-	if _, found := tns[ei.ElementTypeName]; !found {
-		maybeName := ElementType{ElementPath: ElementPath(ei.ElementTypeName)}.Name()
+	if _, found := tns[ei.TypeName]; !found {
+		maybeName := ElementType{ElementPath: ElementPath(ei.TypeName)}.Name()
 		if _, found := tns[maybeName]; found {
-			return fmt.Errorf("Validation error: Element Instance '%v' has unknown ElementTypeName '%v'. Did you mean '%v'?", name, ei.ElementTypeName, maybeName)
+			return fmt.Errorf("Validation error: Element Instance '%v' has unknown ElementTypeName '%v'. Did you mean '%v'?", name, ei.TypeName, maybeName)
 		} else {
-			return fmt.Errorf("Validation error: Element Instance '%v' has unknown ElementTypeName '%v'", name, ei.ElementTypeName)
+			return fmt.Errorf("Validation error: Element Instance '%v' has unknown ElementTypeName '%v'", name, ei.TypeName)
 		}
 	} else {
 		ei.hasParameters = len(ei.Parameters) > 0
@@ -478,6 +478,9 @@ func matchingPrefix(str string, prefixes ...string) string {
 }
 
 func (sim *Simulation) validate(wf *Workflow) error {
+	if sim == nil {
+		return nil
+	}
 	// if there are simulated elements then we must have a simulation
 	// id. But this is not an iff, because we could have a simulation
 	// of no element instances...

@@ -160,7 +160,7 @@
                 }
             },
             "additionalProperties": false,
-            "required": []
+            "required": ["SimulationId","Version"]
         }
     },
     "definitions": {
@@ -196,7 +196,7 @@
         "elementInstance": {
             "type": "object",
             "properties": {
-                "ElementTypeName": {
+                "TypeName": {
                     "type": "string"
                 },
                 "Meta": {
@@ -217,7 +217,7 @@
                 }
             },
             "additionalProperties": false,
-            "required": ["ElementTypeName"]
+            "required": ["TypeName"]
         },
         "elementInstanceConnection": {
             "type": "object",
@@ -317,11 +317,15 @@
                 },
                 "Error": { "type": "string" },
                 "StatePath": { "type": "string" }
-            }
+            },
+            "additionalProperties": false,
+            "required": ["Name", "TypeName"]
         },
         "simulatedElementType": {
             "type": "object",
             "properties": {
+                "RepositoryName": { "type": "string" },
+                "ElementPath": { "type": "string" },
                 "GoSrcPath": { "type": "string" },
                 "AnthaSrcPath": { "type": "string" },
                 "InputsFieldTypes": {
@@ -348,7 +352,9 @@
                         ".*": {"type": "string"}
                     }
                 }
-            }
+            },
+            "additionalProperties": false,
+            "required": ["RepositoryName", "ElementPath", "GoSrcPath", "AnthaSrcPath", "InputsFieldTypes", "OutputsFieldTypes", "ParametersFieldTypes", "DataFieldTypes"]
         }
     }
 }

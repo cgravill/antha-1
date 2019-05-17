@@ -126,10 +126,10 @@ func (labBuild *LaboratoryBuilder) SetupWorkflow(fh io.ReadCloser) error {
 		return err
 	} else if err := wf.Validate(); err != nil {
 		return err
-	} else if simId, err := RandomBasicId(wf.WorkflowId); err != nil {
+	} else if simId, err := workflow.RandomBasicId(wf.WorkflowId); err != nil {
 		return err
 	} else {
-		wf.Simulation = EmptySimulation()
+		wf.Simulation = workflow.EmptySimulation()
 		wf.Simulation.SimulationId = simId
 		labBuild.Logger = labBuild.Logger.With("simulationId", wf.Simulation.SimulationId)
 		if anthaMod := composer.AnthaModule(); anthaMod != nil && len(anthaMod.Version) != 0 {

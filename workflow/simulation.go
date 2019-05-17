@@ -2,8 +2,8 @@ package workflow
 
 import "github.com/antha-lang/antha/utils"
 
-func EmptySimulation() Simulation {
-	return Simulation{
+func EmptySimulation() *Simulation {
+	return &Simulation{
 		Elements: SimulatedElements{
 			Types:     make(SimulatedElementTypes),
 			Instances: make(SimulatedElementInstances),

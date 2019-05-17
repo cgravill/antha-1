@@ -106,7 +106,7 @@ func (p *Provider) migrateElementParameters(fm *effects.FileManager, process *pr
 func (p *Provider) migrateElement(fm *effects.FileManager, process *protobuf.Process) (*workflow.ElementInstance, error) {
 	ei := &workflow.ElementInstance{}
 
-	ei.ElementTypeName = workflow.ElementTypeName(process.Component)
+	ei.TypeName = workflow.ElementTypeName(process.Component)
 
 	params, err := p.migrateElementParameters(fm, process)
 	if err != nil {

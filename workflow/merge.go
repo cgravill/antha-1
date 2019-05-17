@@ -25,8 +25,8 @@ func (a *Workflow) Merge(b *Workflow) error {
 		a.Elements.merge(b.Elements),
 		a.Inventory.merge(b.Inventory),
 		a.Config.merge(b.Config),
-		a.Testing.merge(b.Testing),
-		a.Simulation.merge(b.Simulation),
+		a.Testing.merge(a, b.Testing),
+		a.Simulation.merge(a, b.Simulation),
 	}.Pack()
 }
 
@@ -372,25 +372,37 @@ func (a *PlateReaderConfig) Merge(b PlateReaderConfig) error {
 	return nil
 }
 
-func (a *Testing) merge(b Testing) error {
-	if a == nil {
+func (a *Testing) merge(wf *Workflow, b *Testing) error {
+	if b == nil {
 		return nil
-	}
 
-	if len(a.MixTaskChecks) == 0 {
+	} else if a == nil {
+		wf.Testing = b
+
+	} else if len(a.MixTaskChecks) == 0 {
 		a.MixTaskChecks = b.MixTaskChecks
+		return nil
+
 	} else if len(b.MixTaskChecks) != 0 {
 		return errors.New("Cannot merge two sets of non-empty testing data")
 	}
-
 	return nil
 }
 
-func (a *Simulation) merge(b Simulation) error {
-	return utils.ErrorSlice{
-		a.SimulationId.Merge(b.SimulationId),
-		a.Elements.merge(b.Elements),
-	}.Pack()
+func (a *Simulation) merge(wf *Workflow, b *Simulation) error {
+	if b == nil {
+		return nil
+
+	} else if a == nil {
+		wf.Simulation = b
+		return nil
+
+	} else {
+		return utils.ErrorSlice{
+			a.SimulationId.Merge(b.SimulationId),
+			a.Elements.merge(b.Elements),
+		}.Pack()
+	}
 }
 
 func (a *SimulatedElements) merge(b SimulatedElements) error {

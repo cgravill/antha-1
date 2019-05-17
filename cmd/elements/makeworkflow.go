@@ -49,7 +49,7 @@ func makeWorkflow(l *logger.Logger, flagSet *flag.FlagSet, inDir, regexStr strin
 					Types: workflow.ElementTypes{&etCopy},
 					Instances: workflow.ElementInstances{
 						workflow.ElementInstanceName(etCopy.Name()): &workflow.ElementInstance{
-							ElementTypeName: etCopy.Name(),
+							TypeName: etCopy.Name(),
 						},
 					},
 				},

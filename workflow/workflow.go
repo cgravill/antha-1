@@ -38,9 +38,9 @@ type Workflow struct {
 
 	Config Config `json:"Config"`
 
-	Testing Testing `json:"Testing,omitempty"`
+	Testing *Testing `json:"Testing,omitempty"`
 
-	Simulation Simulation `json:"Simulation,omitempty"`
+	Simulation *Simulation `json:"Simulation,omitempty"`
 
 	typeNames map[ElementTypeName]*ElementType
 }
@@ -106,8 +106,7 @@ func EmptyWorkflow() *Workflow {
 		Elements: Elements{
 			Instances: make(ElementInstances),
 		},
-		Config:     EmptyConfig(),
-		Simulation: EmptySimulation(),
+		Config: EmptyConfig(),
 	}
 }
 
@@ -330,9 +329,9 @@ type ElementInstances map[ElementInstanceName]*ElementInstance
 // must appear as the final token in an ElementPath value within the
 // Elements/Types section of the workflow.
 type ElementInstance struct {
-	ElementTypeName ElementTypeName     `json:"ElementTypeName"`
-	Meta            json.RawMessage     `json:"Meta,omitempty"`
-	Parameters      ElementParameterSet `json:"Parameters,omitempty"`
+	TypeName   ElementTypeName     `json:"TypeName"`
+	Meta       json.RawMessage     `json:"Meta,omitempty"`
+	Parameters ElementParameterSet `json:"Parameters,omitempty"`
 
 	hasConnections bool
 	hasParameters  bool

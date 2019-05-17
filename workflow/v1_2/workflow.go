@@ -97,7 +97,7 @@ func (wf *workflowv1_2) MigrateElement(fm *effects.FileManager, name string) (*w
 		return nil, errors.New("element instance " + name + " not present")
 	}
 
-	ei.ElementTypeName = workflow.ElementTypeName(v.Component)
+	ei.TypeName = workflow.ElementTypeName(v.Component)
 	enc, err := json.Marshal(v.Metadata)
 	if err != nil {
 		return nil, err

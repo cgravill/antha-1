@@ -153,13 +153,13 @@ func (cb *ComposerBase) transpile(wf *workflow.Workflow) error {
 func (cb *ComposerBase) token(wf *workflow.Workflow, elem workflow.ElementInstanceName, param workflow.ElementParameterName) (string, error) {
 	if elemInstance, found := wf.Elements.Instances[elem]; !found {
 		return "", fmt.Errorf("No such element instance with name '%v'", elem)
-	} else if elemType, found := cb.elementTypes[elemInstance.ElementTypeName]; !found {
-		return "", fmt.Errorf("No such element type with name '%v' (element instance '%v')", elemInstance.ElementTypeName, elem)
+	} else if elemType, found := cb.elementTypes[elemInstance.TypeName]; !found {
+		return "", fmt.Errorf("No such element type with name '%v' (element instance '%v')", elemInstance.TypeName, elem)
 	} else if elemType.Transpiler == nil {
-		return "", fmt.Errorf("The element type '%v' does not appear to contain an Antha element", elemInstance.ElementTypeName)
+		return "", fmt.Errorf("The element type '%v' does not appear to contain an Antha element", elemInstance.TypeName)
 	} else if tok, found := elemType.Transpiler.TokenByParamName[string(param)]; !found {
 		return "", fmt.Errorf("The element type '%v' has no parameter named '%v' (element instance '%v')",
-			elemInstance.ElementTypeName, param, elem)
+			elemInstance.TypeName, param, elem)
 	} else {
 		return tok.String(), nil
 	}
@@ -176,7 +176,7 @@ type mainComposer struct {
 }
 
 func (cb *ComposerBase) ComposeMainAndRun(keep, run, linkedDrivers bool, wf *workflow.Workflow) error {
-	if wf.Simulation.SimulationId != "" {
+	if wf.Simulation != nil && wf.Simulation.SimulationId != "" {
 		return fmt.Errorf("Workflow has already been simulated (SimulationId %v); aborting", wf.Simulation.SimulationId)
 	}
 
@@ -248,7 +248,7 @@ func (cb *ComposerBase) NewTestsComposer(keep, run, linkedDrivers bool) *testCom
 }
 
 func (tc *testComposer) AddWorkflow(wf *workflow.Workflow, inDir string) error {
-	if wf.Simulation.SimulationId != "" {
+	if wf.Simulation != nil && wf.Simulation.SimulationId != "" {
 		return fmt.Errorf("Workflow has already been simulated (SimulationId %v); aborting", wf.Simulation.SimulationId)
 	} else if _, found := tc.Workflows[wf.WorkflowId]; found {
 		return fmt.Errorf("Workflow with Id %v already added. Workflow Ids must be unique", wf.WorkflowId)
