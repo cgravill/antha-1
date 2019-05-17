@@ -27,9 +27,38 @@ func MaybeMigrateFileParam(fm *effects.FileManager, param json.RawMessage) (json
 		return js, nil
 	} else if err != nil {
 		return nil, err
+	} else if js, err := maybeMigrateFileSeries(fm, param); js != nil {
+		return js, nil
+	} else if err != nil {
+		return nil, err
 	} else {
 		return param, nil
 	}
+}
+
+// maybeMigrateFileSeries returns a nil json.RawMessage unless: no error was encountered during unmarshalling and every value within the FileSeries unmarshals as a valid wtype.File. returns a non-nil error only if an error was encountered when writing a file value to disk.
+func maybeMigrateFileSeries(fm *effects.FileManager, param json.RawMessage) (json.RawMessage, error) {
+	bifSeries := struct {
+		Files []*bakedInFile
+	}{}
+	if err := json.Unmarshal([]byte(param), &bifSeries); err != nil || bifSeries.Files == nil {
+		return nil, nil
+	}
+
+	js := wtype.FileSeries{
+		Files: make([]*wtype.File, len(bifSeries.Files)),
+	}
+	for i, bif := range bifSeries.Files {
+		if !bif.hasData() {
+			return nil, nil
+		} else if f, err := bif.moveDataToFile(fm); err != nil {
+			return nil, err
+		} else {
+			js.Files[i] = f
+		}
+	}
+
+	return json.Marshal(js)
 }
 
 // maybeMigrateFileArray returns a nil json.RawMessage unless: no error was encountered during unmarshalling and every value within the slice unmarshals as a valid wtype.File. returns a non-nil error only if an error was encountered when writing a file value to disk.
