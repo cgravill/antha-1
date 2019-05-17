@@ -23,10 +23,15 @@ func NewMessageInstruction(lhi *wtype.LHInstruction) *MessageInstruction {
 	}
 	msi.BaseRobotInstruction = NewBaseRobotInstruction(msi)
 
+	pt := make(map[string]*wtype.Liquid)
+
 	if lhi != nil {
+		for i := 0; i < len(lhi.Inputs); i++ {
+			pt[lhi.Inputs[i].ID] = lhi.Outputs[i]
+		}
 		msi.Message = lhi.Message
 		msi.WaitTime = lhi.WaitTime
-		msi.PassThrough = lhi.PassThrough
+		msi.PassThrough = pt
 	}
 
 	return msi

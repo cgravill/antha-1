@@ -2,13 +2,11 @@ package wtype
 
 import (
 	"fmt"
-	"strings"
-
-	"time"
-
 	"github.com/antha-lang/antha/antha/anthalib/wunit"
 	"github.com/antha-lang/antha/laboratory/effects/id"
 	"github.com/antha-lang/antha/utils"
+	"strings"
+	"time"
 )
 
 // enum of instruction types
@@ -52,7 +50,6 @@ type LHInstruction struct {
 	OutPlate         *Plate
 	Message          string
 	WaitTime         time.Duration
-	PassThrough      map[string]*Liquid // 1:1 pass through, only applies to prompts
 }
 
 func (ins LHInstruction) String() string {
@@ -112,7 +109,6 @@ func newLHInstruction(idGen *id.IDGenerator) *LHInstruction {
 	var lhi LHInstruction
 	lhi.ID = idGen.NextID()
 	lhi.Majorlayoutgroup = -1
-	lhi.PassThrough = make(map[string]*Liquid, 1)
 	return &lhi
 }
 
