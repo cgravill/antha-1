@@ -1077,6 +1077,24 @@ func TestExecutionPlanning(t *testing.T) {
 					},
 				},
 				{
+					Name:          "multi channel independent different tips",
+					Liquidhandler: GetIndependentLiquidHandlerForTest(lab),
+					Instructions: Mixes("pcrplate_skirted_riser", TestMixComponents{
+						{
+							LiquidName:    "water",
+							VolumesByWell: ColumnWise(8, []float64{10.0, 100.0, 10.0, 100.0, 10.0, 100.0, 10.0, 100.0}),
+							LiquidType:    wtype.LTWater,
+							Sampler:       mixer.Sample,
+						},
+					}),
+					InputPlates:  []*wtype.LHPlate{GetTroughForTest(lab.IDGenerator)},
+					OutputPlates: []*wtype.LHPlate{GetPlateForTest(lab.IDGenerator)},
+					Assertions: Assertions{
+						NumberOfAssertion(liquidhandling.ASP, 1), //full multichanneling
+						NumberOfAssertion(liquidhandling.DSP, 1), //full multichanneling
+					},
+				},
+				{
 					Name: "multi channel split-sample",
 					Instructions: func(lab *laboratory.Laboratory) ([]*wtype.LHInstruction, error) {
 
