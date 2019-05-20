@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	flag.Usage = workflow.NewFlagUsage(nil, "Parse, compile and run a workflow")
+	flag.Usage = workflow.NewFlagUsage(nil, "Parse, compile and run a workflow", "github.com/antha-lang/antha/cmd/composer")
 
 	var inDir, outDir string
 	var keep, run, linkedDrivers bool

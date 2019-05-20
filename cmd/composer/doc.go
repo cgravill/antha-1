@@ -24,8 +24,8 @@
 //  2. Checkout all the known repositories under outdir/src at the
 //     indicated revisions.
 //
-//  3. Transpile the transitive closure of all antha element files
-//     into Go code.
+//  3. Transpile the transitive closure of all required antha element
+//     files into Go code.
 //
 //  4. Use the merged and validated workflow to generate a main.go in
 //     outdir/workflow. This is the entry point for the execution of
@@ -42,8 +42,8 @@
 //     generation of the workflow binary (for example, for
 //     configuration of device instruction plugins).
 //
-//  7. Compile the generated main.go into outdir/bin/job-id and build
-//     into the generated binary the merged and validated
+//  7. Compile the generated main.go into outdir/bin/workflow and
+//     build into the generated binary the merged and validated
 //     workflow. The generated binary is relatively self contained at
 //     this point - the only external dependencies are non-linked-in
 //     instruction plugins, and input data files.
@@ -73,17 +73,17 @@
 //         calls) will have their paths interpreted as relative to
 //         this directory.
 //
-//  -keep=false
+//  -keep (boolean, default false)
 //    By default, after steps 1-7 are successfully run, the contents
 //    of outdir/src and outdir/workflow are removed (i.e. the checked
 //    out sources, the merged and validated workflow and generated
 //    main.go). These are not removed if -keep=true
 //
-//  -run=true
+//  -run (boolean, default true)
 //    By default, the compiled workflow is executed (step 8). If
-//    -run=false then the composer exits after steps 1-7.q
+//    -run=false then the composer exits after step 7.
 //
-//  -linkedDrivers=false
+//  -linkedDrivers (boolean, default false)
 //    By default we do not require a checkout of the
 //    github.com/Synthace/instruction-plugins repository, which means
 //    that every device within the workflow that requires an

@@ -16,7 +16,7 @@ import (
 
 func defaults(l *logger.Logger, args []string) error {
 	flagSet := flag.NewFlagSet(flag.CommandLine.Name()+" defaults", flag.ContinueOnError)
-	flagSet.Usage = workflow.NewFlagUsage(flagSet, "Gather defaults for an element set from metadata.json files in the repo")
+	flagSet.Usage = workflow.NewFlagUsage(flagSet, "Gather defaults for an element set from metadata.json files in the repo", "github.com/antha-lang/antha/cmd/elements")
 
 	var regexStr, inDir string
 	flagSet.StringVar(&regexStr, "regex", "", "Regular expression to match against element type path (optional)")

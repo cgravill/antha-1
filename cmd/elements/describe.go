@@ -43,7 +43,7 @@ const (
 
 func describe(l *logger.Logger, args []string) error {
 	flagSet := flag.NewFlagSet(flag.CommandLine.Name()+" describe", flag.ContinueOnError)
-	flagSet.Usage = workflow.NewFlagUsage(flagSet, "Show descriptions of elements")
+	flagSet.Usage = workflow.NewFlagUsage(flagSet, "Show descriptions of elements", "github.com/antha-lang/antha/cmd/elements")
 
 	validOutputFormats := []string{
 		outputFormatHuman,

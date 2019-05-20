@@ -1,7 +1,7 @@
 // The Elements Command
 //
 // The elements command is a command to help work with elements and
-// workflows.  Various subcommands are available, and just like the
+// workflows. Various subcommands are available, and just like the
 // composer command (github.com/antha-lang/antha/cmd/composer), they
 // accept workflow snippets as inputs.
 //
@@ -28,6 +28,9 @@
 // is matched against the element type's path. Only matching element
 // types are output. The default is to match all element types.
 //
+// Example:
+//    elements list -regex=Aliquot path/to/repositories.json
+//
 // Describe
 //
 // The describe subcommand is similar to the list subcommand, but for
@@ -53,6 +56,9 @@
 // The information is output via stdout, and is appropriately tab
 // indented.
 //
+// Example:
+//    elements describe -regex=AddFluorescenceTimeCourse path/to/repositories.json
+//
 // Make Workflow
 //
 // The makeWorkflow subcommand allows for workflows to be generated
@@ -68,7 +74,7 @@
 // output to. The default is to output to stdout.
 //
 // For every found element type for which the element type's path
-// matches the regex, the generated worflow with contain a
+// matches the regex, the generated worflow will contain a
 // corresponding Element Type entry, and a corresponding Element
 // Instance entry. No parameters are set on the element instance, and
 // no connections are made between any elements.
@@ -79,18 +85,17 @@
 // elements transpile and compile correct, a command line such as the
 // following could be used:
 //
-//  elements makeWorkflow -regex=QPCR repositories.json | composer -run=false -
+//  elements makeWorkflow -regex=QPCR path/to/repositories.json | composer -run=false -keep -
 //
 // Testing
 //
 // Whilst not a subcommand, testing of elements is supported by this
 // package.
 //
-// Testing accepts the -indir flag exactly as for the list subcommand,
-// and workflow snippets can be provided in exactly the same way. The
-// testing subsystem has built in support for selecting which tests to
-// run, see https://golang.org/cmd/go/#hdr-Testing_flags and
-// particularly the -run flag.
+// Testing accepts the -indir and -regex flags exactly as for the list
+// subcommand, and workflow snippets can be provided in exactly the
+// same way. The -regex flag is only used when selecting test
+// workflows to run.
 //
 // Testing also accepts an -outdir flag which can be used to provide a
 // path to a directory under which all source checkouts, transpilation
