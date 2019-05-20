@@ -15,16 +15,7 @@ func GetLiquidHandlerForTest(lab *laboratory.Laboratory) *lh.Liquidhandler {
 }
 
 func GetIndependentLiquidHandlerForTest(lab *laboratory.Laboratory) *lh.Liquidhandler {
-	gilson := makeGilson(lab)
-	for _, head := range gilson.Heads {
-		head.Params.Independent = true
-	}
-
-	for _, adaptor := range gilson.Adaptors {
-		adaptor.Params.Independent = true
-	}
-
-	return lh.Init(gilson)
+	return lh.Init(makeIndependentLH(lab))
 }
 
 func GetLHRequestForTest(idGen *id.IDGenerator) *lh.LHRequest {

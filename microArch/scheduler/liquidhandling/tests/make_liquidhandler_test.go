@@ -30,6 +30,15 @@ const (
 	LVMaxRate = 3.75
 )
 
+func getIndependentConfig(idGen *id.IDGenerator) *wtype.LHChannelParameter {
+	minvol := wunit.NewVolume(0.5, "ul")
+	maxvol := wunit.NewVolume(250, "ul")
+	minspd := wunit.NewFlowRate(LVMinRate, "ml/min")
+	maxspd := wunit.NewFlowRate(HVMaxRate, "ml/min")
+
+	return wtype.NewLHChannelParameter(idGen, "config", "GilsonPipetmax", minvol, maxvol, minspd, maxspd, 8, true, wtype.LHVChannel, 0)
+}
+
 func getHVConfig(idGen *id.IDGenerator) *wtype.LHChannelParameter {
 	minvol := wunit.NewVolume(10, "ul")
 	maxvol := wunit.NewVolume(250, "ul")
@@ -48,7 +57,7 @@ func getLVConfig(idGen *id.IDGenerator) *wtype.LHChannelParameter {
 	return wtype.NewLHChannelParameter(idGen, "LVconfig", "GilsonPipetmax", newminvol, newmaxvol, newminspd, newmaxspd, 8, false, wtype.LHVChannel, 1)
 }
 
-func makeGilson(lab *laboratory.Laboratory) *liquidhandling.LHProperties {
+func makeLayout(lab *laboratory.Laboratory) *liquidhandling.LHProperties {
 	// gilson pipetmax
 
 	layout := make(map[string]*wtype.LHPosition)
@@ -83,6 +92,33 @@ func makeGilson(lab *laboratory.Laboratory) *liquidhandling.LHProperties {
 		Tipwastes: workflow.Addresses{"position_1"},
 		Wastes:    workflow.Addresses{"position_9"},
 	}
+
+	return lhp
+}
+
+func makeIndependentLH(lab *laboratory.Laboratory) *liquidhandling.LHProperties {
+	lhp := makeLayout(lab)
+
+	// test independent liquidhandler has only one head to avoid multi-head instruction issues
+	config := getIndependentConfig(lab.IDGenerator)
+	adaptor := wtype.NewLHAdaptor(lab.IDGenerator, "DummyAdaptor", "Gilson", config)
+	head := wtype.NewLHHead(lab.IDGenerator, "Head", "Gilson", config)
+	head.Adaptor = adaptor
+
+	ha := wtype.NewLHHeadAssembly(nil)
+	ha.AddPosition(wtype.Coordinates3D{X: 0, Y: 0, Z: 0})
+	if err := ha.LoadHead(head); err != nil {
+		panic(err)
+	}
+	lhp.Heads = append(lhp.Heads, head)
+	lhp.Adaptors = append(lhp.Adaptors, adaptor)
+	lhp.HeadAssemblies = append(lhp.HeadAssemblies, ha)
+
+	return lhp
+}
+
+func makeGilson(lab *laboratory.Laboratory) *liquidhandling.LHProperties {
+	lhp := makeLayout(lab)
 
 	hvconfig := getHVConfig(lab.IDGenerator)
 	hvadaptor := wtype.NewLHAdaptor(lab.IDGenerator, "DummyAdaptor", "Gilson", hvconfig)
