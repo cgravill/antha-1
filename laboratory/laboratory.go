@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -36,6 +37,11 @@ type Element interface {
 	Steps(*Laboratory) error
 	Analysis(*Laboratory) error
 	Validation(*Laboratory) error
+
+	InputsJSONMap() (map[workflow.ElementParameterName]json.RawMessage, error)
+	OutputsJSONMap() (map[workflow.ElementParameterName]json.RawMessage, error)
+	ParametersJSONMap() (map[workflow.ElementParameterName]json.RawMessage, error)
+	DataJSONMap() (map[workflow.ElementParameterName]json.RawMessage, error)
 }
 
 type LaboratoryBuilder struct {
@@ -207,9 +213,10 @@ func (labBuild *LaboratoryBuilder) Decommission() error {
 
 	labBuild.elemLock.Lock()
 	for _, lab := range labBuild.elemsCompleted {
+		typeMeta := lab.element.TypeMeta()
 		simElem := workflow.SimulatedElementInstance{
 			Name:      lab.element.Name(),
-			TypeName:  lab.element.TypeMeta().Name,
+			TypeName:  typeMeta.Name,
 			StatePath: lab.statePath,
 		}
 		if lab.parent != nil {
@@ -218,6 +225,27 @@ func (labBuild *LaboratoryBuilder) Decommission() error {
 		if lab.err != nil {
 			simElem.Error = lab.err.Error()
 		}
+
+		// temporary solution for exposing files: temporary until we have a proper elements service
+		files := make(map[workflow.ElementParameterName]json.RawMessage)
+		for fieldName, typ := range typeMeta.DataFieldTypes {
+			if strings.HasSuffix(typ, "github.com/antha-lang/antha/antha/anthalib/wtype.File") {
+				if bs, found := lab.serializedElement.Data[fieldName]; found && bs != nil {
+					files[fieldName] = bs
+				}
+			}
+		}
+		for fieldName, typ := range typeMeta.OutputsFieldTypes {
+			if strings.HasSuffix(typ, "github.com/antha-lang/antha/antha/anthalib/wtype.File") {
+				if bs, found := lab.serializedElement.Outputs[fieldName]; found && bs != nil {
+					files[fieldName] = bs
+				}
+			}
+		}
+		if len(files) != 0 {
+			simElem.Files = files
+		}
+
 		labBuild.Workflow.Simulation.Elements.Instances[workflow.ElementInstanceId(fmt.Sprint(lab.id))] = simElem
 	}
 	labBuild.elemLock.Unlock()
@@ -466,9 +494,18 @@ type Laboratory struct {
 	// any error that was produced by the element itself
 	err error
 
+	serializedElement serializedElement
+
 	// name of file (leaf) where we've written out the state of the
 	// element once it's completed
 	statePath string
+}
+
+type serializedElement struct {
+	Inputs     map[workflow.ElementParameterName]json.RawMessage
+	Outputs    map[workflow.ElementParameterName]json.RawMessage
+	Parameters map[workflow.ElementParameterName]json.RawMessage
+	Data       map[workflow.ElementParameterName]json.RawMessage
 }
 
 func (labBuild *LaboratoryBuilder) makeLab(logger *logger.Logger, e Element, parent *Laboratory) *Laboratory {
@@ -569,21 +606,29 @@ func (lab *Laboratory) run(funs ...func(*Laboratory) error) {
 			}()
 		}
 		lab.Logger.Log("progress", "starting")
+
 		// this defer comes here because this defer will read all our
 		// inputs and parameters as part of the save() call. This is
 		// only safe (concurrency) once we know our inputs are ready.
 		defer lab.save()
+		// We serialize inputs and parameters before the element starts
+		// because of the risk of the element modifying them. We
+		// serialize outputs and data afterwards.
+		lab.serializeInputsParams()
+		defer lab.serializeOutputsData()
+
 		for _, fun := range funs {
 			select {
 			case <-lab.labBuild.errored:
 				return
 			default:
-				if err := fun(lab); err != nil {
-					lab.err = err
+				if lab.err != nil {
 					return
 				}
+				lab.err = fun(lab)
 			}
 		}
+
 	case <-lab.labBuild.errored:
 		return
 	}
@@ -602,6 +647,36 @@ func (lab *Laboratory) stopped() {
 	}
 }
 
+func (lab *Laboratory) serializeInputsParams() {
+	if inputs, err := lab.element.InputsJSONMap(); err != nil {
+		lab.err = err
+		return
+	} else {
+		lab.serializedElement.Inputs = inputs
+	}
+	if parameters, err := lab.element.ParametersJSONMap(); err != nil {
+		lab.err = err
+		return
+	} else {
+		lab.serializedElement.Parameters = parameters
+	}
+}
+
+func (lab *Laboratory) serializeOutputsData() {
+	if outputs, err := lab.element.OutputsJSONMap(); err != nil {
+		lab.err = err
+		return
+	} else {
+		lab.serializedElement.Outputs = outputs
+	}
+	if data, err := lab.element.DataJSONMap(); err != nil {
+		lab.err = err
+		return
+	} else {
+		lab.serializedElement.Data = data
+	}
+}
+
 func (lab *Laboratory) save() {
 	leaf := fmt.Sprintf("%d_%s.json", lab.id, lab.element.Name())
 	p := filepath.Join(lab.labBuild.outDir, "elements", leaf)
@@ -609,7 +684,7 @@ func (lab *Laboratory) save() {
 		lab.labBuild.RecordError(err, true)
 	} else {
 		defer fh.Close()
-		if err := json.NewEncoder(fh).Encode(lab.element); err != nil {
+		if err := json.NewEncoder(fh).Encode(&lab.serializedElement); err != nil {
 			lab.labBuild.RecordError(err, true)
 		} else {
 			lab.statePath = leaf

@@ -1,6 +1,10 @@
 package workflow
 
-import "github.com/antha-lang/antha/utils"
+import (
+	"encoding/json"
+
+	"github.com/antha-lang/antha/utils"
+)
 
 func EmptySimulation() *Simulation {
 	return &Simulation{
@@ -37,10 +41,10 @@ type SimulatedElementType struct {
 	ElementType
 	GoSrcPath            string
 	AnthaSrcPath         string
-	InputsFieldTypes     map[string]string
-	OutputsFieldTypes    map[string]string
-	ParametersFieldTypes map[string]string
-	DataFieldTypes       map[string]string
+	InputsFieldTypes     map[ElementParameterName]string
+	OutputsFieldTypes    map[ElementParameterName]string
+	ParametersFieldTypes map[ElementParameterName]string
+	DataFieldTypes       map[ElementParameterName]string
 }
 
 type SimulatedElementInstances map[ElementInstanceId]SimulatedElementInstance
@@ -48,9 +52,10 @@ type SimulatedElementInstances map[ElementInstanceId]SimulatedElementInstance
 type ElementInstanceId string
 
 type SimulatedElementInstance struct {
-	Name      ElementInstanceName `json:"Name"`
-	TypeName  ElementTypeName     `json:"TypeName"`
-	ParentId  ElementInstanceId   `json:"ParentId,omitempty"`
-	Error     string              `json:"Error,omitempty"`
-	StatePath string              `json:"StatePath"`
+	Name      ElementInstanceName                      `json:"Name"`
+	TypeName  ElementTypeName                          `json:"TypeName"`
+	ParentId  ElementInstanceId                        `json:"ParentId,omitempty"`
+	Error     string                                   `json:"Error,omitempty"`
+	StatePath string                                   `json:"StatePath"`
+	Files     map[ElementParameterName]json.RawMessage `json:"Files,omitempty"`
 }
