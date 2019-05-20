@@ -47,7 +47,7 @@ type Workflow struct {
 
 func WorkflowFromReaders(rs ...io.ReadCloser) (*Workflow, error) {
 	if len(rs) == 0 {
-		return nil, errors.New("No workflow sources provided.")
+		return nil, errors.New("No workflow provided.")
 	}
 	acc := EmptyWorkflow()
 	for _, r := range rs {

@@ -24,7 +24,10 @@ const (
 var validFromFormats = []string{fromFormatJSON, fromFormatProtobuf}
 
 func main() {
-	flag.Usage = workflow.NewFlagUsage(nil, "Migrate workflow to latest schema version", "github.com/antha-lang/antha/cmd/migrate")
+	flag.Usage = workflow.NewFlagUsage(nil,
+		"Migrate workflow to latest schema version",
+		"[flags] workflow-snippet.json...",
+		"github.com/antha-lang/antha/cmd/migrate")
 
 	var fromFile, outDir, gilsonDevice, fromFormat string
 	var validate bool

@@ -56,17 +56,17 @@ func JsonPathsWithin(dir string) ([]string, error) {
 	}
 }
 
-func NewFlagUsage(fs *flag.FlagSet, summary, docstr string) func() {
+func NewFlagUsage(fs *flag.FlagSet, summary, usage, docstr string) func() {
 	if fs == nil {
 		fs = flag.CommandLine
 	}
 	output := fs.Output()
 	name := fs.Name()
 	return func() {
-		fmt.Fprintf(output, "%s: %s\nUsage of %s:\n", name, summary, name)
+		fmt.Fprintf(output, "%s: %s\nUsage:\n  %s %s\n\n", name, summary, name, usage)
 		fs.PrintDefaults()
 		fmt.Fprintf(output,
-			"\nAll further args are interpreted as paths to workflows to be merged and composed. Use - to read a workflow from stdin.\nSee go doc %s for further documentation.\n\n",
+			"\nAll further args are interpreted as paths to workflow snippets to be merged and composed. Use - to read a workflow from stdin.\nSee go doc %s for further documentation.\n",
 			docstr)
 	}
 }

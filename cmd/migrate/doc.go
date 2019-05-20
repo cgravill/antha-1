@@ -1,5 +1,8 @@
 // The Migrate Command
 //
+// Example:
+//   migrate -from=path/to/old.json -format=json myRepositories.json
+//
 // The migrate command migrates workflows from outdated historical
 // schema versions to the current schema version. Currently, it will
 // accept as inputs:
@@ -9,11 +12,11 @@
 //
 // and will produce SchemaVersion=2.0 workflows.
 //
-// The version=1.2 format is deficient in that it does not contain
-// enough information for workflow to be repeatedly executed. Thus
-// when migrating, you are required to provide additional information
-// (particularly Repositories) in the SchemaVersion=2.0 format which
-// is then combined with the old workflow to create a workflow.
+// The version=1.2 format does not contain any versioning information
+// for elements. Thus when migrating, as a minimum, you are required
+// to provide Repository information in the SchemaVersion=2.0 format
+// such that each element type can be located within one of the
+// repositories specified.
 //
 // The following flags are available:
 //
@@ -57,19 +60,8 @@
 //    and all non-mixer devices are migrated. This matches the
 //    historical behaviour of antha.
 //
-// Additionally, as normal, workflow snippets in the current
-// SchemaVersion=2.0 format may be provided as additional arguments to
-// the command. As a minimum, it is necessary to provide sufficient
-// Repositories such that every element instance in the input
-// historical workflow (version=1.2) can be located within one of the
-// Repositories. If this is not possible then migration will
-// fail. This is because the older formats do not contain any
-// repository information, thus it is not possible to migrate from an
-// old workflow without providing repository information in the new
-// SchemaVersion=2.0 format.
-//
-// Example:
-//   migrate -from=path/to/old.json myRepositories.json
+// Additionally, as normal, workflow snippets may be provided as
+// additional arguments to the command.
 //
 // Log messages are produced on stderr.
 package main
