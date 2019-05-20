@@ -74,7 +74,7 @@
 // output to. The default is to output to stdout.
 //
 // For every found element type for which the element type's path
-// matches the regex, the generated worflow will contain a
+// matches the regex, the generated workflow will contain a
 // corresponding Element Type entry, and a corresponding Element
 // Instance entry. No parameters are set on the element instance, and
 // no connections are made between any elements.
