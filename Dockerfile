@@ -9,6 +9,17 @@ RUN set -ex && go install github.com/antha-lang/antha/cmd/...
 RUN set -ex && go test -c github.com/antha-lang/antha/cmd/elements
 COPY scripts/*.sh /antha/
 
+FROM eu.gcr.io/antha-images/golang:1.12.4-build AS lint
+COPY --from=build /root/.netrc /root/.cache /root/
+COPY --from=build /go /go
+COPY --from=build /antha /antha
+WORKDIR /lint
+RUN set -ex && go mod init lint && go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.16.0
+WORKDIR /antha
+RUN set -ex && rm -rf /lint && mkdir /lint && cp -a $(go list -f '{{ .Dir }}' github.com/antha-lang/antha) /lint/antha
+WORKDIR /lint/antha
+RUN set -ex && go mod edit "-dropreplace=github.com/Synthace/antha-runner" "-dropreplace=github.com/Synthace/instruction-plugins" && golangci-lint run --deadline=5m -E gosec -E gofmt
+
 FROM eu.gcr.io/antha-images/golang:1.12.4-build AS tests
 COPY --from=build /root/.netrc /root/.cache /root/
 COPY --from=build /go /go

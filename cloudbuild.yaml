@@ -31,6 +31,17 @@ steps:
     if [ "$BRANCH_NAME" = "feature/future_sanity" ]; then target=cloud; fi
     docker build --force-rm -t 'eu.gcr.io/antha-images/antha-core:$COMMIT_SHA' --target=$target --build-arg COMMIT_SHA=$COMMIT_SHA --build-arg NETRC="$(cat .netrc)" .
 
+- name: 'gcr.io/cloud-builders/docker'
+  id: docker-lint
+  waitFor:
+  - docker-build
+  entrypoint: '/bin/bash'
+  args:
+  - '-c'
+  - |
+    set -x -o nounset -o errexit -o pipefail
+    docker build --force-rm --target=lint .
+
 - name: 'gcr.io/cloud-builders/gsutil'
   id: gitlab-fetch
   waitFor: ['-']
@@ -58,8 +69,9 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   id: docker-push
   waitFor:
-  - gitlab-decrypt
   - docker-build
+  - docker-lint
+  - gitlab-decrypt
   entrypoint: 'bash'
   args:
   - '-c'
