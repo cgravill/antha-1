@@ -28,7 +28,7 @@ require (
 	golang.org/x/net v0.0.0-20190320064053-1272bf9dcd53
 	gonum.org/v1/gonum v0.0.0-20181029232933-400065bf7646
 	gonum.org/v1/plot v0.0.0-20190410204940-3a5f52653745
-	google.golang.org/grpc v1.19.1
+	google.golang.org/grpc v1.20.1
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
 	gopkg.in/src-d/go-git.v4 v4.7.1
 )
