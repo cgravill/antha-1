@@ -3,16 +3,11 @@
 package target
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/antha-lang/antha/instructions"
 	"github.com/antha-lang/antha/laboratory/effects"
 	"github.com/antha-lang/antha/workflow"
-)
-
-var (
-	errNoTarget = errors.New("no target configuration found")
 )
 
 const (
@@ -52,10 +47,6 @@ var (
 		Value: "antha.quantstudio.v1.QuantStudioService",
 	}
 )
-
-type targetKey int
-
-const theTargetKey targetKey = 0
 
 // Target for execution (collection of devices).
 type Target struct {

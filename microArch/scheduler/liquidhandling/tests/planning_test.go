@@ -51,7 +51,9 @@ func (test *PlanningTest) run(lab *laboratory.Laboratory) error {
 
 	for _, plate := range test.InputPlates {
 		if !plate.IsEmpty(lab.IDGenerator) {
-			request.AddUserPlate(lab.IDGenerator, plate)
+			if err := request.AddUserPlate(lab.IDGenerator, plate); err != nil {
+				return err
+			}
 			plate = plate.Dup(lab.IDGenerator)
 			plate.Clean()
 		}
@@ -68,7 +70,9 @@ func (test *PlanningTest) run(lab *laboratory.Laboratory) error {
 		return fmt.Errorf("expecting error = %q: got error %q", test.ErrorPrefix, err.Error())
 	}
 
-	test.Assertions.Assert(lab, test.Liquidhandler, request)
+	if err := test.Assertions.Assert(lab, test.Liquidhandler, request); err != nil {
+		return err
+	}
 
 	if test.ErrorPrefix == "" {
 		return utils.ErrorSlice{

@@ -27,7 +27,7 @@ func (mc *mainComposer) compileWorkflow() error {
 	if err := mc.goBuild(); err != nil {
 		return err
 	}
-	mc.Logger.Log("go_generate", buildStart.Sub(genStart), "go_build", time.Now().Sub(buildStart))
+	mc.Logger.Log("go_generate", buildStart.Sub(genStart), "go_build", time.Since(buildStart))
 	return mc.cleanOutDir()
 }
 

@@ -141,7 +141,9 @@ func TestBeforeVsAfterUserPlateDest(t *testing.T) {
 				Destination: pl2,
 			}
 
-			rq.AddUserPlate(lab.IDGenerator, pl2)
+			if err := rq.AddUserPlate(lab.IDGenerator, pl2); err != nil {
+				return err
+			}
 
 			ins := mixer.GenericMix(lab, mo)
 

@@ -2,8 +2,9 @@ package instructions
 
 import (
 	"encoding/json"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
 	"sync"
+
+	"github.com/antha-lang/antha/antha/anthalib/wtype"
 )
 
 type Maker struct {
@@ -25,7 +26,7 @@ func NewMaker() *Maker {
 
 func (m *Maker) UnmarshalJSON(bs []byte) error {
 	m2 := NewMaker()
-	*m = *m2
+	*m = *m2 //nolint
 
 	return json.Unmarshal(bs, &m.afterInst)
 }

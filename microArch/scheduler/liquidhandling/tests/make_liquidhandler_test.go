@@ -15,12 +15,15 @@ import (
 )
 
 func setUpTipsFor(lab *laboratory.Laboratory, lhp *liquidhandling.LHProperties) {
-	lab.Inventory.TipBoxes.ForEach(func(tb wtype.LHTipbox) error {
+	err := lab.Inventory.TipBoxes.ForEach(func(tb wtype.LHTipbox) error {
 		if tb.Mnfr == lhp.Mnfr || lhp.Mnfr == "MotherNature" {
 			lhp.Tips = append(lhp.Tips, tb.Tips[0][0])
 		}
 		return nil
 	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 const (
