@@ -18,8 +18,8 @@ import (
 
 func main() {
 	flag.Usage = workflow.NewFlagUsage(nil,
-		//		"Export files created by a simulation",
-		//		"[flags] [workflow-snippet.json...]",
+		"Export files created by a simulation",
+		"[flags] [workflow-snippet.json...]",
 		"github.com/antha-lang/antha/cmd/simulationfiles")
 
 	var inDir, outDir string
