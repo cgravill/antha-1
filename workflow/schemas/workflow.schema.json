@@ -306,21 +306,6 @@
                 "Extra": { "type": "object" }
             }
         },
-        "simulatedElementInstance": {
-            "type": "object",
-            "properties": {
-                "Name": { "type": "string" },
-                "TypeName": { "type": "string" },
-                "ParentId": {
-                    "type": "string",
-                    "pattern": "^[a-zA-Z0-9]*$"
-                },
-                "Error": { "type": "string" },
-                "StatePath": { "type": "string" }
-            },
-            "additionalProperties": false,
-            "required": ["Name", "TypeName"]
-        },
         "simulatedElementType": {
             "type": "object",
             "properties": {
@@ -355,6 +340,22 @@
             },
             "additionalProperties": false,
             "required": ["RepositoryName", "ElementPath", "GoSrcPath", "AnthaSrcPath", "InputsFieldTypes", "OutputsFieldTypes", "ParametersFieldTypes", "DataFieldTypes"]
+        },
+        "simulatedElementInstance": {
+            "type": "object",
+            "properties": {
+                "Name": { "type": "string" },
+                "TypeName": { "type": "string" },
+                "ParentId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9]*$"
+                },
+                "Error": { "type": "string" },
+                "StatePath": { "type": "string" },
+                "Files": { "type": "object" }
+            },
+            "additionalProperties": false,
+            "required": ["Name", "TypeName"]
         }
     }
 }

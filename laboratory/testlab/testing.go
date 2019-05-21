@@ -14,6 +14,7 @@ package testlab
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"testing"
@@ -169,6 +170,7 @@ func (te *TestElement) Steps(lab *laboratory.Laboratory) error {
 		return nil
 	}
 }
+
 func (te *TestElement) Analysis(lab *laboratory.Laboratory) error {
 	if te.cbs.Analysis != nil {
 		return te.cbs.Analysis(lab)
@@ -176,10 +178,27 @@ func (te *TestElement) Analysis(lab *laboratory.Laboratory) error {
 		return nil
 	}
 }
+
 func (te *TestElement) Validation(lab *laboratory.Laboratory) error {
 	if te.cbs.Validation != nil {
 		return te.cbs.Validation(lab)
 	} else {
 		return nil
 	}
+}
+
+func (te *TestElement) InputsJSONMap() (map[workflow.ElementParameterName]json.RawMessage, error) {
+	return nil, nil
+}
+
+func (te *TestElement) OutputsJSONMap() (map[workflow.ElementParameterName]json.RawMessage, error) {
+	return nil, nil
+}
+
+func (te *TestElement) ParametersJSONMap() (map[workflow.ElementParameterName]json.RawMessage, error) {
+	return nil, nil
+}
+
+func (te *TestElement) DataJSONMap() (map[workflow.ElementParameterName]json.RawMessage, error) {
+	return nil, nil
 }
