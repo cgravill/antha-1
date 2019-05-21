@@ -233,12 +233,12 @@ func RunAndLogCommand(cmd *exec.Cmd, logger func(...interface{}) error) error {
 func drainToLogger(logger func(...interface{}) error, fh io.ReadCloser, key string) {
 	defer fh.Close()
 
-	var err error
-	var bs []byte
-	var p bool
-	line := ""
-	for reader := bufio.NewReader(fh); err == nil; bs, p, err = reader.ReadLine() {
-		if p {
+	reader := bufio.NewReader(fh)
+	// the first call to ReadLine() returns an empty string
+	bs, partial, err := reader.ReadLine()
+	line := string(bs)
+	for ; err == nil; bs, partial, err = reader.ReadLine() {
+		if partial {
 			line = line + string(bs)
 		} else {
 			logger(key, line+string(bs))
