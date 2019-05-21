@@ -53,6 +53,9 @@ var (
 			"Depth":              0.099,
 			"Height":             0.0575,
 		},
+		"QCoolPlate": {
+			"Height": 0.079,
+		},
 		"InhecoStaticOnDeck": {
 			"Height": 0.0575, // height in m
 

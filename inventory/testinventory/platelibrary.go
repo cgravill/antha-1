@@ -27,6 +27,34 @@ var plateBytes = []byte(`
   "Extra": {}
  },
  {
+  "PlateType": "1L_DuranBottle_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "box",
+  "WellH": 121,
+  "WellW": 80,
+  "WellD": 40,
+  "MaxVol": 200000,
+  "MinVol": 40000,
+  "BottomType": 0,
+  "BottomH": 3,
+  "WellX": 121,
+  "WellY": 80,
+  "WellZ": 40,
+  "ColSize": 8,
+  "RowSize": 12,
+  "Height": 102.7,
+  "WellXOffset": 9,
+  "WellYOffset": 9,
+  "WellXStart": 14.28,
+  "WellYStart": 11.24,
+  "WellZStart": 93.2,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "1L_DuranBottle_bioshake",
   "Manufacturer": "Unknown",
   "WellShape": "box",
@@ -249,6 +277,34 @@ var plateBytes = []byte(`
   "WellYStart": 8.74,
   "WellZStart": 1.7,
   "Extra": {}
+ },
+ {
+  "PlateType": "30mlAgarplateforpicking384_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "box",
+  "WellH": 4,
+  "WellW": 4,
+  "WellD": 12,
+  "MaxVol": 125,
+  "MinVol": 20,
+  "BottomType": 0,
+  "BottomH": 1,
+  "WellX": 4,
+  "WellY": 4,
+  "WellZ": 12,
+  "ColSize": 16,
+  "RowSize": 24,
+  "Height": 91,
+  "WellXOffset": 4.5,
+  "WellYOffset": 4.5,
+  "WellXStart": 11.78,
+  "WellYStart": 8.74,
+  "WellZStart": 78.7,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
  },
  {
   "PlateType": "30mlAgarplateforpicking384_bioshake",
@@ -475,6 +531,34 @@ var plateBytes = []byte(`
   "Extra": {}
  },
  {
+  "PlateType": "AcroPrep384NoFilter_QCoolPlate",
+  "Manufacturer": "Pall",
+  "WellShape": "box",
+  "WellH": 4,
+  "WellW": 4,
+  "WellD": 11.4,
+  "MaxVol": 80,
+  "MinVol": 4,
+  "BottomType": 2,
+  "BottomH": 0.5,
+  "WellX": 4,
+  "WellY": 4,
+  "WellZ": 11.4,
+  "ColSize": 16,
+  "RowSize": 24,
+  "Height": 91.4,
+  "WellXOffset": 4.5,
+  "WellYOffset": 4.5,
+  "WellXStart": 12.049999999999999,
+  "WellYStart": 9,
+  "WellZStart": 79.5,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "AcroPrep384NoFilter_bioshake",
   "Manufacturer": "Pall",
   "WellShape": "box",
@@ -697,6 +781,34 @@ var plateBytes = []byte(`
   "WellYStart": 9,
   "WellZStart": 18,
   "Extra": {}
+ },
+ {
+  "PlateType": "AcroPrep384WithFilter_QCoolPlate",
+  "Manufacturer": "Pall",
+  "WellShape": "box",
+  "WellH": 4,
+  "WellW": 4,
+  "WellD": 9,
+  "MaxVol": 80,
+  "MinVol": 80,
+  "BottomType": 0,
+  "BottomH": 0.5,
+  "WellX": 4,
+  "WellY": 4,
+  "WellZ": 9,
+  "ColSize": 16,
+  "RowSize": 24,
+  "Height": 104.5,
+  "WellXOffset": 4.5,
+  "WellYOffset": 4.5,
+  "WellXStart": 12.049999999999999,
+  "WellYStart": 9,
+  "WellZStart": 95,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
  },
  {
   "PlateType": "AcroPrep384WithFilter_bioshake",
@@ -923,6 +1035,34 @@ var plateBytes = []byte(`
   "Extra": {}
  },
  {
+  "PlateType": "Agarplateforpicking1536_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "box",
+  "WellH": 2,
+  "WellW": 2,
+  "WellD": 7,
+  "MaxVol": 13,
+  "MinVol": 2,
+  "BottomType": 0,
+  "BottomH": 0.5,
+  "WellX": 2,
+  "WellY": 2,
+  "WellZ": 7,
+  "ColSize": 32,
+  "RowSize": 48,
+  "Height": 84,
+  "WellXOffset": 2.25,
+  "WellYOffset": 2.25,
+  "WellXStart": 11.78,
+  "WellYStart": 8.74,
+  "WellZStart": 80.7,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "Agarplateforpicking1536_bioshake",
   "Manufacturer": "Unknown",
   "WellShape": "box",
@@ -1145,6 +1285,34 @@ var plateBytes = []byte(`
   "WellYStart": 8.24,
   "WellZStart": 3.95,
   "Extra": {}
+ },
+ {
+  "PlateType": "Agarplateforpicking3150_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "box",
+  "WellH": 1.4,
+  "WellW": 1.4,
+  "WellD": 7,
+  "MaxVol": 5,
+  "MinVol": 0.5,
+  "BottomType": 0,
+  "BottomH": 0.5,
+  "WellX": 1.4,
+  "WellY": 1.4,
+  "WellZ": 7,
+  "ColSize": 45,
+  "RowSize": 70,
+  "Height": 84,
+  "WellXOffset": 1.55,
+  "WellYOffset": 1.55,
+  "WellXStart": 10.395,
+  "WellYStart": 8.24,
+  "WellZStart": 80.95,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
  },
  {
   "PlateType": "Agarplateforpicking3150_bioshake",
@@ -1371,6 +1539,34 @@ var plateBytes = []byte(`
   "Extra": {}
  },
  {
+  "PlateType": "Agarplateforpicking384_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "box",
+  "WellH": 4,
+  "WellW": 4,
+  "WellD": 12,
+  "MaxVol": 125,
+  "MinVol": 20,
+  "BottomType": 0,
+  "BottomH": 1,
+  "WellX": 4,
+  "WellY": 4,
+  "WellZ": 12,
+  "ColSize": 16,
+  "RowSize": 24,
+  "Height": 91,
+  "WellXOffset": 4.5,
+  "WellYOffset": 4.5,
+  "WellXStart": 11.78,
+  "WellYStart": 8.74,
+  "WellZStart": 81.2,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "Agarplateforpicking384_bioshake",
   "Manufacturer": "Unknown",
   "WellShape": "box",
@@ -1594,6 +1790,35 @@ var plateBytes = []byte(`
   "WellZStart": 4.2,
   "Extra": {
    "IMSPECIAL": true
+  }
+ },
+ {
+  "PlateType": "Agarplateforpicking48_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "cylinder",
+  "WellH": 11,
+  "WellW": 11,
+  "WellD": 19,
+  "MaxVol": 10,
+  "MinVol": 1,
+  "BottomType": 0,
+  "BottomH": 1,
+  "WellX": 11,
+  "WellY": 11,
+  "WellZ": 19,
+  "ColSize": 6,
+  "RowSize": 8,
+  "Height": 91,
+  "WellXOffset": 13,
+  "WellYOffset": 13,
+  "WellXStart": 17.28,
+  "WellYStart": 10.24,
+  "WellZStart": 81.2,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
   }
  },
  {
@@ -1835,6 +2060,34 @@ var plateBytes = []byte(`
   "Extra": {}
  },
  {
+  "PlateType": "Agarplateforpicking768_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "box",
+  "WellH": 3,
+  "WellW": 3,
+  "WellD": 14,
+  "MaxVol": 31.25,
+  "MinVol": 5,
+  "BottomType": 0,
+  "BottomH": 1,
+  "WellX": 3,
+  "WellY": 3,
+  "WellZ": 14,
+  "ColSize": 24,
+  "RowSize": 32,
+  "Height": 91,
+  "WellXOffset": 3.1,
+  "WellYOffset": 3.1,
+  "WellXStart": 11.78,
+  "WellYStart": 8.74,
+  "WellZStart": 81.2,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "Agarplateforpicking768_bioshake",
   "Manufacturer": "Unknown",
   "WellShape": "box",
@@ -2057,6 +2310,34 @@ var plateBytes = []byte(`
   "WellYStart": 11.24,
   "WellZStart": 4.2,
   "Extra": {}
+ },
+ {
+  "PlateType": "Agarplateforpicking96_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "cylinder",
+  "WellH": 5.5,
+  "WellW": 5.5,
+  "WellD": 15,
+  "MaxVol": 5,
+  "MinVol": 1,
+  "BottomType": 1,
+  "BottomH": 1.4,
+  "WellX": 5.5,
+  "WellY": 5.5,
+  "WellZ": 15,
+  "ColSize": 8,
+  "RowSize": 12,
+  "Height": 91,
+  "WellXOffset": 9,
+  "WellYOffset": 9,
+  "WellXStart": 14.28,
+  "WellYStart": 11.24,
+  "WellZStart": 81.2,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
  },
  {
   "PlateType": "Agarplateforpicking96_bioshake",
@@ -2283,6 +2564,34 @@ var plateBytes = []byte(`
   "Extra": {}
  },
  {
+  "PlateType": "AppliedBiosystems_384_MicroAmp_Optical_QCoolPlate",
+  "Manufacturer": "Applied Biosystems",
+  "WellShape": "cylinder",
+  "WellH": 3.17,
+  "WellW": 3.17,
+  "WellD": 9.09,
+  "MaxVol": 45,
+  "MinVol": 10,
+  "BottomType": 0,
+  "BottomH": 0.61,
+  "WellX": 3.17,
+  "WellY": 3.17,
+  "WellZ": 9.09,
+  "ColSize": 16,
+  "RowSize": 24,
+  "Height": 86.7,
+  "WellXOffset": 4.5,
+  "WellYOffset": 4.5,
+  "WellXStart": 13.41,
+  "WellYStart": 10.23,
+  "WellZStart": 77,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "AppliedBiosystems_384_MicroAmp_Optical_bioshake",
   "Manufacturer": "Applied Biosystems",
   "WellShape": "cylinder",
@@ -2506,6 +2815,35 @@ var plateBytes = []byte(`
   "WellZStart": 0.7,
   "Extra": {
    "IMSPECIAL": true
+  }
+ },
+ {
+  "PlateType": "DSW24_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "box",
+  "WellH": 16.8,
+  "WellW": 16.8,
+  "WellD": 41.3,
+  "MaxVol": 11000,
+  "MinVol": 650,
+  "BottomType": 2,
+  "BottomH": 4.7,
+  "WellX": 16.8,
+  "WellY": 16.8,
+  "WellZ": 41.3,
+  "ColSize": 4,
+  "RowSize": 6,
+  "Height": 121.1,
+  "WellXOffset": 18,
+  "WellYOffset": 18,
+  "WellXStart": 18.78,
+  "WellYStart": 15.74,
+  "WellZStart": 77.7,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
   }
  },
  {
@@ -2747,6 +3085,34 @@ var plateBytes = []byte(`
   "Extra": {}
  },
  {
+  "PlateType": "DSW96_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "box",
+  "WellH": 8.2,
+  "WellW": 8.2,
+  "WellD": 41.3,
+  "MaxVol": 2000,
+  "MinVol": 420,
+  "BottomType": 2,
+  "BottomH": 4.7,
+  "WellX": 8.2,
+  "WellY": 8.2,
+  "WellZ": 41.3,
+  "ColSize": 8,
+  "RowSize": 12,
+  "Height": 121.1,
+  "WellXOffset": 9,
+  "WellYOffset": 9,
+  "WellXStart": 14.28,
+  "WellYStart": 11.24,
+  "WellZStart": 82.2,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "DSW96_bioshake",
   "Manufacturer": "Unknown",
   "WellShape": "box",
@@ -2969,6 +3335,34 @@ var plateBytes = []byte(`
   "WellYStart": 41.24,
   "WellZStart": 5.2,
   "Extra": {}
+ },
+ {
+  "PlateType": "DWST12_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "box",
+  "WellH": 8.2,
+  "WellW": 72,
+  "WellD": 41.3,
+  "MaxVol": 15000,
+  "MinVol": 5000,
+  "BottomType": 2,
+  "BottomH": 4.7,
+  "WellX": 8.2,
+  "WellY": 72,
+  "WellZ": 41.3,
+  "ColSize": 1,
+  "RowSize": 12,
+  "Height": 121.1,
+  "WellXOffset": 9,
+  "WellYOffset": 9,
+  "WellXStart": 14.28,
+  "WellYStart": 41.24,
+  "WellZStart": 82.2,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
  },
  {
   "PlateType": "DWST12_bioshake",
@@ -3194,6 +3588,35 @@ var plateBytes = []byte(`
   "WellZStart": 0.7,
   "Extra": {
    "IMSPECIAL": true
+  }
+ },
+ {
+  "PlateType": "DWST8_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "box",
+  "WellH": 115,
+  "WellW": 8.2,
+  "WellD": 41.3,
+  "MaxVol": 24000,
+  "MinVol": 1000,
+  "BottomType": 2,
+  "BottomH": 4.7,
+  "WellX": 115,
+  "WellY": 8.2,
+  "WellZ": 41.3,
+  "ColSize": 8,
+  "RowSize": 1,
+  "Height": 121.1,
+  "WellXOffset": 9,
+  "WellYOffset": 9,
+  "WellXStart": 63.78,
+  "WellYStart": 11.24,
+  "WellZStart": 77.7,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
   }
  },
  {
@@ -3436,6 +3859,35 @@ var plateBytes = []byte(`
    "IMSPECIAL": true,
    "constraint-Pipetmax": [
     "position_9"
+   ]
+  }
+ },
+ {
+  "PlateType": "EGEL48_QCoolPlate",
+  "Manufacturer": "Invitrogen",
+  "WellShape": "trapezoid",
+  "WellH": 2,
+  "WellW": 4,
+  "WellD": 3.299999999999997,
+  "MaxVol": 20,
+  "MinVol": 0,
+  "BottomType": 0,
+  "BottomH": 2,
+  "WellX": 2,
+  "WellY": 4,
+  "WellZ": 3.299999999999997,
+  "ColSize": 2,
+  "RowSize": 24,
+  "Height": 125.5,
+  "WellXOffset": 4.5,
+  "WellYOffset": 33.75,
+  "WellXStart": 13.28,
+  "WellYStart": 28.990000000000002,
+  "WellZStart": 122.2,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
    ]
   }
  },
@@ -3701,6 +4153,35 @@ var plateBytes = []byte(`
   }
  },
  {
+  "PlateType": "EGEL96_1_QCoolPlate",
+  "Manufacturer": "Invitrogen",
+  "WellShape": "trapezoid",
+  "WellH": 2,
+  "WellW": 4,
+  "WellD": 3.299999999999997,
+  "MaxVol": 20,
+  "MinVol": 0,
+  "BottomType": 0,
+  "BottomH": 2,
+  "WellX": 2,
+  "WellY": 4,
+  "WellZ": 3.299999999999997,
+  "ColSize": 4,
+  "RowSize": 13,
+  "Height": 125.5,
+  "WellXOffset": 9,
+  "WellYOffset": 18,
+  "WellXStart": 5.279999999999999,
+  "WellYStart": 10.74,
+  "WellZStart": 123.2,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "EGEL96_1_bioshake",
   "Manufacturer": "Invitrogen",
   "WellShape": "trapezoid",
@@ -3962,6 +4443,35 @@ var plateBytes = []byte(`
   }
  },
  {
+  "PlateType": "EGEL96_2_QCoolPlate",
+  "Manufacturer": "Invitrogen",
+  "WellShape": "trapezoid",
+  "WellH": 2,
+  "WellW": 4,
+  "WellD": 3.299999999999997,
+  "MaxVol": 20,
+  "MinVol": 0,
+  "BottomType": 0,
+  "BottomH": 2,
+  "WellX": 2,
+  "WellY": 4,
+  "WellZ": 3.299999999999997,
+  "ColSize": 4,
+  "RowSize": 13,
+  "Height": 125.5,
+  "WellXOffset": 9,
+  "WellYOffset": 18,
+  "WellXStart": 9.28,
+  "WellYStart": 20.240000000000002,
+  "WellZStart": 123.2,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "EGEL96_2_bioshake",
   "Manufacturer": "Invitrogen",
   "WellShape": "trapezoid",
@@ -4219,6 +4729,35 @@ var plateBytes = []byte(`
    "IMSPECIAL": true,
    "constraint-Pipetmax": [
     "position_9"
+   ]
+  }
+ },
+ {
+  "PlateType": "EPAGE48_QCoolPlate",
+  "Manufacturer": "Invitrogen",
+  "WellShape": "trapezoid",
+  "WellH": 2,
+  "WellW": 4,
+  "WellD": 3.299999999999997,
+  "MaxVol": 20,
+  "MinVol": 0,
+  "BottomType": 0,
+  "BottomH": 2,
+  "WellX": 2,
+  "WellY": 4,
+  "WellZ": 3.299999999999997,
+  "ColSize": 2,
+  "RowSize": 24,
+  "Height": 125.5,
+  "WellXOffset": 4.5,
+  "WellYOffset": 33.75,
+  "WellXStart": 13.28,
+  "WellYStart": 28.990000000000002,
+  "WellZStart": 122.2,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
    ]
   }
  },
@@ -4527,6 +5066,34 @@ var plateBytes = []byte(`
   "Extra": {}
  },
  {
+  "PlateType": "FourColumnReservoir_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "box",
+  "WellH": 26,
+  "WellW": 71,
+  "WellD": 42,
+  "MaxVol": 73000,
+  "MinVol": 3000,
+  "BottomType": 2,
+  "BottomH": 2,
+  "WellX": 26,
+  "WellY": 71,
+  "WellZ": 42,
+  "ColSize": 1,
+  "RowSize": 4,
+  "Height": 121,
+  "WellXOffset": 26,
+  "WellYOffset": 1,
+  "WellXStart": 23.78,
+  "WellYStart": 42.24,
+  "WellZStart": 78.7,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "FourColumnReservoir_bioshake",
   "Manufacturer": "Unknown",
   "WellShape": "box",
@@ -4749,6 +5316,34 @@ var plateBytes = []byte(`
   "WellYStart": 11.24,
   "WellZStart": 3.7,
   "Extra": {}
+ },
+ {
+  "PlateType": "GreinerSWVBottom_QCoolPlate",
+  "Manufacturer": "Greiner",
+  "WellShape": "cylinder",
+  "WellH": 6.2,
+  "WellW": 6.2,
+  "WellD": 10,
+  "MaxVol": 230,
+  "MinVol": 10,
+  "BottomType": 2,
+  "BottomH": 1,
+  "WellX": 6.2,
+  "WellY": 6.2,
+  "WellZ": 11,
+  "ColSize": 8,
+  "RowSize": 12,
+  "Height": 92,
+  "WellXOffset": 9,
+  "WellYOffset": 9,
+  "WellXStart": 14.53,
+  "WellYStart": 11.24,
+  "WellZStart": 80.7,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
  },
  {
   "PlateType": "GreinerSWVBottom_bioshake",
@@ -4999,6 +5594,34 @@ var plateBytes = []byte(`
   "Extra": {}
  },
  {
+  "PlateType": "GreinerV96FromSpec_QCoolPlate",
+  "Manufacturer": "Greiner",
+  "WellShape": "cylinder",
+  "WellH": 6.96,
+  "WellW": 6.96,
+  "WellD": 9,
+  "MaxVol": 335,
+  "MinVol": 50,
+  "BottomType": 2,
+  "BottomH": 0,
+  "WellX": 6.96,
+  "WellY": 6.96,
+  "WellZ": 9,
+  "ColSize": 8,
+  "RowSize": 12,
+  "Height": 91.6,
+  "WellXOffset": 9,
+  "WellYOffset": 9,
+  "WellXStart": 14.38,
+  "WellYStart": 11.24,
+  "WellZStart": 80.7,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "GreinerV96FromSpec_bioshake",
   "Manufacturer": "Greiner",
   "WellShape": "cylinder",
@@ -5221,6 +5844,34 @@ var plateBytes = []byte(`
   "WellYStart": 11.24,
   "WellZStart": 3.7,
   "Extra": {}
+ },
+ {
+  "PlateType": "IDT96_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "cylinder",
+  "WellH": 7,
+  "WellW": 7,
+  "WellD": 39.35,
+  "MaxVol": 1200,
+  "MinVol": 100,
+  "BottomType": 1,
+  "BottomH": 3,
+  "WellX": 7,
+  "WellY": 7,
+  "WellZ": 39.35,
+  "ColSize": 8,
+  "RowSize": 12,
+  "Height": 119.5,
+  "WellXOffset": 9,
+  "WellYOffset": 9,
+  "WellXStart": 14.28,
+  "WellYStart": 11.24,
+  "WellZStart": 80.7,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
  },
  {
   "PlateType": "IDT96_bioshake",
@@ -5446,6 +6097,35 @@ var plateBytes = []byte(`
   "WellZStart": 6.7,
   "Extra": {
    "IMSPECIAL": true
+  }
+ },
+ {
+  "PlateType": "Kombi2mlEpp_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "cylinder",
+  "WellH": 8.2,
+  "WellW": 8.2,
+  "WellD": 45,
+  "MaxVol": 2000,
+  "MinVol": 50,
+  "BottomType": 2,
+  "BottomH": 4.7,
+  "WellX": 8.2,
+  "WellY": 8.2,
+  "WellZ": 45,
+  "ColSize": 4,
+  "RowSize": 2,
+  "Height": 122,
+  "WellXOffset": 18,
+  "WellYOffset": 18,
+  "WellXStart": 19.28,
+  "WellYStart": 21.240000000000002,
+  "WellZStart": 83.7,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
   }
  },
  {
@@ -5687,6 +6367,34 @@ var plateBytes = []byte(`
   "Extra": {}
  },
  {
+  "PlateType": "Labcyte_384PP_StdV_QCoolPlate",
+  "Manufacturer": "Labcyte",
+  "WellShape": "box",
+  "WellH": 3.3,
+  "WellW": 3.3,
+  "WellD": 11.99,
+  "MaxVol": 65,
+  "MinVol": 15,
+  "BottomType": 0,
+  "BottomH": 0,
+  "WellX": 3.3,
+  "WellY": 3.3,
+  "WellZ": 11.99,
+  "ColSize": 16,
+  "RowSize": 24,
+  "Height": 91.4,
+  "WellXOffset": 4.5,
+  "WellYOffset": 4.5,
+  "WellXStart": 11.91,
+  "WellYStart": 10.94,
+  "WellZStart": 77.7,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "Labcyte_384PP_StdV_bioshake",
   "Manufacturer": "Labcyte",
   "WellShape": "box",
@@ -5911,6 +6619,34 @@ var plateBytes = []byte(`
   "Extra": {}
  },
  {
+  "PlateType": "Nunc96DeepWell_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "box",
+  "WellH": 8.5,
+  "WellW": 8.5,
+  "WellD": 41.5,
+  "MaxVol": 2000,
+  "MinVol": 420,
+  "BottomType": 1,
+  "BottomH": 2.5,
+  "WellX": 8.2,
+  "WellY": 8.2,
+  "WellZ": 41.3,
+  "ColSize": 8,
+  "RowSize": 12,
+  "Height": 120.6,
+  "WellXOffset": 9,
+  "WellYOffset": 9,
+  "WellXStart": 13.28,
+  "WellYStart": 11.24,
+  "WellZStart": 84.2,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "Nunc96DeepWell_bioshake",
   "Manufacturer": "Unknown",
   "WellShape": "box",
@@ -6133,6 +6869,34 @@ var plateBytes = []byte(`
   "WellYStart": 10.94,
   "WellZStart": 0.7,
   "Extra": {}
+ },
+ {
+  "PlateType": "Nunc_96_deepwell_1ml_QCoolPlate",
+  "Manufacturer": "Thermo Fisher",
+  "WellShape": "cylinder",
+  "WellH": 8.4,
+  "WellW": 8.4,
+  "WellD": 29.1,
+  "MaxVol": 1000,
+  "MinVol": 10,
+  "BottomType": 1,
+  "BottomH": 1.4,
+  "WellX": 8.4,
+  "WellY": 8.4,
+  "WellZ": 29.1,
+  "ColSize": 8,
+  "RowSize": 12,
+  "Height": 108.6,
+  "WellXOffset": 9,
+  "WellYOffset": 9,
+  "WellXStart": 14.18,
+  "WellYStart": 10.94,
+  "WellZStart": 77.7,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
  },
  {
   "PlateType": "Nunc_96_deepwell_1ml_bioshake",
@@ -6411,6 +7175,35 @@ var plateBytes = []byte(`
   }
  },
  {
+  "PlateType": "Nuncon12wellAgar_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "cylinder",
+  "WellH": 22.5,
+  "WellW": 22.5,
+  "WellD": 17,
+  "MaxVol": 1000,
+  "MinVol": 10,
+  "BottomType": 0,
+  "BottomH": 9,
+  "WellX": 22.5,
+  "WellY": 22.5,
+  "WellZ": 17,
+  "ColSize": 3,
+  "RowSize": 4,
+  "Height": 96,
+  "WellXOffset": 27,
+  "WellYOffset": 27,
+  "WellXStart": 25.28,
+  "WellYStart": 15.24,
+  "WellZStart": 86.7,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "Nuncon12wellAgar_bioshake",
   "Manufacturer": "Unknown",
   "WellShape": "cylinder",
@@ -6622,6 +7415,35 @@ var plateBytes = []byte(`
   "WellZStart": 27.7,
   "Extra": {
    "IMSPECIAL": true
+  }
+ },
+ {
+  "PlateType": "Nuncon12well_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "cylinder",
+  "WellH": 22.5,
+  "WellW": 22.5,
+  "WellD": 17,
+  "MaxVol": 1000,
+  "MinVol": 10,
+  "BottomType": 0,
+  "BottomH": 9,
+  "WellX": 22.5,
+  "WellY": 22.5,
+  "WellZ": 17,
+  "ColSize": 3,
+  "RowSize": 4,
+  "Height": 96,
+  "WellXOffset": 27,
+  "WellYOffset": 27,
+  "WellXStart": 25.28,
+  "WellYStart": 15.24,
+  "WellZStart": 81.7,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
   }
  },
  {
@@ -6863,6 +7685,34 @@ var plateBytes = []byte(`
   "Extra": {}
  },
  {
+  "PlateType": "SRWFB96_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "cylinder",
+  "WellH": 8.2,
+  "WellW": 8.2,
+  "WellD": 11,
+  "MaxVol": 340,
+  "MinVol": 25,
+  "BottomType": 0,
+  "BottomH": 1,
+  "WellX": 8.2,
+  "WellY": 8.2,
+  "WellZ": 11,
+  "ColSize": 8,
+  "RowSize": 12,
+  "Height": 92,
+  "WellXOffset": 9,
+  "WellYOffset": 9,
+  "WellXStart": 14.28,
+  "WellYStart": 11.24,
+  "WellZStart": 79.9,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "SRWFB96_bioshake",
   "Manufacturer": "Unknown",
   "WellShape": "cylinder",
@@ -7087,6 +7937,34 @@ var plateBytes = []byte(`
   "Extra": {}
  },
  {
+  "PlateType": "SWST12_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "box",
+  "WellH": 8.2,
+  "WellW": 72,
+  "WellD": 15,
+  "MaxVol": 4000,
+  "MinVol": 1500,
+  "BottomType": 2,
+  "BottomH": 4.7,
+  "WellX": 8.2,
+  "WellY": 72,
+  "WellZ": 15,
+  "ColSize": 1,
+  "RowSize": 12,
+  "Height": 97,
+  "WellXOffset": 9,
+  "WellYOffset": 9,
+  "WellXStart": 14.28,
+  "WellYStart": 41.24,
+  "WellZStart": 78.7,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "SWST12_bioshake",
   "Manufacturer": "Unknown",
   "WellShape": "box",
@@ -7309,6 +8187,34 @@ var plateBytes = []byte(`
   "WellYStart": 11.24,
   "WellZStart": -1.2,
   "Extra": {}
+ },
+ {
+  "PlateType": "TwistDNAPlate_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "cylinder",
+  "WellH": 6.7,
+  "WellW": 6.7,
+  "WellD": 9.8,
+  "MaxVol": 450,
+  "MinVol": 10,
+  "BottomType": 2,
+  "BottomH": 4.6,
+  "WellX": 6.7,
+  "WellY": 6.7,
+  "WellZ": 9.8,
+  "ColSize": 8,
+  "RowSize": 12,
+  "Height": 91.4,
+  "WellXOffset": 9,
+  "WellYOffset": 9,
+  "WellXStart": 14.28,
+  "WellYStart": 11.24,
+  "WellZStart": 75.8,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
  },
  {
   "PlateType": "TwistDNAPlate_bioshake",
@@ -7561,6 +8467,35 @@ var plateBytes = []byte(`
   }
  },
  {
+  "PlateType": "VWR12well_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "cylinder",
+  "WellH": 24,
+  "WellW": 24,
+  "WellD": 19,
+  "MaxVol": 100,
+  "MinVol": 10,
+  "BottomType": 0,
+  "BottomH": 5,
+  "WellX": 24,
+  "WellY": 24,
+  "WellZ": 19,
+  "ColSize": 3,
+  "RowSize": 4,
+  "Height": 97,
+  "WellXOffset": 27,
+  "WellYOffset": 27,
+  "WellXStart": 25.28,
+  "WellYStart": 15.24,
+  "WellZStart": 78.7,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "VWR12well_bioshake",
   "Manufacturer": "Unknown",
   "WellShape": "cylinder",
@@ -7798,6 +8733,35 @@ var plateBytes = []byte(`
   "WellZStart": 2.7,
   "Extra": {
    "IMSPECIAL": true
+  }
+ },
+ {
+  "PlateType": "costar48well_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "cylinder",
+  "WellH": 11,
+  "WellW": 11,
+  "WellD": 19,
+  "MaxVol": 1000,
+  "MinVol": 100,
+  "BottomType": 0,
+  "BottomH": 3,
+  "WellX": 11,
+  "WellY": 11,
+  "WellZ": 19,
+  "ColSize": 6,
+  "RowSize": 8,
+  "Height": 97,
+  "WellXOffset": 13,
+  "WellYOffset": 13,
+  "WellXStart": 17.28,
+  "WellYStart": 10.24,
+  "WellZStart": 79.7,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
   }
  },
  {
@@ -8041,6 +9005,35 @@ var plateBytes = []byte(`
   }
  },
  {
+  "PlateType": "eppendorfrack424_1.5ml_lidholder_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "cylinder",
+  "WellH": 8.2,
+  "WellW": 8.2,
+  "WellD": 45,
+  "MaxVol": 1500,
+  "MinVol": 50,
+  "BottomType": 2,
+  "BottomH": 0.6750000000000007,
+  "WellX": 9.2,
+  "WellY": 9.2,
+  "WellZ": 39.5,
+  "ColSize": 4,
+  "RowSize": 3,
+  "Height": 122,
+  "WellXOffset": 36,
+  "WellYOffset": 18,
+  "WellXStart": 28.28,
+  "WellYStart": 16.240000000000002,
+  "WellZStart": 82.2,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "eppendorfrack424_1.5ml_lidholder_bioshake",
   "Manufacturer": "Unknown",
   "WellShape": "cylinder",
@@ -8278,6 +9271,35 @@ var plateBytes = []byte(`
   "WellZStart": 5.7,
   "Extra": {
    "IMSPECIAL": true
+  }
+ },
+ {
+  "PlateType": "eppendorfrack424_2ml_lidholder_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "cylinder",
+  "WellH": 8.2,
+  "WellW": 8.2,
+  "WellD": 45,
+  "MaxVol": 2000,
+  "MinVol": 50,
+  "BottomType": 2,
+  "BottomH": 4.7,
+  "WellX": 8.2,
+  "WellY": 8.2,
+  "WellZ": 45,
+  "ColSize": 4,
+  "RowSize": 3,
+  "Height": 122,
+  "WellXOffset": 36,
+  "WellYOffset": 18,
+  "WellXStart": 28.28,
+  "WellYStart": 16.240000000000002,
+  "WellZStart": 82.7,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
   }
  },
  {
@@ -8521,6 +9543,35 @@ var plateBytes = []byte(`
   }
  },
  {
+  "PlateType": "eppendorfrack425_1.5ml_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "cylinder",
+  "WellH": 8.2,
+  "WellW": 8.2,
+  "WellD": 45,
+  "MaxVol": 1500,
+  "MinVol": 50,
+  "BottomType": 2,
+  "BottomH": 0.6750000000000007,
+  "WellX": 9.2,
+  "WellY": 9.2,
+  "WellZ": 39.5,
+  "ColSize": 4,
+  "RowSize": 6,
+  "Height": 122.75,
+  "WellXOffset": 18,
+  "WellYOffset": 18,
+  "WellXStart": 18.78,
+  "WellYStart": 16.240000000000002,
+  "WellZStart": 83.25,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "eppendorfrack425_1.5ml_bioshake",
   "Manufacturer": "Unknown",
   "WellShape": "cylinder",
@@ -8758,6 +9809,35 @@ var plateBytes = []byte(`
   "WellZStart": 5.7,
   "Extra": {
    "IMSPECIAL": true
+  }
+ },
+ {
+  "PlateType": "eppendorfrack425_2ml_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "cylinder",
+  "WellH": 8.2,
+  "WellW": 8.2,
+  "WellD": 45,
+  "MaxVol": 2000,
+  "MinVol": 50,
+  "BottomType": 2,
+  "BottomH": 4.7,
+  "WellX": 8.2,
+  "WellY": 8.2,
+  "WellZ": 45,
+  "ColSize": 4,
+  "RowSize": 6,
+  "Height": 122,
+  "WellXOffset": 18,
+  "WellYOffset": 18,
+  "WellXStart": 18.78,
+  "WellYStart": 16.240000000000002,
+  "WellZStart": 82.7,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
   }
  },
  {
@@ -9001,6 +10081,35 @@ var plateBytes = []byte(`
   }
  },
  {
+  "PlateType": "falcon6wellAgar_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "cylinder",
+  "WellH": 37,
+  "WellW": 37,
+  "WellD": 20,
+  "MaxVol": 4000,
+  "MinVol": 1,
+  "BottomType": 0,
+  "BottomH": 9,
+  "WellX": 37,
+  "WellY": 37,
+  "WellZ": 20,
+  "ColSize": 2,
+  "RowSize": 3,
+  "Height": 97,
+  "WellXOffset": 39,
+  "WellYOffset": 39,
+  "WellXStart": 19.28,
+  "WellYStart": 16.240000000000002,
+  "WellZStart": 86.7,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "falcon6wellAgar_bioshake",
   "Manufacturer": "Unknown",
   "WellShape": "cylinder",
@@ -9239,6 +10348,34 @@ var plateBytes = []byte(`
   "Extra": {}
  },
  {
+  "PlateType": "greiner384_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "box",
+  "WellH": 4,
+  "WellW": 4,
+  "WellD": 12,
+  "MaxVol": 125,
+  "MinVol": 20,
+  "BottomType": 0,
+  "BottomH": 1,
+  "WellX": 4,
+  "WellY": 4,
+  "WellZ": 12,
+  "ColSize": 16,
+  "RowSize": 24,
+  "Height": 91,
+  "WellXOffset": 4.5,
+  "WellYOffset": 4.5,
+  "WellXStart": 11.78,
+  "WellYStart": 8.74,
+  "WellZStart": 80.2,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "greiner384_bioshake",
   "Manufacturer": "Unknown",
   "WellShape": "box",
@@ -9461,6 +10598,34 @@ var plateBytes = []byte(`
   "WellYStart": 11.24,
   "WellZStart": 2.7,
   "Extra": {}
+ },
+ {
+  "PlateType": "greiner96Black_QCoolPlate",
+  "Manufacturer": "greiner",
+  "WellShape": "cylinder",
+  "WellH": 8.2,
+  "WellW": 8.2,
+  "WellD": 11,
+  "MaxVol": 340,
+  "MinVol": 25,
+  "BottomType": 0,
+  "BottomH": 1,
+  "WellX": 8.2,
+  "WellY": 8.2,
+  "WellZ": 11,
+  "ColSize": 8,
+  "RowSize": 12,
+  "Height": 92,
+  "WellXOffset": 9,
+  "WellYOffset": 9,
+  "WellXStart": 14.28,
+  "WellYStart": 11.24,
+  "WellZStart": 79.7,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
  },
  {
   "PlateType": "greiner96Black_bioshake",
@@ -9687,6 +10852,34 @@ var plateBytes = []byte(`
   "Extra": {}
  },
  {
+  "PlateType": "nunc1536_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "box",
+  "WellH": 2,
+  "WellW": 2,
+  "WellD": 7,
+  "MaxVol": 13,
+  "MinVol": 2,
+  "BottomType": 0,
+  "BottomH": 0.5,
+  "WellX": 2,
+  "WellY": 2,
+  "WellZ": 7,
+  "ColSize": 32,
+  "RowSize": 48,
+  "Height": 84,
+  "WellXOffset": 2.25,
+  "WellYOffset": 2.25,
+  "WellXStart": 11.78,
+  "WellYStart": 8.74,
+  "WellZStart": 79.7,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "nunc1536_bioshake",
   "Manufacturer": "Unknown",
   "WellShape": "box",
@@ -9910,6 +11103,35 @@ var plateBytes = []byte(`
   "WellZStart": 3.7,
   "Extra": {
    "IMSPECIAL": true
+  }
+ },
+ {
+  "PlateType": "nunc8well_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "box",
+  "WellH": 30,
+  "WellW": 39,
+  "WellD": 11,
+  "MaxVol": 3000,
+  "MinVol": 10,
+  "BottomType": 0,
+  "BottomH": 11,
+  "WellX": 30,
+  "WellY": 39,
+  "WellZ": 11,
+  "ColSize": 2,
+  "RowSize": 4,
+  "Height": 88,
+  "WellXOffset": 30,
+  "WellYOffset": 40,
+  "WellXStart": 19.28,
+  "WellYStart": 21.740000000000002,
+  "WellZStart": 80.7,
+  "Extra": {
+   "IMSPECIAL": true,
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
   }
  },
  {
@@ -10149,6 +11371,34 @@ var plateBytes = []byte(`
   "WellYStart": 11.24,
   "WellZStart": 3.7,
   "Extra": {}
+ },
+ {
+  "PlateType": "nunc_96_U_PS_Clear_QCoolPlate",
+  "Manufacturer": "Nunc",
+  "WellShape": "cylinder",
+  "WellH": 7.1,
+  "WellW": 7.1,
+  "WellD": 10.2,
+  "MaxVol": 250,
+  "MinVol": 20,
+  "BottomType": 1,
+  "BottomH": 1,
+  "WellX": 7.1,
+  "WellY": 7.1,
+  "WellZ": 10.2,
+  "ColSize": 8,
+  "RowSize": 12,
+  "Height": 91.4,
+  "WellXOffset": 9,
+  "WellYOffset": 9,
+  "WellXStart": 13.78,
+  "WellYStart": 11.24,
+  "WellZStart": 80.7,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
  },
  {
   "PlateType": "nunc_96_U_PS_Clear_bioshake",
@@ -10589,6 +11839,34 @@ var plateBytes = []byte(`
   "Extra": {}
  },
  {
+  "PlateType": "pcrplate_skirted_FromSpec_QCoolPlate",
+  "Manufacturer": "4titude",
+  "WellShape": "cylinder",
+  "WellH": 5.5,
+  "WellW": 5.5,
+  "WellD": 15.1,
+  "MaxVol": 200,
+  "MinVol": 5,
+  "BottomType": 1,
+  "BottomH": 0.5,
+  "WellX": 5.5,
+  "WellY": 5.5,
+  "WellZ": 15.1,
+  "ColSize": 8,
+  "RowSize": 12,
+  "Height": 93.1,
+  "WellXOffset": 9,
+  "WellYOffset": 9,
+  "WellXStart": 14.38,
+  "WellYStart": 11.24,
+  "WellZStart": 77.5,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
+ },
+ {
   "PlateType": "pcrplate_skirted_FromSpec_bioshake",
   "Manufacturer": "4titude",
   "WellShape": "cylinder",
@@ -10787,6 +12065,35 @@ var plateBytes = []byte(`
   "WellYStart": 11.24,
   "WellZStart": 18.5,
   "Extra": {}
+ },
+ {
+  "PlateType": "pcrplate_skirted_QCoolPlate",
+  "Manufacturer": "Unknown",
+  "WellShape": "cylinder",
+  "WellH": 5.5,
+  "WellW": 5.5,
+  "WellD": 15,
+  "MaxVol": 200,
+  "MinVol": 5,
+  "BottomType": 1,
+  "BottomH": 1.4,
+  "WellX": 5.5,
+  "WellY": 5.5,
+  "WellZ": 15,
+  "ColSize": 8,
+  "RowSize": 12,
+  "Height": 92.5,
+  "WellXOffset": 9,
+  "WellYOffset": 9,
+  "WellXStart": 14.28,
+  "WellYStart": 11.24,
+  "WellZStart": 78.336,
+  "Extra": {
+   "afvfunc": "{\"Quartic\":\"\",\"A\":-3.3317851312e-9,\"B\":0.00000225834467,\"C\":-0.0006305492472,\"D\":0.1328156706978,\"E\":0}",
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
  },
  {
   "PlateType": "pcrplate_skirted_bioshake",
@@ -11184,6 +12491,34 @@ var plateBytes = []byte(`
   "WellYStart": 42.24,
   "WellZStart": 0.7,
   "Extra": {}
+ },
+ {
+  "PlateType": "reservoir_QCoolPlate",
+  "Manufacturer": "unknown",
+  "WellShape": "box",
+  "WellH": 121,
+  "WellW": 80,
+  "WellD": 40,
+  "MaxVol": 200000,
+  "MinVol": 40000,
+  "BottomType": 0,
+  "BottomH": 3,
+  "WellX": 121,
+  "WellY": 80,
+  "WellZ": 40,
+  "ColSize": 1,
+  "RowSize": 1,
+  "Height": 117,
+  "WellXOffset": 1,
+  "WellYOffset": 1,
+  "WellXStart": 63.78,
+  "WellYStart": 42.24,
+  "WellZStart": 77.7,
+  "Extra": {
+   "constraint-Pipetmax": [
+    "position_1"
+   ]
+  }
  },
  {
   "PlateType": "reservoir_bioshake",

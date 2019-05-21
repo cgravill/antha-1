@@ -29,10 +29,14 @@ const (
 
 const (
 	incubatoroffset = -1.58
+	qCoolPlate      = "QCoolPlate"
+	// empirically determined Z height offset from manufacturer's dimensions
+	qCoolerOffset = -2
 )
 
 var (
 	incubatorheightinmm = devices.Shaker["3000 T-elm"]["Height"]*1000 + incubatoroffset
+	qCoolerHeightinmm   = devices.Shaker[qCoolPlate]["Height"]*1000 + qCoolerOffset
 	//inhecoincubatorinmm = devices.Shaker["InhecoStaticOnDeck"]["Height"] * 1000
 )
 
@@ -273,6 +277,39 @@ var defaultDevices = map[string]device{
 			},
 		},
 		Properties: devices.Shaker["3000 T-elm"],
+		PositionConstraints: map[string][]string{
+			"Pipetmax": {"position_1"},
+		},
+	},
+	// https://www.qinstruments.com/products/lab-automation/coldplate/
+	qCoolPlate: incubator{
+		Riser: riser{
+			Name:         qCoolPlate,
+			Manufacturer: "QInstruments",
+			Heightinmm:   qCoolerHeightinmm,
+			Synonyms:     []string{qCoolPlate},
+			PlateConstraints: plateConstraints{
+				NotThesePlates: []plateWithConstraint{
+					{
+						Name:          "FluidX700ulTubes",
+						SpecialOffset: 0.0,
+					},
+					{
+						Name:          "pcrplate",
+						SpecialOffset: 0.0,
+					},
+					{
+						Name:          "pcrplate_semi_skirted",
+						SpecialOffset: 0.0,
+					},
+					{
+						Name:          "strip_tubes_0.2ml",
+						SpecialOffset: 0.0,
+					},
+				},
+			},
+		},
+		Properties: devices.Shaker[qCoolPlate],
 		PositionConstraints: map[string][]string{
 			"Pipetmax": {"position_1"},
 		},
