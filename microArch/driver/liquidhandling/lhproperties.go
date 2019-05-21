@@ -371,6 +371,17 @@ func (lhp *LHProperties) AddTipBoxTo(addr string, tipbox *wtype.LHTipbox) bool {
 	return true
 }
 
+// GetTipboxes returns a slice of all loaded tipboxes in the preference order defined by lhp.Preferences
+func (lhp *LHProperties) GetTipboxes() []*wtype.LHTipbox {
+	ret := make([]*wtype.LHTipbox, 0, len(lhp.Tipboxes))
+	for _, addr := range lhp.Preferences.Tipboxes {
+		if bx := lhp.Tipboxes[addr]; bx != nil {
+			ret = append(ret, bx)
+		}
+	}
+	return ret
+}
+
 func (lhp *LHProperties) RemoveTipBoxes() {
 	for addr, tbx := range lhp.Tipboxes {
 		lhp.PlateLookup[tbx.ID] = nil
@@ -720,16 +731,6 @@ func countMultiB(ar []bool) int {
 	return r
 }
 
-func copyToRightLength(sa []string, m int) []string {
-	r := make([]string, m)
-
-	for i := 0; i < len(sa); i++ {
-		r[i] = sa[i]
-	}
-
-	return r
-}
-
 // this function only returns true if we can get all tips at once
 // TODO -- support not getting in a single operation
 func (lhp *LHProperties) getCleanTipSubset(labEffects *effects.LaboratoryEffects, tipParams TipSubset, usetiptracking bool) (wells, positions, boxtypes []string, err error) {
@@ -745,18 +746,6 @@ func (lhp *LHProperties) getCleanTipSubset(labEffects *effects.LaboratoryEffects
 			continue
 		}
 		wells, err = bx.GetTipsMasked(tipParams.Mask, tipParams.Channel.Orientation, true)
-
-		/*
-			if err != nil && !bx.IsEmpty() {
-				return wells, positions, boxtypes, err
-			}
-		*/
-
-		// update wells
-
-		if len(wells) != len(positions) {
-			wells = copyToRightLength(wells, len(positions))
-		}
 
 		// TODO -- support partial collections
 		if wells != nil && countMulti(wells) == multi {
