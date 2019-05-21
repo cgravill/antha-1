@@ -323,6 +323,9 @@ func NewAntha(fileSet *token.FileSet, src *ast.File, metaBs []byte) (*Antha, err
 
 	// TODO: add usage tracking to replace useExpr
 	p.addImportReq(&ImportReq{
+		Path: "encoding/json",
+	})
+	p.addImportReq(&ImportReq{
 		Path: "github.com/ugorji/go/codec",
 	})
 	p.addImportReq(&ImportReq{
@@ -616,7 +619,7 @@ var TypeMeta = &laboratory.ElementTypeMeta{
 	GoSrcPath: {{printf "%q" .GeneratedPath}},
 	AnthaSrcPath: {{printf "%q" .Path}},
 
-{{range $x, $msg := .Messages}}	{{$msg.Kind}}FieldTypes: map[string]string{
+{{range $x, $msg := .Messages}}	{{$msg.Kind}}FieldTypes: map[workflow.ElementParameterName]string{
 {{range $y, $field := $msg.Fields}}		{{printf "%q" $field.Name}}: {{printf "%q" $field.FullyQualifiedTypeString}},
 {{end}}	},
 {{end}}
@@ -648,7 +651,17 @@ func (element *{{.ElementTypeName}}) TypeMeta() *laboratory.ElementTypeMeta {
 	return TypeMeta
 }
 
-func Defaults(jh *codec.JsonHandle) (*{{.ElementTypeName}}, error) {
+{{range $x, $msg := .Messages}}func (element *{{$.ElementTypeName}}) {{$msg.Kind}}JSONMap() (map[workflow.ElementParameterName]json.RawMessage, error) {
+	m := make(map[workflow.ElementParameterName]json.RawMessage)
+{{range $y, $field := $msg.Fields}}	if bs, err := json.Marshal(element.{{$msg.Kind}}.{{$field.Name}}); err != nil {
+		return nil, err
+	} else {
+		m[{{printf "%q" $field.Name}}] = bs
+	}
+{{end}}	return m, nil
+}
+
+{{end}}func Defaults(jh *codec.JsonHandle) (*{{.ElementTypeName}}, error) {
 	element := &{{.ElementTypeName}}{}
 {{range $key, $value := .Defaults}}	if err := codec.NewDecoderBytes([]byte({{printf "%q" $value}}), jh).Decode(&element.{{token $key}}.{{$key}}); err != nil {
 		return nil, err

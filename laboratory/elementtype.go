@@ -7,10 +7,10 @@ type ElementTypeMeta struct {
 	GoSrcPath            string
 	AnthaSrcPath         string
 	LineMap              map[int]int
-	InputsFieldTypes     map[string]string
-	OutputsFieldTypes    map[string]string
-	ParametersFieldTypes map[string]string
-	DataFieldTypes       map[string]string
+	InputsFieldTypes     map[workflow.ElementParameterName]string
+	OutputsFieldTypes    map[workflow.ElementParameterName]string
+	ParametersFieldTypes map[workflow.ElementParameterName]string
+	DataFieldTypes       map[workflow.ElementParameterName]string
 }
 
 func (labBuild *LaboratoryBuilder) RegisterElementType(elemType *ElementTypeMeta, repoName workflow.RepositoryName, elemPath workflow.ElementPath) {
