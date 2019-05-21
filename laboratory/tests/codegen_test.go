@@ -94,7 +94,9 @@ func TestWellFormed(t *testing.T) {
 	}
 
 	tgt := target.New()
-	tgt.AddDevice(&testDriver{})
+	if err := tgt.AddDevice(&testDriver{}); err != nil {
+		t.Fatal(err)
+	}
 	human.New(labEffects.IDGenerator).DetermineRole(tgt)
 
 	if insts, err := codegen.Compile(labEffects, "", tgt, nodes); err != nil {

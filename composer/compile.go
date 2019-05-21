@@ -35,7 +35,8 @@ func (cb *ComposerBase) goGenerate() error {
 	cmd := exec.Command("go", "generate", "-x")
 	cmd.Dir = filepath.Join(cb.OutDir, "workflow")
 
-	return RunAndLogCommand(cmd, cb.Logger.With("cmd", "generate").Log)
+	l := cb.Logger.With("cmd", "generate")
+	return RunAndLogCommand(cmd, l.ForSingletonPrefix("stdout"), l.ForSingletonPrefix("stderr"))
 }
 
 func (mc *mainComposer) goBuild() error {
@@ -46,7 +47,8 @@ func (mc *mainComposer) goBuild() error {
 	}
 	cmd.Dir = filepath.Join(mc.OutDir, "workflow")
 
-	if err := RunAndLogCommand(cmd, mc.Logger.With("cmd", "build").Log); err != nil {
+	l := mc.Logger.With("cmd", "build")
+	if err := RunAndLogCommand(cmd, l.ForSingletonPrefix("stdout"), l.ForSingletonPrefix("stderr")); err != nil {
 		return err
 	} else {
 		mc.Logger.Log("compilation", "successful", "binary", outBin)
@@ -73,7 +75,7 @@ func (tc *testComposer) goTest() error {
 		cmd.Args = append(cmd.Args, "-tags", "linkedDrivers")
 	}
 
-	if err := RunAndLogCommand(cmd, RawLogger); err != nil {
+	if err := RunAndLogCommand(cmd, MakeRawLogger(os.Stdout), MakeRawLogger(os.Stderr)); err != nil {
 		return err
 	} else {
 		tc.Logger.Log("testing", "successful")
@@ -93,18 +95,19 @@ func (cb *ComposerBase) GoList() (string, error) {
 	cmd.Dir = filepath.Join(cb.OutDir, "workflow")
 
 	pkgsStrs := []string{}
-	backupLogger := cb.Logger.With("cmd", "list").Log
-	logger := func(vs ...interface{}) error {
-		if len(vs) == 2 && vs[0] == "stdout" {
-			if pkg, ok := vs[1].(string); ok {
+	l := cb.Logger.With("cmd", "list")
+	stdoutLoggerBackup := l.ForSingletonPrefix("stdout")
+	stdoutLogger := func(vs ...interface{}) {
+		if len(vs) == 1 {
+			if pkg, ok := vs[0].(string); ok {
 				pkgsStrs = append(pkgsStrs, pkg)
-				return nil
+				return
 			}
 		}
-		return backupLogger(vs...)
+		stdoutLoggerBackup(vs...)
 	}
 
-	if err := RunAndLogCommand(cmd, logger); err != nil {
+	if err := RunAndLogCommand(cmd, stdoutLogger, l.ForSingletonPrefix("stderr")); err != nil {
 		return "", err
 	}
 
@@ -138,7 +141,7 @@ func (mc *mainComposer) runWorkflow() error {
 	cmd.Env = []string{}
 
 	// the workflow uses a proper logger these days so we don't need to do any wrapping
-	return RunAndLogCommand(cmd, RawLogger)
+	return RunAndLogCommand(cmd, MakeRawLogger(os.Stdout), MakeRawLogger(os.Stderr))
 }
 
 func (cb *ComposerBase) prepareDrivers(cfg *workflow.Config) error {
@@ -176,7 +179,8 @@ func (cb *ComposerBase) prepareDrivers(cfg *workflow.Config) error {
 			cb.Logger.Log("instructionPlugin", string(id), "building", cfg.CompileAndRun)
 			cmd := exec.Command("go", "build", "-mod", "readonly", "-o", outBin, cfg.CompileAndRun)
 			cmd.Dir = filepath.Join(cb.OutDir, "workflow") // we need to rely on the go.mod file being there
-			if err := RunAndLogCommand(cmd, cb.Logger.With("cmd", "build", "instructionPlugin", string(id)).Log); err != nil {
+			l := cb.Logger.With("cmd", "build", "instructionPlugin", string(id))
+			if err := RunAndLogCommand(cmd, l.ForSingletonPrefix("stdout"), l.ForSingletonPrefix("stderr")); err != nil {
 				return err
 			}
 			cfg.ExecFile = outBin
@@ -203,15 +207,15 @@ func (cb *ComposerBase) prepareDrivers(cfg *workflow.Config) error {
 }
 
 // Only starts the command, does not Wait for it.
-func StartAndLogCommand(cmd *exec.Cmd, logger func(...interface{}) error) error {
+func StartAndLogCommand(cmd *exec.Cmd, stdoutLog, stderrLog func(...interface{})) error {
 	if stdout, err := cmd.StdoutPipe(); err != nil {
 		return err
 	} else if stderr, err := cmd.StderrPipe(); err != nil {
 		stdout.Close()
 		return err
 	} else {
-		go drainToLogger(logger, stdout, "stdout")
-		go drainToLogger(logger, stderr, "stderr")
+		go drainToLogger(stdoutLog, stdout)
+		go drainToLogger(stderrLog, stderr)
 		// lock to the current thread to ensure that thread state is
 		// predictably inherited (eg namespaces etc) (see docs in
 		// cmd.Run())
@@ -222,41 +226,37 @@ func StartAndLogCommand(cmd *exec.Cmd, logger func(...interface{}) error) error 
 }
 
 // Starts and Waits for the command (unless error)
-func RunAndLogCommand(cmd *exec.Cmd, logger func(...interface{}) error) error {
-	if err := StartAndLogCommand(cmd, logger); err != nil {
+func RunAndLogCommand(cmd *exec.Cmd, stdoutLog, stderrLog func(...interface{})) error {
+	if err := StartAndLogCommand(cmd, stdoutLog, stderrLog); err != nil {
 		return err
 	} else {
 		return cmd.Wait()
 	}
 }
 
-func drainToLogger(logger func(...interface{}) error, fh io.ReadCloser, key string) {
+func drainToLogger(logger func(...interface{}), fh io.ReadCloser) {
 	defer fh.Close()
 
 	reader := bufio.NewReader(fh)
 	for {
-		if s, err := reader.ReadString('\n'); err == nil {
-			logger(key, strings.TrimSuffix(s, "\n"))
-		} else if err == io.EOF {
-			if s != "" {
-				logger(key, strings.TrimSuffix(s, "\n"))
+		line, err := reader.ReadString('\n')
+		line = strings.TrimSuffix(line, "\n")
+		if line != "" {
+			logger(line)
+		}
+		if err != nil {
+			if err != io.EOF {
+				logger("error", err.Error())
 			}
-			break
-		} else if err != nil {
-			logger("error", err.Error())
 			break
 		}
 	}
 }
 
-func RawLogger(vs ...interface{}) error {
-	if len(vs) > 0 {
-		w := os.Stdout
-		if str, ok := vs[0].(string); !ok || str != "stdout" {
-			w = os.Stderr
+func MakeRawLogger(w io.Writer) func(...interface{}) {
+	return func(vs ...interface{}) {
+		if _, err := fmt.Fprintln(w, vs...); err != nil {
+			panic(err)
 		}
-		_, err := fmt.Fprintln(w, vs[1:]...)
-		return err
 	}
-	return nil
 }

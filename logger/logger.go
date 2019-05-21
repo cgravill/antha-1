@@ -13,10 +13,34 @@ type Logger struct {
 	// To understand this a bit better, consider that implementations
 	// of Logger include the keyval pairs and a reference to the
 	// underlying logger...
-	kitlog.Logger
+	kit kitlog.Logger
 
 	// ...whereas SwapLogger is just the underlying logger
 	swappable *kitlog.SwapLogger
+}
+
+func (l *Logger) Log(pairs ...interface{}) {
+	if err := l.kit.Log(pairs...); err != nil {
+		panic(err)
+	}
+}
+
+func (l *Logger) With(keyvals ...interface{}) *Logger {
+	logger := kitlog.With(l.kit, keyvals...)
+	return &Logger{
+		kit:       logger,
+		swappable: l.swappable,
+	}
+}
+
+func (l *Logger) ForSingletonPrefix(prefix string) func(...interface{}) {
+	return func(keyvals ...interface{}) {
+		if len(keyvals) == 1 {
+			l.Log(prefix, keyvals[0])
+		} else {
+			l.Log(keyvals...)
+		}
+	}
 }
 
 type wrapper struct {
@@ -24,7 +48,7 @@ type wrapper struct {
 }
 
 func (w wrapper) Write(p []byte) (n int, err error) {
-	if err := w.l.Log("msg", p); err != nil {
+	if err := w.l.kit.Log("msg", p); err != nil {
 		return 0, err
 	} else {
 		return len(p), nil
@@ -46,19 +70,11 @@ func NewLogger(ws ...io.Writer) *Logger {
 	sl := &kitlog.SwapLogger{}
 	sl.Swap(logger)
 	l := &Logger{
-		Logger:    sl,
+		kit:       sl,
 		swappable: sl,
 	}
 	stdlog.SetOutput(&wrapper{l: l})
 	return l
-}
-
-func (l *Logger) With(keyvals ...interface{}) *Logger {
-	logger := kitlog.With(l.Logger, keyvals...)
-	return &Logger{
-		Logger:    logger,
-		swappable: l.swappable,
-	}
 }
 
 // Replace the underlying writers of not only this logger, but the

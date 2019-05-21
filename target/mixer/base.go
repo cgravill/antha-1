@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -114,19 +115,24 @@ func (bm *BaseMixer) maybeExec() error {
 		// could be concurrent, hence the locking and careful
 		// signalling.
 		running := make(chan struct{})
-		lock := new(sync.Mutex)
-		logFun := func(pairs ...interface{}) error {
-			lock.Lock()
-			select {
-			case <-running:
-			default:
+		lock := uint64(0)
+		markRunning := func() {
+			if atomic.AddUint64(&lock, 1) == 1 {
 				close(running)
 			}
-			lock.Unlock()
-			return bm.logger.Log(pairs...)
+		}
+		stdoutLog := bm.logger.ForSingletonPrefix("stdout")
+		stdoutLogWrapped := func(keyvals ...interface{}) {
+			markRunning()
+			stdoutLog(keyvals...)
+		}
+		stderrLog := bm.logger.ForSingletonPrefix("stderr")
+		stderrLogWrapped := func(keyvals ...interface{}) {
+			markRunning()
+			stderrLog(keyvals...)
 		}
 
-		if err := composer.StartAndLogCommand(cmd, logFun); err != nil {
+		if err := composer.StartAndLogCommand(cmd, stdoutLogWrapped, stderrLogWrapped); err != nil {
 			return err
 		}
 
@@ -219,11 +225,11 @@ func (bm *BaseMixer) Close() {
 			go func() {
 				// these signal calls will fail on some OS, and will likely
 				// fail if the process has already exited.
-				proc.Signal(syscall.SIGTERM)
+				proc.Signal(syscall.SIGTERM) // nolint
 				// give it 1 second to shut down cleanly, then just kill it
 				// hard.
 				time.Sleep(time.Second)
-				proc.Kill()
+				proc.Kill() // nolint
 			}()
 		}
 		<-bm.cmdFinished
