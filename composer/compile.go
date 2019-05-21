@@ -234,19 +234,18 @@ func drainToLogger(logger func(...interface{}) error, fh io.ReadCloser, key stri
 	defer fh.Close()
 
 	reader := bufio.NewReader(fh)
-	// the first call to ReadLine() returns an empty string
-	bs, partial, err := reader.ReadLine()
-	line := string(bs)
-	for ; err == nil; bs, partial, err = reader.ReadLine() {
-		if partial {
-			line = line + string(bs)
-		} else {
-			logger(key, line+string(bs))
-			line = ""
+	for {
+		if s, err := reader.ReadString('\n'); err == nil {
+			logger(key, strings.TrimSuffix(s, "\n"))
+		} else if err == io.EOF {
+			if s != "" {
+				logger(key, strings.TrimSuffix(s, "\n"))
+			}
+			break
+		} else if err != nil {
+			logger("error", err.Error())
+			break
 		}
-	}
-	if err != io.EOF {
-		logger("error", err.Error())
 	}
 }
 
