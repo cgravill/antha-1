@@ -40,7 +40,7 @@ steps:
   - '-c'
   - |
     set -x -o nounset -o errexit -o pipefail
-    docker build --force-rm --target=lint .
+    docker build --force-rm --target=lint --build-arg COMMIT_SHA=$COMMIT_SHA --build-arg NETRC="$(cat .netrc)" .
 
 - name: 'gcr.io/cloud-builders/gsutil'
   id: gitlab-fetch
