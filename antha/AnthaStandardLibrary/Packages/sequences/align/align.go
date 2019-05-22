@@ -335,9 +335,7 @@ func DNA(template, query wtype.DNASequence, alignmentMatrix ScoringMatrix) (alig
 	}
 
 	if len(query.Seq) > len(template.Seq) {
-		if err == nil {
-			err = fmt.Errorf("query sequence is larger than template, this may result in an unusual alignment")
-		}
+		err = fmt.Errorf("query sequence is larger than template, this may result in an unusual alignment")
 	}
 
 	if revResult.Matches() > fwdResult.Matches() {

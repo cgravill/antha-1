@@ -77,8 +77,8 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   id: docker-push
   waitFor:
-  - gitlab-decrypt
   - docker-build
+  - gitlab-decrypt
   entrypoint: 'bash'
   args:
   - '-c'

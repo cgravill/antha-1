@@ -503,7 +503,7 @@ func (sim *SimulatedElements) validate(wf *Workflow) error {
 func (types SimulatedElementTypes) validate(wf *Workflow) error {
 	for name, elemTyp := range types {
 		if _, found := wf.Repositories[elemTyp.RepositoryName]; !found {
-			fmt.Errorf("Validation error: Simulation records use element type %v with repository %v which is unknown",
+			return fmt.Errorf("Validation error: Simulation records use element type %v with repository %v which is unknown",
 				name, elemTyp.RepositoryName)
 		}
 	}

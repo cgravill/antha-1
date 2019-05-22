@@ -154,7 +154,7 @@ func SetUpTipsFor(lab *laboratory.Laboratory, lhp *liquidhandling.LHProperties, 
 
 	seen := make(map[string]bool)
 
-	lab.Inventory.TipBoxes.ForEach(func(tb wtype.LHTipbox) error {
+	err := lab.Inventory.TipBoxes.ForEach(func(tb wtype.LHTipbox) error {
 		if tb.Mnfr == lhp.Mnfr || lhp.Mnfr == "MotherNature" {
 			//ignore filter tips and the hacky "low volume high volume" ones
 			//		if tb.Tiptype.Filtered || tb.Tiptype.Type == "LVGilson200" {
@@ -177,6 +177,9 @@ func SetUpTipsFor(lab *laboratory.Laboratory, lhp *liquidhandling.LHProperties, 
 		}
 		return nil
 	})
+	if err != nil {
+		panic(err) // it really can't be != nil because the above fun never returns a non nil err
+	}
 	return lhp
 }
 

@@ -818,7 +818,6 @@ func BenchmarkChannelTipReuseUgly(b *testing.B) {
 		})
 	}
 }
-*/
 
 func generateRobotInstructions2(lab *laboratory.Laboratory, inss []*wtype.LHInstruction, pol *wtype.LHPolicyRuleSet) ([]liquidhandling.TerminalRobotInstruction, error) {
 	tb, dstp := getTransferBlock(lab, inss, "pcrplate_skirted_riser40")
@@ -839,6 +838,7 @@ func generateRobotInstructions2(lab *laboratory.Laboratory, inss []*wtype.LHInst
 
 	return iTree.Leaves(), nil
 }
+*/
 
 // regression test for issue with additional transfers being
 // generated with sequential, different-length multichannel

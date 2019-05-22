@@ -36,7 +36,9 @@ func NewTestLabBuilder(t *testing.T, inDir, outDir string, fh io.ReadCloser) *la
 	labBuild := laboratory.EmptyLaboratoryBuilder()
 	labBuild.Logger = labBuild.Logger.With("testName", t.Name())
 	labBuild.Setup(fh, inDir, outDir)
-	labBuild.Workflow.Meta.Set("TestName", t.Name())
+	if err := labBuild.Workflow.Meta.Set("TestName", t.Name()); err != nil {
+		labBuild.RecordError(err, true)
+	}
 
 	if err := labBuild.Errors(); err != nil {
 		t.Fatal(err)
@@ -81,7 +83,9 @@ func withTestLab(t *testing.T, inDir string, callbacks *TestElementCallbacks) {
 
 	wf := workflow.EmptyWorkflow()
 	wf.WorkflowId = workflow.BasicId("TestLab")
-	wf.Meta.Set("TestName", t.Name())
+	if err := wf.Meta.Set("TestName", t.Name()); err != nil {
+		labBuild.RecordError(err, true)
+	}
 	wfBuf := new(bytes.Buffer)
 	if err := wf.ToWriter(wfBuf, false); err != nil {
 		labBuild.RecordError(err, true)

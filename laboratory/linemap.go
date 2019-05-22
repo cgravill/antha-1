@@ -113,6 +113,4 @@ func (lmm *lineMapManager) ElementStackTrace() string {
 			return strings.Join(result, "\n")
 		}
 	}
-
-	return stack
 }

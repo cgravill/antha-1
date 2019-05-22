@@ -63,7 +63,7 @@ func (hum *Human) Compile(labEffects *effects.LaboratoryEffects, dir string, nod
 	return hum.impl.Compile(labEffects, dir, nodes)
 }
 
-func (hum *Human) DetermineRole(tgt *target.Target) {
+func (hum *Human) DetermineRole(tgt *target.Target) error {
 	mixReq := instructions.Request{
 		Selector: []instructions.NameValue{
 			target.DriverSelectorV1Mixer,
@@ -91,8 +91,9 @@ func (hum *Human) DetermineRole(tgt *target.Target) {
 	}
 
 	if hum.canMix || hum.canIncubate {
-		tgt.AddDevice(hum)
+		return tgt.AddDevice(hum)
 	}
+	return nil
 }
 
 func (hum *Human) Connect(*workflow.Workflow) error {
