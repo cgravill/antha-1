@@ -33,7 +33,10 @@ import (
 // TipType uniquely indentifies the type of the tip
 type TipType string
 
-var NilTipType = TipType("<nil>")
+// IsNil returns true if the tiptype is unset
+func (tt TipType) IsNil() bool {
+	return tt == ""
+}
 
 // LHTip represents a specific tip for transporting liquids
 type LHTip struct {
@@ -71,7 +74,7 @@ func (self *LHTip) GetID() string {
 //@implement Typed
 func (self *LHTip) GetType() string {
 	if self == nil {
-		return string(NilTipType)
+		return "<nil>"
 	}
 	return string(self.Type)
 }
