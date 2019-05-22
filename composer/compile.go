@@ -240,11 +240,12 @@ func drainToLogger(logger func(...interface{}), fh io.ReadCloser) {
 	reader := bufio.NewReader(fh)
 	for {
 		line, err := reader.ReadString('\n')
-		line = strings.TrimSuffix(line, "\n")
-		if line != "" {
-			logger(line)
-		}
-		if err != nil {
+		if err == nil {
+			logger(strings.TrimSuffix(line, "\n"))
+		} else {
+			if line != "" {
+				logger(line)
+			}
 			if err != io.EOF {
 				logger("error", err.Error())
 			}
