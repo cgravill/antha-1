@@ -254,8 +254,9 @@ func TestPlateType(t *testing.T) {
 
 	p2 := LHPlateFromType(idGen2, pt)
 
-	if diffs := deep.Equal(p, p2); len(diffs) != 0 {
-		t.Errorf("Plate reconsistuted from plate type not correct\n%v", strings.Join(diffs, "\n"))
+	// deel.Equal gets upset by recursive structures, so using reflect.DeepEqual here
+	if !reflect.DeepEqual(p, p2) {
+		t.Error("Plate reconsistuted from plate type not correct")
 	}
 
 	// now check we get the right plate type out
