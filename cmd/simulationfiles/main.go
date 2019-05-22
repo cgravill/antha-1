@@ -18,8 +18,8 @@ import (
 
 func main() {
 	flag.Usage = workflow.NewFlagUsage(nil,
-		//		"Export files created by a simulation",
-		//		"[flags] [workflow-snippet.json...]",
+		"Export files created by a simulation",
+		"[flags] [workflow-snippet.json...]",
 		"github.com/antha-lang/antha/cmd/simulationfiles")
 
 	var inDir, outDir string
@@ -40,6 +40,8 @@ func main() {
 
 	if err := extract(l, inDir, outDir); err != nil {
 		logger.Fatal(l, err)
+	} else {
+		l.Log("msg", "completed")
 	}
 }
 
@@ -50,16 +52,19 @@ func extract(l *logger.Logger, inDir, outDir string) error {
 		return err
 	} else if wf, err := workflow.WorkflowFromReaders(rs...); err != nil {
 		return err
-	} else if err := wf.Validate(); err != nil {
-		return err
+	} else if wf.Simulation == nil {
+		return errors.New("Workflow has not been simulated.")
 	} else {
-
-		if wf.Simulation == nil {
-			return errors.New("Workflow does not contain any record of simulation")
-		}
 		sim := wf.Simulation
-		fmt.Printf("Summary:\n Workflow Id:      %v\n Simulation Id:    %v\n Antha Version:    %v\n Simulation Start: %v\n Simulation End:   %v\n",
-			wf.WorkflowId, sim.SimulationId, sim.Version, sim.Start, sim.End)
+		fmt.Printf(`Simulation Summary:
+ Workflow Id:    %v
+ Simulation Id:  %v
+ Antha Version:  %v
+ Start:          %v
+ End:            %v
+ InDir:          %v
+ OutDir:         %v
+`, wf.WorkflowId, sim.SimulationId, sim.Version, sim.Start, sim.End, sim.InDir, sim.OutDir)
 
 		elemTypes := sim.Elements.Types
 		for id, inst := range sim.Elements.Instances {
@@ -78,15 +83,14 @@ func extract(l *logger.Logger, inDir, outDir string) error {
 
 func extractFields(l *logger.Logger, sim *workflow.Simulation, outDir string, fieldGroup string, fields map[workflow.ElementParameterName]string, id workflow.ElementInstanceId, inst workflow.SimulatedElementInstance) error {
 	for paramName, paramType := range fields {
+		paramLogger := l.With("id", id, "type", inst.TypeName, "name", inst.Name, fieldGroup, paramName)
 		dir := filepath.Join(outDir, string(paramName))
 		if paramType == "*github.com/antha-lang/antha/antha/anthalib/wtype.File" {
-			l.Log("id", id, "type", inst.TypeName, "name", inst.Name, fieldGroup, paramName, "dir", dir)
-			if err := writeFile(l, sim, dir, inst.Files[paramName], ""); err != nil {
+			if err := writeFile(paramLogger, sim, dir, inst.Files[paramName], ""); err != nil {
 				return err
 			}
 		} else if paramType == "[]*github.com/antha-lang/antha/antha/anthalib/wtype.File" {
-			l.Log("id", id, "type", inst.TypeName, "name", inst.Name, fieldGroup, paramName, "dir", dir)
-			if err := writeFiles(l, sim, dir, inst.Files[paramName]); err != nil {
+			if err := writeFiles(paramLogger, sim, dir, inst.Files[paramName]); err != nil {
 				return err
 			}
 		}
@@ -128,7 +132,8 @@ func writeFiles(l *logger.Logger, sim *workflow.Simulation, dir string, bs json.
 		return err
 	}
 	for idx, f := range fs {
-		if err := writeFile(l, sim, dir, f, fmt.Sprintf("%d_", idx)); err != nil {
+		// We do idx+1 because humans seem to not like numbers starting from 0!
+		if err := writeFile(l, sim, dir, f, fmt.Sprintf("%d_", idx+1)); err != nil {
 			return err
 		}
 	}

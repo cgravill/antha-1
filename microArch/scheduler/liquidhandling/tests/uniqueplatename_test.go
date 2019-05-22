@@ -42,7 +42,9 @@ func TestUniquePlateName(t *testing.T) {
 					t.Errorf("Plate named %s returned by getSafePlateName - already defined by request", nom)
 				}
 
-				rq.AddUserPlate(idGen, &wtype.Plate{PlateName: nom, ID: idGen.NextID()})
+				if err := rq.AddUserPlate(idGen, &wtype.Plate{PlateName: nom, ID: idGen.NextID()}); err != nil {
+					t.Error(err)
+				}
 
 				if !rq.HasPlateNamed(nom) {
 					t.Errorf("Plate named %s not recognised by request after addition", nom)

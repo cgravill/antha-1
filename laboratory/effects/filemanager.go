@@ -68,7 +68,7 @@ func (fm *FileManager) ReadAll(f *wtype.File) ([]byte, error) {
 		switch u.Scheme {
 		case "http", "https":
 			f, err := fm.WithWriter(func(w io.Writer) error {
-				if resp, err := http.Get(p); err != nil {
+				if resp, err := http.Get(p); err != nil { // nolint
 					return err
 				} else {
 					defer resp.Body.Close()

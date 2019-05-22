@@ -52,16 +52,13 @@ commands are highly coupled to the sources, we do not currently
 support building a Docker image based on un-committed and un-pushed
 code.
 
-The Dockerfile defines several targets. Here we target the first:
-"build" which merely fetches all the sources and builds all the antha
+The Dockerfile defines several targets. Here we use the first: "build"
+which merely fetches all the sources and builds all the antha
 commands. It does not run any tests. Inspect the Dockerfile to see the
 other targets.
 
-At the end, you should have a
-message like:
+At the end, you should have a message like:
 
-    Step 13/13 : ONBUILD ADD . /elements
-     ---> Running in cfccbe95a60c
     Removing intermediate container cfccbe95a60c
      ---> 2ce136c2261c
     Successfully built 2ce136c2261c

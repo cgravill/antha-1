@@ -10,7 +10,10 @@ import (
 
 func makeWorkflowCmd(l *logger.Logger, args []string) error {
 	flagSet := flag.NewFlagSet(flag.CommandLine.Name()+" makeWorkflow", flag.ContinueOnError)
-	flagSet.Usage = workflow.NewFlagUsage(flagSet, "Modify workflow adding selected elements")
+	flagSet.Usage = workflow.NewFlagUsage(flagSet,
+		"Modify workflow adding selected elements",
+		"[flags] [workflow-snippet.json...]",
+		"github.com/antha-lang/antha/cmd/elements")
 
 	var regexStr, inDir, toFile string
 	flagSet.StringVar(&regexStr, "regex", "", "Regular expression to match against element type path (optional)")

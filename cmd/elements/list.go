@@ -11,7 +11,10 @@ import (
 
 func list(l *logger.Logger, args []string) error {
 	flagSet := flag.NewFlagSet(flag.CommandLine.Name()+" list", flag.ContinueOnError)
-	flagSet.Usage = workflow.NewFlagUsage(flagSet, "List all found element types, tab separated")
+	flagSet.Usage = workflow.NewFlagUsage(flagSet,
+		"List all found element types, tab separated",
+		"[flags] [workflow-snippet.json...]",
+		"github.com/antha-lang/antha/cmd/elements")
 
 	var regexStr, inDir string
 	flagSet.StringVar(&regexStr, "regex", "", "Regular expression to match against element type path (optional)")
