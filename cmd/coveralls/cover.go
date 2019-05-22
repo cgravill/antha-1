@@ -98,7 +98,9 @@ func (pkg *Package) LocateSources() error {
 		} else {
 			pkg.SrcDir = dir
 			for _, blks := range pkg.Files {
-				blks.ReadSource(pkg.SrcDir)
+				if err := blks.ReadSource(pkg.SrcDir); err != nil {
+					return err
+				}
 			}
 			return nil
 		}

@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"crypto/md5"
+	"crypto/md5" // nolint
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -61,7 +61,7 @@ func (job *Job) Upload() error {
 		return err
 	}
 
-	res, err := http.PostForm("https://coveralls.io/api/v1/jobs", url.Values{"json": {string(buf.Bytes())}})
+	res, err := http.PostForm("https://coveralls.io/api/v1/jobs", url.Values{"json": {buf.String()}})
 	if err != nil {
 		return err
 	}
