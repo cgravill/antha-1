@@ -16,11 +16,11 @@ func (wf *Workflow) Validate() error {
 	return utils.ErrorSlice{
 		wf.SchemaVersion.Validate(),
 		wf.WorkflowId.Validate(false),
-		wf.SimulationId.Validate(true),
 		wf.Repositories.validate(),
 		wf.Elements.validate(wf),
 		wf.Inventory.validate(),
 		wf.Config.validate(),
+		wf.Simulation.validate(wf),
 	}.Pack()
 }
 
@@ -44,10 +44,9 @@ func (basicId BasicId) Validate(permitEmpty bool) error {
 }
 
 func (rs Repositories) validate() error {
-	// Until we switch to go modules, we have to enforce that all
-	// repositories are not only unique, but that no one repository
-	// is a prefix of another. To enforce this, we sort the prefixes
-	// (so shortest will come first) and then we need to only test
+	// We have to enforce that all repositories are not only unique, but that no
+	// one repository is a prefix of another. To enforce this, we sort the
+	// prefixes (so shortest will come first) and then we need to only test
 	// against the tail of the list.
 	prefixes := make([]string, 0, len(rs))
 	for prefix := range rs {
@@ -80,7 +79,9 @@ func (r *Repository) validate() error {
 		return err
 	} else if !info.Mode().IsDir() {
 		return fmt.Errorf("Validation error: Repository Directory is not a directory: '%s'", r.Directory)
-	} else if err := r.maybeResolveGit(); err != nil {
+	} else if err := r.maybeResolveBranch(); err != nil {
+		return err
+	} else if _, err := r.maybeResolveCommit(); err != nil {
 		return err
 	} else {
 		return nil
@@ -145,12 +146,12 @@ func (ei *ElementInstance) validate(wf *Workflow, name ElementInstanceName) erro
 		return fmt.Errorf("Validation error: Element Instance %v cannot be nil", name)
 	}
 	tns := wf.TypeNames()
-	if _, found := tns[ei.ElementTypeName]; !found {
-		maybeName := ElementType{ElementPath: ElementPath(ei.ElementTypeName)}.Name()
+	if _, found := tns[ei.TypeName]; !found {
+		maybeName := ElementType{ElementPath: ElementPath(ei.TypeName)}.Name()
 		if _, found := tns[maybeName]; found {
-			return fmt.Errorf("Validation error: Element Instance '%v' has unknown ElementTypeName '%v'. Did you mean '%v'?", name, ei.ElementTypeName, maybeName)
+			return fmt.Errorf("Validation error: Element Instance '%v' has unknown ElementTypeName '%v'. Did you mean '%v'?", name, ei.TypeName, maybeName)
 		} else {
-			return fmt.Errorf("Validation error: Element Instance '%v' has unknown ElementTypeName '%v'", name, ei.ElementTypeName)
+			return fmt.Errorf("Validation error: Element Instance '%v' has unknown ElementTypeName '%v'", name, ei.TypeName)
 		}
 	} else {
 		ei.hasParameters = len(ei.Parameters) > 0
@@ -260,7 +261,7 @@ func (inst *GilsonPipetMaxInstanceConfig) validate(id DeviceInstanceID, isDefaul
 		return fmt.Errorf("Confusion: GilsonPipetMax device '%s' exists. Did you mean to set GilsonPipetMax.Defaults instead?", id)
 
 	}
-	return inst.commonMixerInstanceConfig.validate(id)
+	return inst.CommonMixerInstanceConfig.validate(id)
 }
 
 // Tecan
@@ -293,7 +294,7 @@ func (inst *TecanInstanceConfig) validate(id DeviceInstanceID, isDefaults bool) 
 		return fmt.Errorf("Confusion: Tecan device '%s' exists. Did you mean to set Tecan.Defaults instead?", id)
 
 	}
-	return inst.commonMixerInstanceConfig.validate(id)
+	return inst.CommonMixerInstanceConfig.validate(id)
 }
 
 // CyBio
@@ -326,7 +327,7 @@ func (inst *CyBioInstanceConfig) validate(id DeviceInstanceID, isDefaults bool) 
 		return fmt.Errorf("Confusion: CyBio device '%s' exists. Did you mean to set CyBio.Defaults instead?", id)
 
 	}
-	return inst.commonMixerInstanceConfig.validate(id)
+	return inst.CommonMixerInstanceConfig.validate(id)
 }
 
 // Labcyte
@@ -360,7 +361,7 @@ func (inst *LabcyteInstanceConfig) validate(id DeviceInstanceID, isDefaults bool
 
 	}
 	// NB because the instruction plugin itself does validation of the model, we don't do that here!
-	return inst.commonMixerInstanceConfig.validate(id)
+	return inst.CommonMixerInstanceConfig.validate(id)
 }
 
 // Hamilton
@@ -394,10 +395,10 @@ func (inst *HamiltonInstanceConfig) validate(id DeviceInstanceID, isDefaults boo
 
 	}
 	// NB because the instruction plugin itself does validation of the model, we don't do that here!
-	return inst.commonMixerInstanceConfig.validate(id)
+	return inst.CommonMixerInstanceConfig.validate(id)
 }
 
-func (inst *commonMixerInstanceConfig) validate(id DeviceInstanceID) error {
+func (inst *CommonMixerInstanceConfig) validate(id DeviceInstanceID) error {
 	if inst.ExecFile != "" {
 		if abs, err := exec.LookPath(inst.ExecFile); err != nil {
 			return fmt.Errorf("Error when trying to locate executable at %v for %v: %v", inst.ExecFile, id, err)
@@ -474,4 +475,66 @@ func matchingPrefix(str string, prefixes ...string) string {
 		}
 	}
 	return ""
+}
+
+func (sim *Simulation) validate(wf *Workflow) error {
+	if sim == nil {
+		return nil
+	}
+	// if there are simulated elements then we must have a simulation
+	// id. But this is not an iff, because we could have a simulation
+	// of no element instances...
+	if elemCount := len(sim.Elements.Instances); elemCount != 0 && sim.SimulationId == "" {
+		return fmt.Errorf("Validation error: Simulation records %d simulated elements, but we have no SimulationId", elemCount)
+	} else if err := sim.SimulationId.Validate(elemCount == 0); err != nil {
+		return err
+	} else {
+		return sim.Elements.validate(wf)
+	}
+}
+
+func (sim *SimulatedElements) validate(wf *Workflow) error {
+	return utils.ErrorSlice{
+		sim.Types.validate(wf),
+		sim.Instances.validate(wf),
+	}.Pack()
+}
+
+func (types SimulatedElementTypes) validate(wf *Workflow) error {
+	for name, elemTyp := range types {
+		if _, found := wf.Repositories[elemTyp.RepositoryName]; !found {
+			fmt.Errorf("Validation error: Simulation records use element type %v with repository %v which is unknown",
+				name, elemTyp.RepositoryName)
+		}
+	}
+	return nil
+}
+
+func (insts SimulatedElementInstances) validate(wf *Workflow) error {
+	tns := wf.TypeNames()
+	for elemInstId, elemInst := range insts {
+		if elemInst.ParentId == "" {
+			// If there's no parent, then this is a top level
+			// element. Which means it must be declared directly in
+			// the workflow.
+			if _, found := tns[elemInst.TypeName]; !found {
+				return fmt.Errorf("Validation error: Simulation records top-level element instance (id: %v) with type %v, but that type is unknown in the workflow.",
+					elemInstId, elemInst.TypeName)
+			}
+			if _, found := wf.Elements.Instances[elemInst.Name]; !found {
+				return fmt.Errorf("Validation error: Simulation records top-level element instance (id: %v) with name %v, but that name is unknown in the workflow.",
+					elemInst, elemInst.Name)
+			}
+
+		} else if _, found := insts[elemInst.ParentId]; !found {
+			return fmt.Errorf("Validation error: Simulation records element instance (id: %v) with parent (id: %v), but the parent doesn't seem to exist",
+				elemInstId, elemInst.ParentId)
+		}
+
+		if _, found := wf.Simulation.Elements.Types[elemInst.TypeName]; !found {
+			return fmt.Errorf("Validation error: Simulation records element instance (id: %v) with type %v, but that type is unknown in the simulation types.",
+				elemInstId, elemInst.TypeName)
+		}
+	}
+	return nil
 }

@@ -8,9 +8,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
+	runner "github.com/Synthace/antha-runner/export"
 	"github.com/antha-lang/antha/codegen"
 	"github.com/antha-lang/antha/composer"
 	"github.com/antha-lang/antha/instructions"
@@ -28,12 +31,17 @@ import (
 
 type Element interface {
 	Name() workflow.ElementInstanceName
-	TypeName() workflow.ElementTypeName
+	TypeMeta() *ElementTypeMeta
 
 	Setup(*Laboratory) error
 	Steps(*Laboratory) error
 	Analysis(*Laboratory) error
 	Validation(*Laboratory) error
+
+	InputsJSONMap() (map[workflow.ElementParameterName]json.RawMessage, error)
+	OutputsJSONMap() (map[workflow.ElementParameterName]json.RawMessage, error)
+	ParametersJSONMap() (map[workflow.ElementParameterName]json.RawMessage, error)
+	DataJSONMap() (map[workflow.ElementParameterName]json.RawMessage, error)
 }
 
 type LaboratoryBuilder struct {
@@ -41,21 +49,27 @@ type LaboratoryBuilder struct {
 	outDir   string
 	Workflow *workflow.Workflow
 
-	// elemLock must be taken to access/mutate elemsUnrun and elements fields
-	elemLock      sync.Mutex
-	elemsUnrun    int64
-	elements      map[Element]*ElementBase
-	nextElementId uint64
+	// elemLock must be taken to access/mutate elemsRunning and elementToLab fields
+	elemLock       sync.Mutex
+	elemsRunning   int
+	elementToLab   map[Element]*Laboratory
+	nextElementId  uint64
+	elemsCompleted []*Laboratory
 
 	// This lock is here to serialize access to errors (append and
-	// Pack()), and to avoid races around closing Errored chan
+	// Pack()), and to avoid races around closing errored chan
 	errLock sync.Mutex
 	errors  utils.ErrorSlice
-	Errored chan struct{}
+	// errored is closed as soon as an error is recorded. This can
+	// happen before Completed is closed.
+	errored chan struct{}
 
+	throttle chan struct{}
+
+	// Completed is closed when all the elements within the workflow
+	// have stopped (some may never have even started), regardless of
+	// whether any error occurred.
 	Completed chan struct{}
-
-	Fatal func(error) // Fatal is a field and not a method so that we can dynamically change it
 
 	*lineMapManager
 	Logger *logger.Logger
@@ -67,18 +81,22 @@ type LaboratoryBuilder struct {
 }
 
 func EmptyLaboratoryBuilder() *LaboratoryBuilder {
+	// Hopefully temporary. See AC-72
+	const concurrencyLevel = 1
+
 	labBuild := &LaboratoryBuilder{
-		elements:  make(map[Element]*ElementBase),
-		Errored:   make(chan struct{}),
-		Completed: make(chan struct{}),
+		elementToLab: make(map[Element]*Laboratory),
+		errored:      make(chan struct{}),
+		throttle:     make(chan struct{}, concurrencyLevel),
+		Completed:    make(chan struct{}),
 
 		lineMapManager: NewLineMapManager(),
 		Logger:         logger.NewLogger(),
 	}
-	// we wrap in a func here because we may change the value of
-	// Logger (see SetupWorkflow) and so don't want to capture an
-	// old value here.
-	labBuild.Fatal = func(err error) { labBuild.Logger.Fatal(err) }
+	token := struct{}{}
+	for c := 0; c < concurrencyLevel; c++ {
+		labBuild.throttle <- token
+	}
 	return labBuild
 }
 
@@ -92,19 +110,21 @@ func parseFlags() (inDir, outDir string) {
 func NewLaboratoryBuilder(fh io.ReadCloser) *LaboratoryBuilder {
 	labBuild := EmptyLaboratoryBuilder()
 	inDir, outDir := parseFlags()
-	if err := labBuild.Setup(fh, inDir, outDir); err != nil {
-		labBuild.Fatal(err)
-	}
+	labBuild.Setup(fh, inDir, outDir)
 	return labBuild
 }
 
-func (labBuild *LaboratoryBuilder) Setup(fh io.ReadCloser, inDir, outDir string) error {
-	return utils.ErrorFuncs{
-		func() error { return labBuild.SetupWorkflow(fh) },
+func (labBuild *LaboratoryBuilder) Setup(fh io.ReadCloser, inDir, outDir string) {
+	err := utils.ErrorFuncs{
+		// We sort out the paths first so that we have somewhere to
+		// write out errors to if the workflow is invalid.
 		func() error { return labBuild.SetupPaths(inDir, outDir) },
+		func() error { return labBuild.SetupWorkflow(fh) },
 		func() error { return labBuild.SetupEffects() },
-		func() error { return labBuild.SaveWorkflow() },
 	}.Run()
+	if err != nil {
+		labBuild.RecordError(err, true)
+	}
 }
 
 func (labBuild *LaboratoryBuilder) SetupWorkflow(fh io.ReadCloser) error {
@@ -115,19 +135,20 @@ func (labBuild *LaboratoryBuilder) SetupWorkflow(fh io.ReadCloser) error {
 	} else if simId, err := workflow.RandomBasicId(wf.WorkflowId); err != nil {
 		return err
 	} else {
-		wf.SimulationId = simId
-		labBuild.Logger = labBuild.Logger.With("simulationId", simId)
+		wf.Simulation = workflow.EmptySimulation()
+		wf.Simulation.SimulationId = simId
+		labBuild.Logger = labBuild.Logger.With("simulationId", wf.Simulation.SimulationId)
 		if anthaMod := composer.AnthaModule(); anthaMod != nil && len(anthaMod.Version) != 0 {
-			if err := wf.Meta.Set("SimulatorVersion", anthaMod.Version); err != nil {
-				return err
-			}
+			wf.Simulation.Version = anthaMod.Version
 			labBuild.Logger.Log("simulatorVersion", anthaMod.Version)
 		} else {
-			if err := wf.Meta.Set("SimulatorVersion", "unknown"); err != nil {
-				return err
-			}
+			wf.Simulation.Version = "unknown"
 			labBuild.Logger.Log("simulatorVersion", "unknown")
 		}
+		wf.Simulation.Start = time.Now().Format(time.RFC3339Nano)
+
+		wf.Simulation.InDir = labBuild.inDir
+		wf.Simulation.OutDir = labBuild.outDir
 
 		labBuild.Workflow = wf
 		return nil
@@ -148,14 +169,14 @@ func (labBuild *LaboratoryBuilder) SetupPaths(inDir, outDir string) error {
 	labBuild.Logger.Log("outdir", labBuild.outDir)
 
 	// Create subdirs within it:
-	for _, leaf := range []string{"elements", "data", "devices", "workflow"} {
-		if err := os.MkdirAll(filepath.Join(labBuild.outDir, leaf), 0700); err != nil {
+	for _, leaf := range []string{"elements", "data", "tasks", "workflow"} {
+		if err := utils.MkdirAll(filepath.Join(labBuild.outDir, leaf)); err != nil {
 			return err
 		}
 	}
 
 	// Switch the logger over to write to disk too:
-	if logFH, err := os.OpenFile(filepath.Join(labBuild.outDir, "logs.txt"), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0400); err != nil {
+	if logFH, err := utils.CreateFile(filepath.Join(labBuild.outDir, "logs.txt"), utils.ReadWrite); err != nil {
 		return err
 	} else {
 		labBuild.logFH = logFH
@@ -181,24 +202,69 @@ func (labBuild *LaboratoryBuilder) SetupEffects() error {
 	if fm, err := effects.NewFileManager(filepath.Join(labBuild.inDir, "data"), filepath.Join(labBuild.outDir, "data")); err != nil {
 		return err
 	} else {
-		labBuild.effects = effects.NewLaboratoryEffects(labBuild.Workflow, labBuild.Workflow.SimulationId, fm)
+		labBuild.effects = effects.NewLaboratoryEffects(labBuild.Workflow, labBuild.Workflow.Simulation.SimulationId, fm)
 		return nil
 	}
 }
 
-func (labBuild *LaboratoryBuilder) SaveWorkflow() error {
-	return labBuild.Workflow.WriteToFile(filepath.Join(labBuild.outDir, "workflow", "workflow.json"), false)
-}
+// Returns all the errors that were encountered and recorded in this lab's existence
+func (labBuild *LaboratoryBuilder) Decommission() error {
+	labBuild.Workflow.Simulation.End = time.Now().Format(time.RFC3339Nano)
 
-func (labBuild *LaboratoryBuilder) SaveErrors() error {
-	if err := labBuild.Errors(); err != nil {
-		return ioutil.WriteFile(filepath.Join(labBuild.outDir, "errors.txt"), []byte(err.Error()), 0400)
-	} else {
-		return nil
+	labBuild.elemLock.Lock()
+	for _, lab := range labBuild.elemsCompleted {
+		typeMeta := lab.element.TypeMeta()
+		simElem := workflow.SimulatedElementInstance{
+			Name:      lab.element.Name(),
+			TypeName:  typeMeta.Name,
+			StatePath: lab.statePath,
+		}
+		if lab.parent != nil {
+			simElem.ParentId = workflow.ElementInstanceId(fmt.Sprint(lab.parent.id))
+		}
+		if lab.err != nil {
+			simElem.Error = lab.err.Error()
+		}
+
+		// temporary solution for exposing files: temporary until we have a proper elements service
+		files := make(map[workflow.ElementParameterName]json.RawMessage)
+		for fieldName, typ := range typeMeta.DataFieldTypes {
+			if strings.HasSuffix(typ, "github.com/antha-lang/antha/antha/anthalib/wtype.File") {
+				if bs, found := lab.serializedElement.Data[fieldName]; found && bs != nil {
+					files[fieldName] = bs
+				}
+			}
+		}
+		for fieldName, typ := range typeMeta.OutputsFieldTypes {
+			if strings.HasSuffix(typ, "github.com/antha-lang/antha/antha/anthalib/wtype.File") {
+				if bs, found := lab.serializedElement.Outputs[fieldName]; found && bs != nil {
+					files[fieldName] = bs
+				}
+			}
+		}
+		if len(files) != 0 {
+			simElem.Files = files
+		}
+
+		labBuild.Workflow.Simulation.Elements.Instances[workflow.ElementInstanceId(fmt.Sprint(lab.id))] = simElem
 	}
-}
+	labBuild.elemLock.Unlock()
 
-func (labBuild *LaboratoryBuilder) Decommission() {
+	if labBuild.Errors() != nil {
+		// Because we've called Errors() we have gone through a memory
+		// barrier, so direct access to labBuild.errors is now safe,
+		// provided we are the only go-routine doing so, which we should
+		// be.
+		labBuild.Workflow.Simulation.Errors = labBuild.errors
+	}
+	if err := labBuild.saveWorkflow(); err != nil {
+		labBuild.RecordError(err, true)
+	}
+
+	if err := runner.Export(labBuild.effects.IDGenerator, labBuild.inDir, labBuild.outDir, labBuild.instrs, labBuild.Errors()); err != nil {
+		labBuild.RecordError(err, true)
+	}
+
 	if labBuild.logFH != nil {
 		labBuild.Logger.SwapWriters(os.Stderr)
 		if err := labBuild.logFH.Sync(); err != nil {
@@ -209,6 +275,12 @@ func (labBuild *LaboratoryBuilder) Decommission() {
 		}
 		labBuild.logFH = nil
 	}
+
+	return labBuild.Errors()
+}
+
+func (labBuild *LaboratoryBuilder) saveWorkflow() error {
+	return labBuild.Workflow.WriteToFile(filepath.Join(labBuild.outDir, "workflow", "workflow.json"), false)
 }
 
 func (labBuild *LaboratoryBuilder) RemoveOutDir() error {
@@ -220,8 +292,11 @@ func (labBuild *LaboratoryBuilder) RemoveInDir() error {
 }
 
 func (labBuild *LaboratoryBuilder) Compile() {
-	if devices, err := labBuild.connectDevices(); err != nil {
-		labBuild.Fatal(err)
+	if labBuild.Errors() != nil {
+		return
+
+	} else if devices, err := labBuild.connectDevices(); err != nil {
+		labBuild.RecordError(err, true)
 
 	} else {
 		defer devices.Close()
@@ -231,13 +306,13 @@ func (labBuild *LaboratoryBuilder) Compile() {
 		// supports prompting.
 		human.New(labBuild.effects.IDGenerator).DetermineRole(devices)
 
-		devDir := filepath.Join(labBuild.outDir, "devices")
+		tasksDir := filepath.Join(labBuild.outDir, "tasks")
 
 		if nodes, err := labBuild.effects.Maker.MakeNodes(labBuild.effects.Trace.Instructions()); err != nil {
-			labBuild.Fatal(err)
+			labBuild.RecordError(err, true)
 
-		} else if instrs, err := codegen.Compile(labBuild.effects, devDir, devices, nodes); err != nil {
-			labBuild.Fatal(err)
+		} else if instrs, err := codegen.Compile(labBuild.effects, tasksDir, devices, nodes); err != nil {
+			labBuild.RecordError(err, true)
 
 		} else {
 			labBuild.instrs = instrs
@@ -273,12 +348,6 @@ func (labBuild *LaboratoryBuilder) connectDevices() (*target.Target, error) {
 	}
 }
 
-func (labBuild *LaboratoryBuilder) Export() {
-	if err := export(labBuild.effects.IDGenerator, labBuild.inDir, labBuild.outDir, labBuild.instrs); err != nil {
-		labBuild.Fatal(err)
-	}
-}
-
 // This interface exists just to allow both the lab builder and
 // laboratory itself to contain the InstallElement method. We need the
 // method on both due to the dynamic inter-element calls.
@@ -287,75 +356,104 @@ type ElementInstaller interface {
 }
 
 func (labBuild *LaboratoryBuilder) InstallElement(e Element) {
-	eb := labBuild.NewElementBase(e)
+	labBuild.addElementLaboratory(e, labBuild.makeLab(labBuild.Logger, e, nil))
+}
+
+func (labBuild *LaboratoryBuilder) addElementLaboratory(e Element, lab *Laboratory) {
 	labBuild.elemLock.Lock()
 	defer labBuild.elemLock.Unlock()
-	labBuild.elements[e] = eb
-	labBuild.elemsUnrun++
+	labBuild.elementToLab[e] = lab
 }
 
 func (labBuild *LaboratoryBuilder) AddConnection(src, dst Element, fun func()) error {
 	labBuild.elemLock.Lock()
 	defer labBuild.elemLock.Unlock()
-	if ebSrc, found := labBuild.elements[src]; !found {
+	if labSrc, found := labBuild.elementToLab[src]; !found {
 		return fmt.Errorf("Unknown src element: %v", src)
-	} else if ebDst, found := labBuild.elements[dst]; !found {
+	} else if labDst, found := labBuild.elementToLab[dst]; !found {
 		return fmt.Errorf("Unknown dst element: %v", dst)
 	} else {
-		ebDst.AddBlockedInput()
-		ebSrc.AddOnExit(func() {
-			fun()
-			ebDst.InputReady()
+		labDst.addBlockedInput()
+		labSrc.addOnExit(func(lab *Laboratory) {
+			if lab.err == nil {
+				fun()
+				labDst.inputReady()
+			}
 		})
 		return nil
 	}
 }
 
 // Run all the installed elements.
-func (labBuild *LaboratoryBuilder) RunElements() error {
+func (labBuild *LaboratoryBuilder) RunElements() {
+	if labBuild.Errors() != nil {
+		return
+	}
+
 	labBuild.elemLock.Lock()
-	if labBuild.elemsUnrun == 0 {
+	labBuild.elemsRunning = len(labBuild.elementToLab)
+	if labBuild.elemsRunning == 0 {
 		labBuild.elemLock.Unlock()
 		close(labBuild.Completed)
-		return nil
 
 	} else {
-		for _, eb := range labBuild.elements {
-			eb.AddOnExit(labBuild.elementCompleted)
+		elemToLab := labBuild.elementToLab
+		labBuild.elementToLab = make(map[Element]*Laboratory)
+		for _, lab := range elemToLab {
+			lab.addOnExit(labBuild.recordElementError)
+			lab.addOnExit(labBuild.elementCompleted)
 		}
-		for _, eb := range labBuild.elements {
-			go eb.Run(labBuild.makeLab(eb, labBuild.Logger))
+		for _, lab := range elemToLab {
+			go lab.run()
 		}
 		labBuild.elemLock.Unlock()
 		<-labBuild.Completed
-
-		return labBuild.Errors()
 	}
 }
 
-func (labBuild *LaboratoryBuilder) elementCompleted() {
+// Our sole concern here is accounting of how many elements are still
+// unrun.
+func (labBuild *LaboratoryBuilder) elementCompleted(lab *Laboratory) {
 	labBuild.elemLock.Lock()
 	defer labBuild.elemLock.Unlock()
-	labBuild.elemsUnrun--
-	if labBuild.elemsUnrun == 0 {
+	labBuild.elemsCompleted = append(labBuild.elemsCompleted, lab)
+	labBuild.elemsRunning--
+	if labBuild.elemsRunning == 0 {
 		close(labBuild.Completed)
 	}
 }
 
-func (labBuild *LaboratoryBuilder) recordError(err error) {
+// for top-level (i.e. workflow-defined) elements, if the element
+// produces an error then that error is fatal to the whole
+// workflow. It will have already been logged though so we don't need
+// to worry about that here.
+func (labBuild *LaboratoryBuilder) recordElementError(lab *Laboratory) {
+	if lab.err != nil {
+		labBuild.RecordError(lab.err, false)
+	}
+}
+
+// record that an error has happened, and optionally log it out of the
+// standard logger. Safe for concurrent use.
+func (labBuild *LaboratoryBuilder) RecordError(err error, log bool) {
+	if log {
+		labBuild.Logger.Log("error", err)
+	}
 	labBuild.errLock.Lock()
 	defer labBuild.errLock.Unlock()
 	labBuild.errors = append(labBuild.errors, err)
 	select { // we keep the lock here to avoid a race to close
-	case <-labBuild.Errored:
+	case <-labBuild.errored:
 	default:
-		close(labBuild.Errored)
+		close(labBuild.errored)
 	}
 }
 
+// Returns any errors that have been encountered and recorded so far -
+// does not block. Safe for concurrent use.
 func (labBuild *LaboratoryBuilder) Errors() error {
 	select {
-	case <-labBuild.Errored:
+	case <-labBuild.errored:
 		labBuild.errLock.Lock()
 		defer labBuild.errLock.Unlock()
 		return labBuild.errors.Pack()
@@ -364,171 +462,253 @@ func (labBuild *LaboratoryBuilder) Errors() error {
 	}
 }
 
+// Laboratory. A separate laboratory exists for every element. It
+// provides each element with the ability to interact with the lab
+// effects, and to log.
 type Laboratory struct {
 	labBuild *LaboratoryBuilder
-	element  Element
+	// if non-nil then this laboratory has a parent, which means it was
+	// not part of the workflow itself (i.e. CallSteps)
+	parent  *Laboratory
+	element Element
 
 	Logger   *logger.Logger
 	Workflow *workflow.Workflow
 	*effects.LaboratoryEffects
-}
 
-func (labBuild *LaboratoryBuilder) makeLab(eb *ElementBase, logger *logger.Logger) *Laboratory {
-	e := eb.element
-	return &Laboratory{
-		labBuild:          labBuild,
-		element:           e,
-		Logger:            logger.With("id", eb.id, "name", e.Name(), "type", e.TypeName()),
-		Workflow:          labBuild.Workflow,
-		LaboratoryEffects: labBuild.effects,
-	}
-}
-
-func (lab *Laboratory) InstallElement(e Element) {
-	lab.labBuild.InstallElement(e)
-}
-
-// Only for use when you're in an element and want to call another element.
-func (lab *Laboratory) CallSteps(e Element) error {
-	// it should already be in the map because the element constructor
-	// will have called through to InstallElement which would have
-	// added it.
-	lab.labBuild.elemLock.Lock()
-	eb, found := lab.labBuild.elements[e]
-	if !found {
-		lab.labBuild.elemLock.Unlock()
-		return fmt.Errorf("CallSteps called on unknown element '%s'", e.Name())
-	}
-
-	finished := make(chan struct{})
-	eb.AddOnExit(func() { close(finished) })
-	eb.AddOnExit(lab.labBuild.elementCompleted)
-	lab.labBuild.elemLock.Unlock()
-
-	// take the root logger (from labBuild) and build up from there.
-	logger := lab.labBuild.Logger.With("parentName", lab.element.Name(), "parentType", lab.element.TypeName())
-	go eb.Run(lab.labBuild.makeLab(eb, logger), eb.element.Steps)
-	<-finished
-
-	select {
-	case <-lab.labBuild.Errored:
-		return lab.labBuild.errors
-	default:
-		return nil
-	}
-}
-
-func (lab *Laboratory) error(err error) {
-	lab.labBuild.recordError(err)
-	lab.Logger.Log("error", err.Error())
-}
-
-func (lab *Laboratory) errorf(fmtStr string, args ...interface{}) {
-	lab.error(fmt.Errorf(fmtStr, args...))
-}
-
-// ElementBase
-type ElementBase struct {
 	// every element has a unique id to ensure we don't collide on names.
 	id uint64
 	// count of inputs that are not yet ready (plus 1)
 	pendingCount int64
 	// this gets closed when all inputs become ready
-	InputsReady chan struct{}
+	inputsReady chan struct{}
 	// funcs to run when this element is completed
-	onExit []func()
-	// the actual element
-	element Element
+	onExit []func(*Laboratory)
+	// closed once the the element has stopped. This closing does *not*
+	// imply that inputsReady will be closed. For example, the element
+	// can be blocked waiting for inputs to become ready when a
+	// workflow error occurs, causing labBuild.errored to close. That
+	// will be detected and will cause the element to close exited. But
+	// inputsReady will still remain unclosed.
+	exited chan struct{}
+	// any error that was produced by the element itself
+	err error
+
+	serializedElement serializedElement
+
+	// name of file (leaf) where we've written out the state of the
+	// element once it's completed
+	statePath string
 }
 
-func (labBuild *LaboratoryBuilder) NewElementBase(e Element) *ElementBase {
-	return &ElementBase{
-		id:           atomic.AddUint64(&labBuild.nextElementId, 1),
+type serializedElement struct {
+	Inputs     map[workflow.ElementParameterName]json.RawMessage
+	Outputs    map[workflow.ElementParameterName]json.RawMessage
+	Parameters map[workflow.ElementParameterName]json.RawMessage
+	Data       map[workflow.ElementParameterName]json.RawMessage
+}
+
+func (labBuild *LaboratoryBuilder) makeLab(logger *logger.Logger, e Element, parent *Laboratory) *Laboratory {
+	id := atomic.AddUint64(&labBuild.nextElementId, 1)
+	return &Laboratory{
+		labBuild: labBuild,
+		parent:   parent,
+		element:  e,
+
+		Logger:            logger.With("id", id, "name", e.Name(), "type", e.TypeMeta().Name),
+		Workflow:          labBuild.Workflow,
+		LaboratoryEffects: labBuild.effects,
+
+		id:           id,
 		pendingCount: 1,
-		InputsReady:  make(chan struct{}),
-		element:      e,
+		inputsReady:  make(chan struct{}),
+		exited:       make(chan struct{}),
 	}
 }
 
-func (eb *ElementBase) Run(lab *Laboratory, funs ...func(*Laboratory) error) {
-	eb.InputReady()
+func (lab *Laboratory) InstallElement(e Element) {
+	// take the root logger (from labBuild) and build up from there.
+	logger := lab.labBuild.Logger.With("parentId", lab.id, "parentName", lab.element.Name(), "parentType", lab.element.TypeMeta().Name)
+	lab.labBuild.addElementLaboratory(e, lab.labBuild.makeLab(logger, e, lab))
+}
+
+// CallSteps is only for use when you're in an element and want to
+// call another element (a dynamically-called element). Note that in
+// this case, only the Steps are run. Any error that the Steps of the
+// element produces is logged and returned. However, it is up to the
+// calling element to determine whether or not such an error is fatal
+// to the workflow (if it is considered fatal, the calling element
+// should return it).
+func (lab *Laboratory) CallSteps(e Element) error {
+	// it should already be in the map because the element constructor
+	// will have called through to InstallElement which would have
+	// added it.
+	labBuild := lab.labBuild
+	labBuild.elemLock.Lock()
+	eLab, found := labBuild.elementToLab[e]
+	if !found {
+		labBuild.elemLock.Unlock()
+		panic(fmt.Errorf("CallSteps called on unknown element '%s'", e.Name()))
+	}
+	// delete it so it can't be run more than once
+	delete(labBuild.elementToLab, e)
+
+	labBuild.elemsRunning++
+	eLab.addOnExit(lab.labBuild.elementCompleted)
+	labBuild.elemLock.Unlock()
+
+	go eLab.run(eLab.element.Steps)
+	<-eLab.exited
+
+	return eLab.err
+}
+
+// run() is designed to be called from a new go-routine (i.e. `go
+// lab.run()`), hence it does not return an error. If you wish to wait
+// for the element to stop and be safe to access, wait for the
+// lab.exited channel to be closed.
+func (lab *Laboratory) run(funs ...func(*Laboratory) error) {
+	lab.Logger.Log("progress", "waiting")
+	lab.inputReady()
 
 	if len(funs) == 0 {
 		funs = []func(*Laboratory) error{
-			eb.element.Setup,
-			eb.element.Steps,
-			eb.element.Analysis,
-			eb.element.Validation,
+			lab.element.Setup,
+			lab.element.Steps,
+			lab.element.Analysis,
+			lab.element.Validation,
 		}
 	}
 
-	defer eb.Exited()
+	defer lab.stopped()
 
 	defer func() {
 		if res := recover(); res != nil {
-			lab.errorf("panic: %v", res)
-			// Use println because of the embedded \n in the Stack Trace
-			fmt.Println(lab.labBuild.lineMapManager.ElementStackTrace())
+			// A panic is always fatal to the whole workflow, regardless of the element
+			stackTrace := lab.labBuild.lineMapManager.ElementStackTrace()
+			fmt.Printf("panic %v:\nDuring element instance %q (id %v) (element type %q):\n%s\n",
+				res, lab.element.Name(), lab.id, lab.element.TypeMeta().Name, stackTrace)
+			lab.err = fmt.Errorf("panic: %v\n%s", res, stackTrace)
+			lab.labBuild.RecordError(lab.err, false)
 		}
 	}()
 
 	select {
-	case <-eb.InputsReady:
+	case <-lab.inputsReady:
+		if lab.parent == nil {
+			token := <-lab.labBuild.throttle
+			defer func() {
+				res := recover()
+				lab.labBuild.throttle <- token
+				if res != nil {
+					panic(res)
+				}
+			}()
+		}
 		lab.Logger.Log("progress", "starting")
+
 		// this defer comes here because this defer will read all our
-		// inputs and parameters as part of the Save() call. This is
+		// inputs and parameters as part of the save() call. This is
 		// only safe (concurrency) once we know our inputs are ready.
-		defer eb.Save(lab)
+		defer lab.save()
+		// We serialize inputs and parameters before the element starts
+		// because of the risk of the element modifying them. We
+		// serialize outputs and data afterwards.
+		lab.serializeInputsParams()
+		defer lab.serializeOutputsData()
+
 		for _, fun := range funs {
 			select {
-			case <-lab.labBuild.Errored:
+			case <-lab.labBuild.errored:
 				return
 			default:
-				if err := fun(lab); err != nil {
-					lab.error(err)
+				if lab.err != nil {
 					return
 				}
+				lab.err = fun(lab)
 			}
 		}
-	case <-lab.labBuild.Errored:
+
+	case <-lab.labBuild.errored:
 		return
 	}
 }
 
-func (eb *ElementBase) Exited() {
-	funs := eb.onExit
-	eb.onExit = nil
-	for _, fun := range funs {
-		fun()
+func (lab *Laboratory) stopped() {
+	err := lab.err
+	if err == nil {
+		lab.Logger.Log("progress", "stopped")
+	} else {
+		lab.Logger.Log("progress", "stopped", "error", err)
+	}
+	close(lab.exited)
+	for _, fun := range lab.onExit {
+		fun(lab)
 	}
 }
 
-func (eb *ElementBase) Save(lab *Laboratory) {
-	lab.Logger.Log("progress", "completed")
-	p := filepath.Join(lab.labBuild.outDir, "elements", fmt.Sprintf("%d_%s.json", eb.id, eb.element.Name()))
-	if fh, err := os.OpenFile(p, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0400); err != nil {
-		lab.error(err)
+func (lab *Laboratory) serializeInputsParams() {
+	if inputs, err := lab.element.InputsJSONMap(); err != nil {
+		lab.err = err
+		return
+	} else {
+		lab.serializedElement.Inputs = inputs
+	}
+	if parameters, err := lab.element.ParametersJSONMap(); err != nil {
+		lab.err = err
+		return
+	} else {
+		lab.serializedElement.Parameters = parameters
+	}
+}
+
+func (lab *Laboratory) serializeOutputsData() {
+	if outputs, err := lab.element.OutputsJSONMap(); err != nil {
+		lab.err = err
+		return
+	} else {
+		lab.serializedElement.Outputs = outputs
+	}
+	if data, err := lab.element.DataJSONMap(); err != nil {
+		lab.err = err
+		return
+	} else {
+		lab.serializedElement.Data = data
+	}
+}
+
+func (lab *Laboratory) save() {
+	leaf := fmt.Sprintf("%d_%s.json", lab.id, lab.element.Name())
+	p := filepath.Join(lab.labBuild.outDir, "elements", leaf)
+	if fh, err := utils.CreateFile(p, utils.ReadWrite); err != nil {
+		lab.labBuild.RecordError(err, true)
 	} else {
 		defer fh.Close()
-		if err := json.NewEncoder(fh).Encode(eb.element); err != nil {
-			lab.error(err)
+		if err := json.NewEncoder(fh).Encode(&lab.serializedElement); err != nil {
+			lab.labBuild.RecordError(err, true)
+		} else {
+			lab.statePath = leaf
 		}
 	}
 }
 
-func (eb *ElementBase) InputReady() {
-	if atomic.AddInt64(&eb.pendingCount, -1) == 0 {
+func (lab *Laboratory) inputReady() {
+	if atomic.AddInt64(&lab.pendingCount, -1) == 0 {
 		// we've done the transition from 1 -> 0. By definition, we're
-		// the only routine that can do that, so we don't need to be
-		// careful.
-		close(eb.InputsReady)
+		// the only routine that can do that (given that wiring is
+		// finished before any element is started, so we cannot be
+		// racing with calls to addBlockedInput), so we don't need to be
+		// careful about double-close-panics.
+		close(lab.inputsReady)
 	}
 }
 
-func (eb *ElementBase) AddBlockedInput() {
-	atomic.AddInt64(&eb.pendingCount, 1)
+func (lab *Laboratory) addBlockedInput() {
+	atomic.AddInt64(&lab.pendingCount, 1)
 }
 
-func (eb *ElementBase) AddOnExit(fun func()) {
-	eb.onExit = append(eb.onExit, fun)
+// nb, it is not safe for the callback fun to read the inputs /
+// parameters of this element unless there is no error.
+func (lab *Laboratory) addOnExit(fun func(*Laboratory)) {
+	lab.onExit = append(lab.onExit, fun)
 }

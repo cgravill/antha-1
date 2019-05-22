@@ -53,6 +53,7 @@ type VirtualLiquidHandler struct {
 	lastMove           string
 	lastTarget         wtype.LHObject
 	properties         *liquidhandling.LHProperties
+	objectByID         map[string]wtype.LHObject // map from object ID to the object used internally
 }
 
 //coneRadius hardcoded radius to assume for cones
@@ -60,11 +61,13 @@ const coneRadius = 3.6
 
 //Create a new VirtualLiquidHandler which mimics an LHDriver
 func NewVirtualLiquidHandler(idGen *id.IDGenerator, props *liquidhandling.LHProperties, settings *SimulatorSettings) (*VirtualLiquidHandler, error) {
-	var vlh VirtualLiquidHandler
-	vlh.idGen = idGen
-	vlh.errors = make([]LiquidhandlingError, 0)
-	vlh.errorHistory = make([][]LiquidhandlingError, 0)
-	vlh.instructionHistory = make([]liquidhandling.TerminalRobotInstruction, 0)
+	vlh := VirtualLiquidHandler{
+		idGen:              idGen,
+		errors:             make([]LiquidhandlingError, 0),
+		errorHistory:       make([][]LiquidhandlingError, 0),
+		instructionHistory: make([]liquidhandling.TerminalRobotInstruction, 0),
+		objectByID:         make(map[string]wtype.LHObject, len(props.Positions)),
+	}
 
 	if settings == nil {
 		vlh.settings = DefaultSimulatorSettings()
@@ -501,6 +504,15 @@ func (self *VirtualLiquidHandler) getTargetPosition(idGen *id.IDGenerator, adapt
 	}
 
 	return ret, true
+}
+
+// GetWellAt return the internal model of the well at the given location, or nil if not found
+func (self *VirtualLiquidHandler) GetWellAt(pl wtype.PlateLocation) *wtype.LHWell {
+	if plate, ok := self.objectByID[pl.ID].(*wtype.LHPlate); ok {
+		w, _ := plate.WellAt(pl.Coords)
+		return w
+	}
+	return nil
 }
 
 func (self *VirtualLiquidHandler) getWellsBelow(height float64, adaptor *AdaptorState) []*wtype.LHWell {
@@ -957,7 +969,7 @@ func (self *VirtualLiquidHandler) Dispense(volume []float64, blowout []bool, hea
 	}
 
 	//for each blowout channel
-	for i := range arg.channels {
+	for _, i := range arg.channels {
 		if !blowout[i] {
 			continue
 		}
@@ -1707,6 +1719,8 @@ func (self *VirtualLiquidHandler) AddPlateTo(position string, plate interface{},
 			self.AddError(err.Error())
 			return ret
 		}
+
+		self.objectByID[wtype.IDOf(obj)] = obj
 
 	} else {
 		self.AddErrorf("Couldn't add object of type %T to %s", plate, position)

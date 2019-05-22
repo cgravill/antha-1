@@ -82,9 +82,15 @@ func (head *LHHead) CanReach(idGen *id.IDGenerator, plate *LHPlate, addresses We
 	//get the real world position of the addresses
 	coords := make([]*Coordinates2D, head.GetParams().Multi)
 	counter := make(addressCounter, len(addresses))
+	lastAddress := ZeroWellCoords()
 	for channel, address := range addresses {
 		//indicates the channel should not be used
 		if address.IsZero() {
+			if !lastAddress.IsZero() {
+				// add to the well counter for the last address so that we leave
+				// a space if we come back to it with a later channel
+				counter.Increment(lastAddress)
+			}
 			continue
 		}
 
@@ -105,6 +111,7 @@ func (head *LHHead) CanReach(idGen *id.IDGenerator, plate *LHPlate, addresses We
 		coords[channel] = &crd2D
 
 		counter.Increment(address)
+		lastAddress = address
 	}
 
 	if !head.GetParams().Independent {

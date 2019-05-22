@@ -15,3 +15,5 @@ cmd/composer/*.json
 cmd/elements/elements
 cmd/migrate/migrate
 cmd/upload-metadata/upload-metadata
+cmd/simulationfiles/simulationfiles
+workflow/simulaterequestpb/dumpjson/dumpjson

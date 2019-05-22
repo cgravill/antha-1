@@ -12,20 +12,26 @@
             "type": "string",
             "pattern": "^[a-zA-Z0-9_ -]*$"
         },
-        "SimulationId": {
-            "type": "string",
-            "pattern": "^[a-zA-Z0-9_ -]*$"
-        },
         "Meta": {
-            "oneOf": [
-                {"type": "null"},
-                {"type": "object"}
-            ],
-            "$comment": "TODO: implement schema. Haven't seen one of these in the wild yet"
+            "type": ["object", "null"],
+            "properties": {
+                "Name": {
+                    "type": "string"
+                }
+            }
         },
         "Inventory": {
-            "type": "object",
-            "$comment": "TODO: implement schema. Haven't seen one of these in the wild yet"
+            "type": ["object", "null"],
+            "properties": {
+                "PlateTypes": {
+                    "type": "object",
+                    "patternProperties": {
+                        ".*": {
+                            "$ref": "#/definitions/plateType"
+                        }
+                    }
+                }
+            }
         },
         "SchemaVersion": {
             "type": "string",
@@ -54,7 +60,7 @@
                 "Instances": {
                     "type": "object",
                     "propertyNames": {
-                        "$comment": "TODO: confirm this regex. This is the name of an element instance, e.g. 'my_aliquot'",
+                        "$comment": "This is the name of an element instance, e.g. 'my_aliquot'",
                         "pattern": "^[a-zA-Z0-9_ -]+$"
                     },
                     "patternProperties": {
@@ -76,8 +82,18 @@
         "Config": {
             "type": "object",
             "propertyNames": {
-                "$comment": "TODO: check this regex. This is the name of a device class, e.g. 'GilsonPipetMax'. It may be the case that an enum is preferable.",
-                "pattern": "^[a-zA-Z0-9_-]+$"
+                "$comment": "The name of a device class",
+                "enum": [
+                    "CyBio",
+                    "GilsonPipetMax",
+                    "GlobalMixer",
+                    "Hamilton",
+                    "Labcyte",
+                    "PlateReader",
+                    "QPCR",
+                    "ShakerIncubator",
+                    "Tecan"
+                ]
             },
             "patternProperties": {
                 "^GlobalMixer$": {
@@ -90,8 +106,8 @@
             "required": []
         },
         "Testing": {
-            "type": "object",
-            "propertyies" : {
+            "type": ["object", "null"],
+            "properties" : {
                 "MixTaskChecks" : {
                     "type" : "array",
                     "items" : {
@@ -99,6 +115,52 @@
                     }
                 }
             }
+        },
+        "Simulation": {
+            "type": ["object", "null"],
+            "properties": {
+                "SimulationId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9_ -]*$"
+                },
+                "Version": { "type": "string" },
+                "Start": { "type": "string" },
+                "End": { "type": "string" },
+                "InDir": { "type": "string" },
+                "OutDir": { "type": "string" },
+                "Errors": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                },
+                "Elements": {
+                    "type": "object",
+                    "properties": {
+                        "Types": {
+                            "type": "object",
+                            "patternProperties": {
+                                ".*": {
+                                    "$ref": "#/definitions/simulatedElementType"
+                                }
+                            }
+                        },
+                        "Instances": {
+                            "type": "object",
+                            "propertyNames": {
+                                "$comment": "Element instance ids",
+                                "pattern": "^[a-zA-Z0-9]+$"
+                            },
+                            "patternProperties": {
+                                ".*": {
+                                    "$ref": "#/definitions/simulatedElementInstance"
+                                }
+                            }
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false,
+            "required": ["SimulationId","Version"]
         }
     },
     "definitions": {
@@ -134,11 +196,11 @@
         "elementInstance": {
             "type": "object",
             "properties": {
-                "ElementTypeName": {
+                "TypeName": {
                     "type": "string"
                 },
                 "Meta": {
-                    "type": "object",
+                    "type": ["object", "null"],
                     "properties": {
                         "x": {
                             "type": "number"
@@ -155,7 +217,7 @@
                 }
             },
             "additionalProperties": false,
-            "required": ["ElementTypeName"]
+            "required": ["TypeName"]
         },
         "elementInstanceConnection": {
             "type": "object",
@@ -189,8 +251,8 @@
                 "Devices": {
                     "type": "object",
                     "propertyNames": {
-                        "$comment": "TODO: check this regex. This is the name of a device instance, e.g. 'Doris'",
-                        "pattern": "^[a-zA-Z0-9_-]+$"
+                        "$comment": "This is the name of a device instance, e.g. 'Doris'",
+                        "pattern": "^[-a-zA-Z0-9_() ]+$"
                     },
                     "patternProperties": {
                         ".*": {
@@ -206,16 +268,94 @@
         "mixTaskCheck": {
             "type": "object",
             "properties": {
-                "Instructions": { 
-                    "type": "array"
+                "Instructions": {
+                    "type": "object"
                 },
                 "Outputs" : {
-                    "type": "array"
+                    "type": "object"
                 },
                 "TimeEstimate": {
-                    "type": "array"
+                    "type": "number"
                 }
             }
+        },
+        "plateType": {
+            "type": "object",
+            "properties": {
+                "Name": { "type": "string" },
+                "Manufacturer": { "type": "string" },
+                "WellShape": { "type": "string" },
+                "WellH": { "type": "number" },
+                "WellW": { "type": "number" },
+                "WellD": { "type": "number" },
+                "MaxVol": { "type": "number" },
+                "MinVol": { "type": "number" },
+                "BottomType": { "type": "number" },
+                "BottomH": { "type": "number" },
+                "WellX": { "type": "number" },
+                "WellY": { "type": "number" },
+                "WellZ": { "type": "number" },
+                "ColSize": { "type": "number" },
+                "RowSize": { "type": "number" },
+                "Height": { "type": "number" },
+                "WellXOffset": { "type": "number" },
+                "WellYOffset": { "type": "number" },
+                "WellXStart": { "type": "number" },
+                "WellYStart": { "type": "number" },
+                "WellZStart": { "type": "number" },
+                "Extra": { "type": "object" }
+            }
+        },
+        "simulatedElementType": {
+            "type": "object",
+            "properties": {
+                "RepositoryName": { "type": "string" },
+                "ElementPath": { "type": "string" },
+                "GoSrcPath": { "type": "string" },
+                "AnthaSrcPath": { "type": "string" },
+                "InputsFieldTypes": {
+                    "type": "object",
+                    "patternProperties": {
+                        ".*": {"type": "string"}
+                    }
+                },
+                "OutputsFieldTypes": {
+                    "type": "object",
+                    "patternProperties": {
+                        ".*": {"type": "string"}
+                    }
+                },
+                "ParametersFieldTypes": {
+                    "type": "object",
+                    "patternProperties": {
+                        ".*": {"type": "string"}
+                    }
+                },
+                "DataFieldTypes": {
+                    "type": "object",
+                    "patternProperties": {
+                        ".*": {"type": "string"}
+                    }
+                }
+            },
+            "additionalProperties": false,
+            "required": ["RepositoryName", "ElementPath", "GoSrcPath", "AnthaSrcPath", "InputsFieldTypes", "OutputsFieldTypes", "ParametersFieldTypes", "DataFieldTypes"]
+        },
+        "simulatedElementInstance": {
+            "type": "object",
+            "properties": {
+                "Name": { "type": "string" },
+                "TypeName": { "type": "string" },
+                "ParentId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9]*$"
+                },
+                "Error": { "type": "string" },
+                "StatePath": { "type": "string" },
+                "Files": { "type": "object" }
+            },
+            "additionalProperties": false,
+            "required": ["Name", "TypeName"]
         }
     }
 }

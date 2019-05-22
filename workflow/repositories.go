@@ -12,6 +12,7 @@ import (
 	"github.com/antha-lang/antha/utils"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
+	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
 func (rs Repositories) LongestMatching(importPath string) (RepositoryName, *Repository) {
@@ -53,7 +54,7 @@ func (r *Repository) Clone(dir string) error {
 	} else if err != nil && !os.IsNotExist(err) {
 		return err
 	}
-	if err := os.MkdirAll(dir, 0700); err != nil {
+	if err := utils.MkdirAll(dir); err != nil {
 		return err
 	}
 	return r.Walk(copier(dir))
@@ -65,7 +66,7 @@ func copier(dir string) func(f *File) error {
 			return nil
 		}
 		dst := filepath.Join(dir, f.Name)
-		if err := os.MkdirAll(filepath.Dir(dst), 0700); err != nil {
+		if err := utils.MkdirAll(filepath.Dir(dst)); err != nil {
 			return err
 		}
 		srcFh, err := f.Contents()
@@ -73,7 +74,7 @@ func copier(dir string) func(f *File) error {
 			return err
 		}
 		defer srcFh.Close()
-		dstFh, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0400)
+		dstFh, err := utils.CreateFile(dst, utils.ReadWrite)
 		if err != nil {
 			return err
 		}
@@ -92,12 +93,15 @@ type File struct {
 }
 
 func (r *Repository) Walk(fun TreeWalker) error {
-	if err := r.maybeResolveGit(); err != nil {
-		return err
-	} else if r.Commit == "" {
+	if r.Commit == "" && r.Branch == "" {
 		return r.walkFromDirectory(fun)
+
+	} else if err := r.maybeResolveBranch(); err != nil {
+		return err
+	} else if tree, err := r.maybeResolveCommit(); err != nil {
+		return err
 	} else {
-		return r.walkFromGitCommit(fun)
+		return r.walkFromGitCommit(tree, fun)
 	}
 }
 
@@ -119,41 +123,31 @@ func (r *Repository) walkFromDirectory(fun TreeWalker) error {
 	})
 }
 
-func (r *Repository) walkFromGitCommit(fun TreeWalker) error {
-	if err := r.ensureGitRepo(); err != nil {
-		return err
-	}
-	commitHash := plumbing.NewHash(r.Commit)
-	if commit, err := r.gitRepo.CommitObject(commitHash); err != nil {
-		return err
-	} else if tree, err := r.gitRepo.TreeObject(commit.TreeHash); err != nil {
-		return err
-	} else {
-		iter := tree.Files()
-		defer iter.Close()
-		var f File
-		for {
-			if gf, err := iter.Next(); err == io.EOF {
-				break
-			} else if err != nil {
-				return err
-			} else {
-				f.Name = strings.TrimPrefix(filepath.FromSlash(gf.Name), pathSepStr)
-				f.IsRegular = gf.Mode.IsRegular()
-				f.Contents = func() (io.ReadCloser, error) {
-					if c, err := gf.Contents(); err != nil {
-						return nil, err
-					} else {
-						return ioutil.NopCloser(bytes.NewBuffer([]byte(c))), nil
-					}
-				}
-				if err := fun(&f); err != nil {
-					return err
+func (r *Repository) walkFromGitCommit(tree *object.Tree, fun TreeWalker) error {
+	iter := tree.Files()
+	defer iter.Close()
+	var f File
+	for {
+		if gf, err := iter.Next(); err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		} else {
+			f.Name = strings.TrimPrefix(filepath.FromSlash(gf.Name), pathSepStr)
+			f.IsRegular = gf.Mode.IsRegular()
+			f.Contents = func() (io.ReadCloser, error) {
+				if c, err := gf.Contents(); err != nil {
+					return nil, err
+				} else {
+					return ioutil.NopCloser(bytes.NewBuffer([]byte(c))), nil
 				}
 			}
+			if err := fun(&f); err != nil {
+				return err
+			}
 		}
-		return nil
 	}
+	return nil
 }
 
 func (r *Repository) ensureGitRepo() error {
@@ -169,26 +163,21 @@ func (r *Repository) ensureGitRepo() error {
 	return nil
 }
 
-func (r *Repository) maybeResolveGit() error {
-	return utils.ErrorFuncs{
-		r.maybeResolveBranch,
-		r.maybeResolveCommit,
-	}.Run()
-}
-
-func (r *Repository) maybeResolveCommit() error {
+func (r *Repository) maybeResolveCommit() (*object.Tree, error) {
 	if r.Commit == "" {
-		return nil
+		return nil, nil
 	} else if err := r.ensureGitRepo(); err != nil {
-		return err
+		return nil, err
 	}
 	commitHash := plumbing.NewHash(r.Commit)
-	if commit, err := r.gitRepo.CommitObject(commitHash); err != nil {
-		return err
-	} else if _, err := r.gitRepo.TreeObject(commit.TreeHash); err != nil {
-		return err
+	if commit, err := r.gitRepo.CommitObject(commitHash); err == plumbing.ErrObjectNotFound {
+		return nil, fmt.Errorf("Commit %v not found in %s. Do you need to 'git fetch --all'?", r.Commit, r.Directory)
+	} else if err != nil {
+		return nil, err
+	} else if tree, err := r.gitRepo.TreeObject(commit.TreeHash); err != nil {
+		return nil, err
 	} else {
-		return nil
+		return tree, nil
 	}
 }
 

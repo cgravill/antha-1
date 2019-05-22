@@ -24,7 +24,7 @@ package liquidhandling
 
 import (
 	"fmt"
-	"math"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -32,7 +32,6 @@ import (
 
 	"github.com/antha-lang/antha/antha/anthalib/wtype"
 	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/antha/anthalib/wutil"
 	"github.com/antha-lang/antha/antha/anthalib/wutil/text"
 	"github.com/antha-lang/antha/laboratory/effects"
 	"github.com/antha-lang/antha/laboratory/effects/id"
@@ -193,10 +192,8 @@ func mergeTipsAndChannels(idGen *id.IDGenerator, channels []*wtype.LHChannelPara
 
 // By the point at which the ChannelBlockInstruction is used by the Generate method all transfers will share the same policy.
 func (ins *ChannelBlockInstruction) Generate(labEffects *effects.LaboratoryEffects, policy *wtype.LHPolicyRuleSet, prms *LHProperties) ([]RobotInstruction, error) {
-	usetiptracking := SafeGetBool(policy.Options, "USE_DRIVER_TIP_TRACKING")
 
 	pol, err := GetPolicyFor(policy, ins)
-
 	if err != nil {
 		if _, ok := err.(ErrInvalidLiquidType); ok {
 			return []RobotInstruction{}, err
@@ -207,26 +204,16 @@ func (ins *ChannelBlockInstruction) Generate(labEffects *effects.LaboratoryEffec
 			return []RobotInstruction{}, err
 		}
 	}
+
 	ret := make([]RobotInstruction, 0)
-	// get some tips
 
-	// we no longer require ins.volume[0][0] to be set
-	// as we move to independent we need to get all volumes
-
-	//channels, _, tiptypes, err := ChooseChannels(ins.GetVolumes(), prms)
-	channels, _, tiptypes, err := ChooseChannels(labEffects.IDGenerator, ins.Volume[0], prms)
-	if err != nil {
-		return ret, err
-	}
-
-	tipget, err := GetTips(labEffects, tiptypes, prms, channels, usetiptracking)
-	if err != nil {
-		return ret, err
-	}
-	ret = append(ret, tipget...)
-	n_tip_uses := 0
-	var last_thing *wtype.Liquid
-	var dirty bool
+	// variables for tracking tip state
+	usetiptracking := SafeGetBool(policy.Options, "USE_DRIVER_TIP_TRACKING")
+	tipUseCounter := 0
+	changeTips := true // always load tips to start with
+	var lastThing *wtype.Liquid
+	var channels []*wtype.LHChannelParameter
+	var tiptypes []string
 
 	for t := 0; t < len(ins.Volume); t++ {
 		if len(ins.What[t]) == 0 {
@@ -242,68 +229,76 @@ func (ins *ChannelBlockInstruction) Generate(labEffects *effects.LaboratoryEffec
 			tvols[i] = wunit.CopyVolume(ins.TVolume[t][i])
 		}
 
-		// choose tips
+		// choose which tips should be used for this transfer
 		newchannels, newtips, newtiptypes, err := ChooseChannels(labEffects.IDGenerator, ins.Volume[t], prms)
 		if err != nil {
 			return ret, err
 		}
 
-		// load tips
+		// due to robot limitations the chosen has to be the same for each channel
+		// this is safe for non-independent robots since the volumes will alwayws be the same
+		// hjk TODO: we should change ChooseChannels such that this is always the case,
+		//           which also significantly simplifies the behaviour of GetTips, see ANTHA-2648
+		types := make(map[string]bool, len(newtiptypes))
+		for _, ttype := range newtiptypes {
+			if ttype != "" {
+				types[ttype] = true
+			}
+		}
+		if len(types) > 1 {
+			tiptypes := make([]string, 0, len(types))
+			for ttype := range types {
+				tiptypes = append(tiptypes, ttype)
+			}
+			return nil, errors.Errorf("tip types must be the same: cannot load tips %s at the same time", strings.Join(tiptypes, " and "))
+		}
 
 		// split the transfer up
 		// volumes no longer equal
 		tvs, err := TransferVolumesMulti(VolumeSet(ins.Volume[t]), mergeTipsAndChannels(labEffects.IDGenerator, newchannels, newtips))
-
 		if err != nil {
 			return ret, err
 		}
 
 		for _, vols := range tvs {
 			// determine whether to change tips
-			// INMC: DO THIS PER CHANNEL
-			change_tips := n_tip_uses > pol["TIP_REUSE_LIMIT"].(int)
-			change_tips = change_tips || !reflect.DeepEqual(channels, newchannels)
-			change_tips = change_tips || !reflect.DeepEqual(tiptypes, newtiptypes)
+			changeTips = changeTips || tipUseCounter > pol["TIP_REUSE_LIMIT"].(int)
+			changeTips = changeTips || !reflect.DeepEqual(channels, newchannels)
+			changeTips = changeTips || !reflect.DeepEqual(tiptypes, newtiptypes)
 
 			// big dangerous assumption here: we need to check if anything is different
-			this_thing := prms.Plates[ins.PltFrom[t][0]].Wellcoords[ins.WellFrom[t][0]].Contents(labEffects.IDGenerator)
+			thisThing := prms.Plates[ins.PltFrom[t][0]].Wellcoords[ins.WellFrom[t][0]].Contents(labEffects.IDGenerator)
 
-			if last_thing != nil {
-				if this_thing.CName != last_thing.CName {
-					change_tips = true
+			if lastThing != nil {
+				if thisThing.CName != lastThing.CName {
+					changeTips = true
 				}
 			}
 
-			// finally ensure we don't contaminate sources
-			if dirty {
-				change_tips = true
-			}
+			if changeTips {
+				// drop the last tips if there are any loaded
+				if tiptypes != nil && channels != nil {
+					if tipdrp, err := DropTips(tiptypes, prms, channels); err != nil {
+						return ret, err
+					} else {
+						ret = append(ret, tipdrp)
+					}
+				}
 
-			if change_tips {
-				// maybe wrap this as a ChangeTips function call
-				// these need parameters
-				tipdrp, err := DropTips(tiptypes, prms, channels)
-
-				if err != nil {
+				if tipget, err := GetTips(labEffects, newtiptypes, prms, newchannels, usetiptracking); err != nil {
 					return ret, err
-				}
-				ret = append(ret, tipdrp)
-
-				tipget, err := GetTips(labEffects, newtiptypes, prms, newchannels, usetiptracking)
-
-				if err != nil {
-					return ret, err
+				} else {
+					ret = append(ret, tipget...)
 				}
 
-				ret = append(ret, tipget...)
-				//		tips = newtips
-
-				n_tip_uses = 0
-				last_thing = nil
-				dirty = false
+				tipUseCounter = 0
+				lastThing = nil
+				changeTips = false
+				tiptypes = newtiptypes
+				channels = newchannels
 			}
+
 			mci := NewChannelTransferInstruction()
-			//vols.SetEqualTo(vol, ins.Multi)
 			mci.What = ins.What[t]
 			mci.Volume = vols.GetACopy()
 			mci.FVolume = fvols.GetACopy()
@@ -315,38 +310,31 @@ func (ins *ChannelBlockInstruction) Generate(labEffects *effects.LaboratoryEffec
 			mci.FPlateType = ins.FPlateType[t]
 			mci.TPlateType = ins.TPlateType[t]
 			mci.Component = ins.Component[t]
-			mci.TipType = newtiptypes
-			//mci.Multi = ins.Multi
+			mci.TipType = tiptypes
 			mci.Multi = countMulti(ins.PltFrom[t])
 			channelprms := make([]*wtype.LHChannelParameter, newchannels[0].Multi)
-			//mci.Prms = newchannel.MergeWithTip(newtip)
-
 			for i := 0; i < len(newchannels); i++ {
 				if newchannels[i] != nil {
 					channelprms[i] = newchannels[i].MergeWithTip(newtips[i])
 				}
 			}
-
 			mci.Prms = channelprms
 
 			ret = append(ret, mci)
-			n_tip_uses++
 
-			// finally check if we are touching a bad liquid
+			tipUseCounter++
+			lastThing = thisThing
+
+			// check if we are touching a bad liquid
 			// in future we will do this properly, for now we assume
 			// touching any liquid is bad
-
 			npre, premix := pol["PRE_MIX"]
 			npost, postmix := pol["POST_MIX"]
-
 			if pol["DSPREFERENCE"].(int) == 0 && !VolumeSet(ins.TVolume[t]).IsZero() || premix && npre.(int) > 0 || postmix && npost.(int) > 0 {
-				dirty = true
+				changeTips = true
 			}
 
-			last_thing = this_thing
-
-			tiptypes = newtiptypes
-			channels = newchannels
+			// update the volumes yet to transfer
 			fvols.SubA(vols)
 			tvols.AddA(vols)
 		}
@@ -400,6 +388,18 @@ func (scti *ChannelTransferInstruction) Params(idGen *id.IDGenerator, k int) Tra
 	tp.Component = scti.Component[k]
 	return tp
 }
+
+// Channels return the channel indexes of each channel used in the instruction
+func (cti *ChannelTransferInstruction) Channels() []int {
+	ret := make([]int, 0, len(cti.Volume))
+	for i, v := range cti.Volume {
+		if !v.IsZero() {
+			ret = append(ret, i)
+		}
+	}
+	return ret
+}
+
 func NewChannelTransferInstruction() *ChannelTransferInstruction {
 	v := &ChannelTransferInstruction{
 		InstructionType: CTI,
@@ -463,32 +463,7 @@ func (ins *ChannelTransferInstruction) GetParameter(name InstructionParameter) i
 }
 
 func (ins *ChannelTransferInstruction) Generate(labEffects *effects.LaboratoryEffects, policy *wtype.LHPolicyRuleSet, prms *LHProperties) ([]RobotInstruction, error) {
-	ret := make([]RobotInstruction, 0)
-
-	if len(ins.Volume) == 0 {
-		return ret, nil
-	}
-	// make the instructions
-
-	suckinstruction := NewSuckInstruction()
-	blowinstruction := NewBlowInstruction()
-	suckinstruction.Multi = ins.Multi
-	blowinstruction.Multi = ins.Multi
-
-	c := 0
-	for i := 0; i < len(ins.Volume); i++ {
-		if ins.Volume[i].IsZero() {
-			continue
-		}
-		c += 1
-		suckinstruction.AddTransferParams(ins.Params(labEffects.IDGenerator, i))
-		blowinstruction.AddTransferParams(ins.Params(labEffects.IDGenerator, i))
-	}
-
-	ret = append(ret, suckinstruction)
-	ret = append(ret, blowinstruction)
-
-	return ret, nil
+	return []RobotInstruction{NewSuckInstruction(labEffects.IDGenerator, ins), NewBlowInstruction(labEffects.IDGenerator, ins)}, nil
 }
 
 type StateChangeInstruction struct {
@@ -1340,36 +1315,56 @@ type SuckInstruction struct {
 	Component   []string
 }
 
-func NewSuckInstruction() *SuckInstruction {
-	v := &SuckInstruction{
-		InstructionType: SUK,
-		What:            []string{},
-		PltFrom:         []string{},
-		WellFrom:        []string{},
-		Volume:          []wunit.Volume{},
-		FPlateType:      []string{},
-		FVolume:         []wunit.Volume{},
-		Component:       []string{},
+func NewSuckInstruction(idGen *id.IDGenerator, cti *ChannelTransferInstruction) *SuckInstruction {
+	// channels parameters must be the same for each channel, i.e. that the same tip and head was chosen for each
+	var prms *wtype.LHChannelParameter
+	for _, cp := range cti.Prms {
+		if cp != nil {
+			if prms != nil && !prms.Equals(cp) {
+				panic("ChannelTransferInstruction mixes channel parameters")
+			}
+			prms = cp
+		}
 	}
-	v.BaseRobotInstruction = NewBaseRobotInstruction(v)
-	return v
+	var tipType string
+	for _, tt := range cti.TipType {
+		if tt != "" {
+			if tipType != "" && tipType != tt {
+				panic("ChannelTransferInstruction mixes tip types")
+			}
+			tipType = tt
+		}
+	}
+
+	ret := &SuckInstruction{
+		InstructionType: SUK,
+		What:            make([]string, len(cti.What)),
+		PltFrom:         make([]string, len(cti.PltFrom)),
+		WellFrom:        make([]string, len(cti.WellFrom)),
+		Volume:          make([]wunit.Volume, len(cti.Volume)),
+		FPlateType:      make([]string, len(cti.FPlateType)),
+		FVolume:         make([]wunit.Volume, len(cti.FVolume)),
+		Component:       make([]string, len(cti.Component)),
+		Prms:            prms.DupKeepIDs(idGen),
+		Head:            prms.Head,
+		Multi:           cti.Multi,
+		TipType:         tipType,
+	}
+	ret.BaseRobotInstruction = NewBaseRobotInstruction(ret)
+
+	copy(ret.What, cti.What)
+	copy(ret.PltFrom, cti.PltFrom)
+	copy(ret.WellFrom, cti.WellFrom)
+	copy(ret.Volume, cti.Volume)
+	copy(ret.FPlateType, cti.FPlateType)
+	copy(ret.FVolume, cti.FVolume)
+	copy(ret.Component, cti.Component)
+
+	return ret
 }
 
 func (ins *SuckInstruction) Visit(visitor RobotInstructionVisitor) {
 	visitor.Suck(ins)
-}
-
-func (ins *SuckInstruction) AddTransferParams(tp TransferParams) {
-	ins.What = append(ins.What, tp.What)
-	ins.PltFrom = append(ins.PltFrom, tp.PltFrom)
-	ins.WellFrom = append(ins.WellFrom, tp.WellFrom)
-	ins.Volume = append(ins.Volume, tp.Volume)
-	ins.FPlateType = append(ins.FPlateType, tp.FPlateType)
-	ins.FVolume = append(ins.FVolume, tp.FVolume)
-	ins.Prms = tp.Channel
-	ins.Head = tp.Channel.Head
-	ins.TipType = tp.TipType
-	ins.Component = append(ins.Component, tp.Component)
 }
 
 func (ins *SuckInstruction) GetParameter(name InstructionParameter) interface{} {
@@ -1462,44 +1457,6 @@ func (ins *SuckInstruction) Generate(labEffects *effects.LaboratoryEffects, poli
 		return nil, err
 	}
 
-	//LLF
-	use_llf, any_llf := get_use_llf(pol, ins.Multi, ins.PltFrom, prms)
-	if any_llf {
-		below_surface := SafeGetF64(pol, "LLFBELOWSURFACE")
-		//Is the liquid height in each well higher than below_surface
-		for i := 0; i < ins.Multi; i++ {
-			plate := prms.Plates[ins.PltFrom[i]]
-			if plate.Welltype.HasLiquidLevelModel() {
-				ll_model, quad := plate.Welltype.GetLiquidLevelModel().(*wutil.Quadratic)
-				if !quad {
-					return ret, fmt.Errorf("Non-quadratic LL model is unsupported")
-				}
-				vol := ins.FVolume[i].ConvertToString("ul") - ins.Volume[i].ConvertToString("ul")
-				//C == 0 by definition for quad models
-				h := (-ll_model.B + math.Sqrt(ll_model.B*ll_model.B+4.*ll_model.A*vol)) / (2. * ll_model.A)
-
-				if h <= below_surface {
-					//we're going to hit the bottom if we LLF all the way
-					//TODO: we should generate two asp commands
-					//one with LLF until we reach close to the bottom
-					//and another without LLF so we don't smack into the bottom
-					//For Now: just diable LLF and continue as before
-					any_llf = false
-					for j := 0; j < ins.Multi; j++ {
-						use_llf[j] = false
-					}
-				}
-			}
-		}
-	}
-
-	if any_llf {
-		//override reference
-		final_asp_ref = 2 //liquid level
-		//override ofz
-		ofz = -SafeGetF64(pol, "LLFBELOWSURFACE")
-	}
-
 	// do we need to enter slowly?
 	entryspeed, gentlynow := pol["ASPENTRYSPEED"]
 	if gentlynow {
@@ -1511,7 +1468,7 @@ func (ins *SuckInstruction) Generate(labEffects *effects.LaboratoryEffects, poli
 		mov.Plt = ins.FPlateType
 		mov.Well = ins.WellFrom
 		mov.WVolume = ins.FVolume
-		for i := 0; i < ins.Multi; i++ {
+		for i := 0; i < len(ins.What); i++ {
 			mov.Reference = append(mov.Reference, 1)
 			mov.OffsetX = append(mov.OffsetX, ofx)
 			mov.OffsetY = append(mov.OffsetY, ofy)
@@ -1570,30 +1527,23 @@ func (ins *SuckInstruction) Generate(labEffects *effects.LaboratoryEffects, poli
 		}
 
 		if ok {
-			v := make([]wunit.Volume, ins.Multi)
-			for i := 0; i < ins.Multi; i++ {
-				vl := wunit.NewVolume(mixvol, "ul")
-				v[i] = vl
+			v := make([]wunit.Volume, len(ins.What))
+			for i, what := range ins.What {
+				if what == "" {
+					v[i] = wunit.ZeroVolume()
+				} else {
+					v[i] = wunit.NewVolume(mixvol, "ul")
+				}
 			}
 			mix.Volume = v
 		}
 		// offsets
 
-		for k := 0; k < ins.Multi; k++ {
+		for k := 0; k < len(ins.What); k++ {
 			mix.OffsetX = append(mix.OffsetX, mixofx)
-		}
-
-		for k := 0; k < ins.Multi; k++ {
 			mix.OffsetY = append(mix.OffsetY, mixofy)
-		}
-		for k := 0; k < ins.Multi; k++ {
 			mix.OffsetZ = append(mix.OffsetZ, mixofz)
-		}
-
-		c := make([]int, ins.Multi)
-
-		for i := 0; i < ins.Multi; i++ {
-			c[i] = cycles
+			mix.Cycles = append(mix.Cycles, cycles)
 		}
 
 		// set speed
@@ -1617,7 +1567,6 @@ func (ins *SuckInstruction) Generate(labEffects *effects.LaboratoryEffects, poli
 			ret = append(ret, setspd)
 		}
 
-		mix.Cycles = c
 		ret = append(ret, mix)
 
 		if changepipspeed {
@@ -1650,7 +1599,7 @@ func (ins *SuckInstruction) Generate(labEffects *effects.LaboratoryEffects, poli
 	mov.Well = ins.WellFrom
 	mov.WVolume = ins.FVolume
 
-	for i := 0; i < ins.Multi; i++ {
+	for i := 0; i < len(ins.What); i++ {
 		mov.Reference = append(mov.Reference, final_asp_ref)
 		mov.OffsetX = append(mov.OffsetX, ofx)
 		mov.OffsetY = append(mov.OffsetY, ofy)
@@ -1697,8 +1646,9 @@ func (ins *SuckInstruction) Generate(labEffects *effects.LaboratoryEffects, poli
 	aspins.Plt = ins.FPlateType
 	aspins.Component = ins.Component
 
-	for i := 0; i < ins.Multi; i++ {
-		aspins.LLF = append(aspins.LLF, use_llf[i])
+	for i := 0; i < len(aspins.What); i++ {
+		// follow the liquidlevel if we moved to it earlier
+		aspins.LLF = append(aspins.LLF, final_asp_ref == wtype.LiquidReference.AsInt())
 	}
 
 	ret = append(ret, aspins)
@@ -1734,7 +1684,7 @@ func (ins *SuckInstruction) Generate(labEffects *effects.LaboratoryEffects, poli
 		mov.Plt = ins.FPlateType
 		mov.Well = ins.WellFrom
 		mov.WVolume = ins.FVolume
-		for i := 0; i < ins.Multi; i++ {
+		for i := 0; i < len(ins.What); i++ {
 			mov.Reference = append(mov.Reference, 1)
 			mov.OffsetX = append(mov.OffsetX, ofx)
 			mov.OffsetY = append(mov.OffsetY, ofy)
@@ -1769,19 +1719,52 @@ type BlowInstruction struct {
 	Component  []string
 }
 
-func NewBlowInstruction() *BlowInstruction {
-	v := &BlowInstruction{
-		InstructionType: BLW,
-		What:            []string{},
-		PltTo:           []string{},
-		WellTo:          []string{},
-		Volume:          []wunit.Volume{},
-		TPlateType:      []string{},
-		TVolume:         []wunit.Volume{},
-		Component:       []string{},
+func NewBlowInstruction(idGen *id.IDGenerator, cti *ChannelTransferInstruction) *BlowInstruction {
+	// we're assuming here that the channels parameters are the same for each channel, i.e. that the same tip and head was chosen for each
+	var prms *wtype.LHChannelParameter
+	for _, cp := range cti.Prms {
+		if cp != nil {
+			if prms != nil && !prms.Equals(cp) {
+				panic("ChannelTransferInstruction mixes different channel parameters")
+			}
+			prms = cp
+		}
 	}
-	v.BaseRobotInstruction = NewBaseRobotInstruction(v)
-	return v
+	var tipType string
+	for _, tt := range cti.TipType {
+		if tt != "" {
+			if tipType != "" && tipType != tt {
+				panic("ChannelTransferInstruction mixes different tip types")
+			}
+			tipType = tt
+		}
+	}
+
+	ret := &BlowInstruction{
+		InstructionType: BLW,
+		What:            make([]string, len(cti.What)),
+		PltTo:           make([]string, len(cti.PltTo)),
+		WellTo:          make([]string, len(cti.WellTo)),
+		Volume:          make([]wunit.Volume, len(cti.Volume)),
+		TPlateType:      make([]string, len(cti.TPlateType)),
+		TVolume:         make([]wunit.Volume, len(cti.TVolume)),
+		Component:       make([]string, len(cti.Component)),
+		Prms:            prms.DupKeepIDs(idGen),
+		Head:            prms.Head,
+		TipType:         tipType,
+		Multi:           cti.Multi,
+	}
+	ret.BaseRobotInstruction = NewBaseRobotInstruction(ret)
+
+	copy(ret.What, cti.What)
+	copy(ret.PltTo, cti.PltTo)
+	copy(ret.WellTo, cti.WellTo)
+	copy(ret.Volume, cti.Volume)
+	copy(ret.TPlateType, cti.TPlateType)
+	copy(ret.TVolume, cti.TVolume)
+	copy(ret.Component, cti.Component)
+
+	return ret
 }
 
 func (ins *BlowInstruction) Visit(visitor RobotInstructionVisitor) {
@@ -1820,19 +1803,6 @@ func (ins *BlowInstruction) GetParameter(name InstructionParameter) interface{} 
 	default:
 		return ins.BaseRobotInstruction.GetParameter(name)
 	}
-}
-
-func (ins *BlowInstruction) AddTransferParams(tp TransferParams) {
-	ins.What = append(ins.What, tp.What)
-	ins.PltTo = append(ins.PltTo, tp.PltTo)
-	ins.WellTo = append(ins.WellTo, tp.WellTo)
-	ins.Volume = append(ins.Volume, tp.Volume)
-	ins.TPlateType = append(ins.TPlateType, tp.TPlateType)
-	ins.TVolume = append(ins.TVolume, tp.TVolume)
-	ins.Prms = tp.Channel
-	ins.Head = tp.Channel.Head
-	ins.TipType = tp.TipType
-	ins.Component = append(ins.Component, tp.Component)
 }
 
 func (scti *BlowInstruction) Params(idGen *id.IDGenerator) MultiTransferParams {
@@ -1922,20 +1892,7 @@ func (ins *BlowInstruction) Generate(labEffects *effects.LaboratoryEffects, poli
 	entryspeed := SafeGetF64(pol, "DSPENTRYSPEED")
 	defaultspeed := SafeGetF64(pol, "DEFAULTZSPEED")
 
-	//LLF
-	use_llf, any_llf := get_use_llf(pol, ins.Multi, ins.PltTo, prms)
-	if any_llf {
-		//override reference
-		ref = 2 //liquid level
-		//override ofz
-		ofz = +SafeGetF64(pol, "LLFABOVESURFACE")
-	}
-
-	var gentlydoesit bool
-
-	if entryspeed > 0.0 && entryspeed != defaultspeed {
-		gentlydoesit = true
-	}
+	gentlydoesit := entryspeed > 0.0 && entryspeed != defaultspeed
 
 	if gentlydoesit {
 		// go to the well top
@@ -1946,7 +1903,7 @@ func (ins *BlowInstruction) Generate(labEffects *effects.LaboratoryEffects, poli
 		mov.Plt = ins.TPlateType
 		mov.Well = ins.WellTo
 		mov.WVolume = ins.TVolume
-		for i := 0; i < ins.Multi; i++ {
+		for i := 0; i < len(ins.What); i++ {
 			mov.Reference = append(mov.Reference, 1)
 			mov.OffsetX = append(mov.OffsetX, ofx)
 			mov.OffsetY = append(mov.OffsetY, ofy)
@@ -1989,7 +1946,7 @@ func (ins *BlowInstruction) Generate(labEffects *effects.LaboratoryEffects, poli
 	mov.Plt = ins.TPlateType
 	mov.Well = ins.WellTo
 	mov.WVolume = ins.TVolume
-	for i := 0; i < ins.Multi; i++ {
+	for i := 0; i < len(ins.What); i++ {
 		mov.Reference = append(mov.Reference, ref)
 		mov.OffsetX = append(mov.OffsetX, ofx)
 		mov.OffsetY = append(mov.OffsetY, ofy)
@@ -2044,8 +2001,9 @@ func (ins *BlowInstruction) Generate(labEffects *effects.LaboratoryEffects, poli
 		boins.Plt = ins.TPlateType
 		boins.What = ins.What
 
-		for i := 0; i < ins.Multi; i++ {
-			boins.LLF = append(boins.LLF, use_llf[i])
+		for i := 0; i < len(ins.What); i++ {
+			// follow the liquid-level if we moved to it earlier
+			boins.LLF = append(boins.LLF, ref == wtype.LiquidReference.AsInt())
 		}
 
 		ret = append(ret, boins)
@@ -2066,8 +2024,9 @@ func (ins *BlowInstruction) Generate(labEffects *effects.LaboratoryEffects, poli
 		dspins.What = ins.What
 		dspins.Component = ins.Component
 
-		for i := 0; i < ins.Multi; i++ {
-			dspins.LLF = append(dspins.LLF, use_llf[i])
+		for i := 0; i < len(ins.What); i++ {
+			// follow the liquid-level if we moved to it earlier
+			dspins.LLF = append(dspins.LLF, ref == wtype.LiquidReference.AsInt())
 		}
 
 		ret = append(ret, dspins)
@@ -2108,19 +2067,19 @@ func (ins *BlowInstruction) Generate(labEffects *effects.LaboratoryEffects, poli
 		mix.What = ins.What
 		// TODO get rid of this HARD CODE
 		// we might want to change this
-		b := make([]bool, ins.Multi)
+		b := make([]bool, len(ins.What))
 		mix.Blowout = b
 
 		// offsets
 
 		pmxoff := SafeGetF64(pol, "POST_MIX_X")
 
-		for k := 0; k < ins.Multi; k++ {
+		for k := 0; k < len(ins.What); k++ {
 			mix.OffsetX = append(mix.OffsetX, pmxoff)
 		}
 
 		pmyoff := SafeGetF64(pol, "POST_MIX_Y")
-		for k := 0; k < ins.Multi; k++ {
+		for k := 0; k < len(ins.What); k++ {
 			mix.OffsetY = append(mix.OffsetY, pmyoff)
 		}
 
@@ -2132,7 +2091,7 @@ func (ins *BlowInstruction) Generate(labEffects *effects.LaboratoryEffects, poli
 			return nil, err
 		}
 
-		for k := 0; k < ins.Multi; k++ {
+		for k := 0; k < len(ins.What); k++ {
 			mix.OffsetZ = append(mix.OffsetZ, pmzoff)
 		}
 
@@ -2168,17 +2127,20 @@ func (ins *BlowInstruction) Generate(labEffects *effects.LaboratoryEffects, poli
 		}
 
 		if ok {
-			v := make([]wunit.Volume, ins.Multi)
-			for i := 0; i < ins.Multi; i++ {
-				vl := wunit.NewVolume(mixvol, "ul")
-				v[i] = vl
+			v := make([]wunit.Volume, len(ins.What))
+			for i, what := range ins.What {
+				if what == "" {
+					v[i] = wunit.ZeroVolume()
+				} else {
+					v[i] = wunit.NewVolume(mixvol, "ul")
+				}
 			}
 			mix.Volume = v
 		}
 
-		c := make([]int, ins.Multi)
+		c := make([]int, len(ins.What))
 
-		for i := 0; i < ins.Multi; i++ {
+		for i := 0; i < len(ins.What); i++ {
 			c[i] = cycles
 		}
 
@@ -2239,11 +2201,11 @@ func (ins *BlowInstruction) Generate(labEffects *effects.LaboratoryEffects, poli
 		mov.Well = ins.WellTo
 		mov.WVolume = ins.TVolume
 
-		ref := make([]int, ins.Multi)
-		off := make([]float64, ins.Multi)
-		ox := make([]float64, ins.Multi)
-		oy := make([]float64, ins.Multi)
-		for i := 0; i < ins.Multi; i++ {
+		ref := make([]int, len(ins.What))
+		off := make([]float64, len(ins.What))
+		ox := make([]float64, len(ins.What))
+		oy := make([]float64, len(ins.What))
+		for i := 0; i < len(ins.What); i++ {
 			ref[i] = 0
 			off[i] = touch_offset
 			ox[i] = 0.0
@@ -2897,8 +2859,11 @@ func (ins *ResetInstruction) Generate(labEffects *effects.LaboratoryEffects, pol
 	blow.Head = ins.Prms.Head
 	bov := wunit.NewVolume(pol["BLOWOUTVOLUME"].(float64), pol["BLOWOUTVOLUMEUNIT"].(string))
 	blow.Multi = getMulti(ins.What)
-	for i := 0; i < blow.Multi; i++ {
-		blow.Volume = append(blow.Volume, bov)
+	blow.Volume = make([]wunit.Volume, len(ins.What))
+	for i := 0; i < len(ins.What); i++ {
+		if ins.What[i] != "" {
+			blow.Volume[i] = bov
+		}
 	}
 
 	blow.Plt = ins.TPlateType
@@ -3029,9 +2994,8 @@ func (ins *MoveMixInstruction) Generate(labEffects *effects.LaboratoryEffects, p
 	mov.OffsetX = ins.OffsetX
 	mov.OffsetY = ins.OffsetY
 	mov.OffsetZ = ins.OffsetZ
-	ref := make([]int, ins.Multi)
-	ref[0] = 0
-	mov.Reference = ref
+	mov.Reference = make([]int, len(ins.What))
+	// mov.Reference[i] == 0 for all i
 	ret[0] = mov
 
 	// mix
@@ -3216,29 +3180,6 @@ func getMulti(w []string) int {
 	}
 
 	return c
-}
-
-func get_use_llf(pol wtype.LHPolicy, multi int, plates []string, prms *LHProperties) ([]bool, bool) {
-	use_llf := make([]bool, multi)
-	any_llf := false
-	enable_llf := SafeGetBool(pol, "USE_LLF")
-
-	//save a few ms
-	if !enable_llf {
-		return use_llf, enable_llf
-	}
-
-	for i := 0; i < multi; i++ {
-		//probably just fetching the same plate each time
-		plate := prms.Plates[plates[i]]
-
-		//do LLF if the well has a volumemodel
-		use_llf[i] = enable_llf && plate.Welltype.HasLiquidLevelModel()
-
-		any_llf = any_llf || use_llf[i]
-	}
-
-	return use_llf, any_llf
 }
 
 // compare proposed value to minimum and maximum tolerated

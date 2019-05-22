@@ -114,8 +114,8 @@ func (it *IChain) Print() {
 				fmt.Printf("-- ")
 			} else if it.Values[j].Type == LHIPRM {
 				fmt.Println("PROMPT ", it.Values[j].Message, "-- ")
-				for in, out := range it.Values[j].PassThrough {
-					fmt.Println(in, ":::", out.ID, " --")
+				for i := range it.Values[j].Inputs {
+					fmt.Println(it.Values[j].Inputs[i].ID, ":::", it.Values[j].Outputs[i].ID, " --")
 				}
 			} else if it.Values[j].Type == LHISPL {
 				fmt.Printf("SPLIT %2d: %s ", j, it.Values[j].ID)
@@ -204,7 +204,7 @@ func (it *IChain) splitMixedNode() *IChain {
 
 	// make new chain
 
-	newch := makeNewIChain(mixValues, splitValues, promptValues)
+	newch := MakeNewIChain(mixValues, splitValues, promptValues)
 
 	// swap it in
 
@@ -213,9 +213,9 @@ func (it *IChain) splitMixedNode() *IChain {
 	return r
 }
 
-// return a chain containing one node for each argument, linked in sequence
+// MakeNewIChain return a chain containing one node for each argument, linked in sequence
 // skip any empty sets
-func makeNewIChain(vals ...[]*LHInstruction) *IChain {
+func MakeNewIChain(vals ...[]*LHInstruction) *IChain {
 	var top, cur *IChain
 
 	for _, v := range vals {

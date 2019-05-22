@@ -7,9 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -28,6 +26,7 @@ import (
 	lhdriver "github.com/antha-lang/antha/microArch/driver/liquidhandling"
 	"github.com/antha-lang/antha/microArch/scheduler/liquidhandling"
 	"github.com/antha-lang/antha/target"
+	"github.com/antha-lang/antha/utils"
 	"github.com/antha-lang/antha/workflow"
 	"google.golang.org/grpc"
 )
@@ -190,7 +189,7 @@ func (bm *BaseMixer) maybeConfigureConn(wf *workflow.Workflow, data []byte) erro
 			return fmt.Errorf("Unable to find connection function for mixer subtype %v", bm.expectedSubType)
 		} else {
 			driver := fun(bm.conn)
-			if props, status := driver.Configure(wf.SimulationId, wf.Meta.Name, bm.id, data); !status.Ok() {
+			if props, status := driver.Configure(wf.Simulation.SimulationId, wf.Meta.Name, bm.id, data); !status.Ok() {
 				return status.GetError()
 			} else {
 				props.Driver = driver
@@ -346,51 +345,50 @@ func (mo mixOpts) mix() (*target.Mix, error) {
 		return nil, err
 	}
 
-	bs, status := handler.Properties.Driver.GetOutputFile()
+	rawBs, status := handler.Properties.Driver.GetOutputFile()
 	if err := status.GetError(); err != nil {
 		return nil, err
-	}
+	} else if tarballBs, err := mo.createTarball(rawBs); err != nil {
+		return nil, err
 
-	mimetype := "application/data"
-	if handler.Properties.Mnfr != "" {
-		mimetype = "application/" + strings.ToLower(handler.Properties.Mnfr)
-	}
-	mix := &target.Mix{
-		Device:          mo.Device,
-		Request:         req,
-		Properties:      handler.Properties,
-		FinalProperties: handler.FinalProperties,
-		Final:           handler.PlateIDMap(),
-		Files: target.Files{
-			Tarball: bs,
-			Type:    mimetype,
-		},
-	}
-	idGen := mo.LabEffects.IDGenerator
-	mix.SetId(idGen)
+	} else {
+		mimetype := "application/data"
+		if handler.Properties.Mnfr != "" {
+			mimetype = "application/" + strings.ToLower(handler.Properties.Mnfr)
+		}
 
-	dir := filepath.Join(mo.OutDir, mix.Id())
-	if err := os.MkdirAll(dir, 0700); err != nil {
-		return nil, err
-	} else if err := mo.writeToTarball(dir, bs); err != nil {
-		return nil, err
-	} else if layoutBs, err := mix.SummarizeLayout(idGen); err != nil {
-		return nil, err
-	} else if actionsBs, err := mix.SummarizeActions(idGen); err != nil {
-		return nil, err
-	} else if err := ioutil.WriteFile(filepath.Join(dir, ".layout.json"), layoutBs, 0400); err != nil {
-		return nil, err
-	} else if err := ioutil.WriteFile(filepath.Join(dir, ".actions.json"), actionsBs, 0400); err != nil {
-		return nil, err
-	}
+		mix := &target.Mix{
+			Device:          mo.Device,
+			Request:         req,
+			Properties:      handler.Properties,
+			FinalProperties: handler.FinalProperties,
+			Final:           handler.PlateIDMap(),
+			Files: target.Files{
+				Tarball: tarballBs,
+				Type:    mimetype,
+			},
+		}
+		idGen := mo.LabEffects.IDGenerator
+		mix.SetId(idGen)
 
-	return mix, nil
+		dir := filepath.Join(mo.OutDir, mix.Id(), string(mo.Device.Id()))
+		if err := utils.MkdirAll(dir); err != nil {
+			return nil, err
+		} else if err := mix.EnsureMixSummary(idGen); err != nil {
+			return nil, err
+		} else if err := utils.CreateAndWriteFile(filepath.Join(dir, "layout.json"), mix.Summary.Layout, utils.ReadWrite); err != nil {
+			return nil, err
+		} else if err := utils.CreateAndWriteFile(filepath.Join(dir, "actions.json"), mix.Summary.Actions, utils.ReadWrite); err != nil {
+			return nil, err
+		} else if err := utils.CreateAndWriteFile(filepath.Join(dir, mo.ContentName), rawBs, utils.ReadWrite); err != nil {
+			return nil, err
+		}
+
+		return mix, nil
+	}
 }
 
-func (mo *mixOpts) writeToTarball(dir string, content []byte) error {
-	if mo.OutDir == "" {
-		return nil
-	}
+func (mo *mixOpts) createTarball(content []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	gw := gzip.NewWriter(&buf)
 	tw := tar.NewWriter(gw)
@@ -401,15 +399,15 @@ func (mo *mixOpts) writeToTarball(dir string, content []byte) error {
 		Size:    int64(len(content)),
 		ModTime: time.Now(),
 	}); err != nil {
-		return err
+		return nil, err
 	} else if _, err := tw.Write(content); err != nil {
-		return err
+		return nil, err
 	} else if err := tw.Close(); err != nil {
-		return err
+		return nil, err
 	} else if err := gw.Close(); err != nil {
-		return err
+		return nil, err
 	} else {
-		return ioutil.WriteFile(filepath.Join(dir, fmt.Sprintf("%v.tar.gz", mo.Device.Id())), buf.Bytes(), 0400)
+		return buf.Bytes(), nil
 	}
 }
 

@@ -20,28 +20,14 @@ func (a *Workflow) Merge(b *Workflow) error {
 	return utils.ErrorSlice{
 		b.SchemaVersion.Validate(), // every snippet must have a valid SchemaVersion
 		a.WorkflowId.Merge(b.WorkflowId),
-		a.SimulationId.Merge(b.SimulationId),
 		a.Meta.merge(b.Meta),
 		a.Repositories.Merge(b.Repositories),
 		a.Elements.merge(b.Elements),
 		a.Inventory.merge(b.Inventory),
 		a.Config.merge(b.Config),
-		a.Testing.merge(b.Testing),
+		a.Testing.merge(a, b.Testing),
+		a.Simulation.merge(a, b.Simulation),
 	}.Pack()
-}
-
-func (a *Testing) merge(b Testing) error {
-	if a == nil {
-		return nil
-	}
-
-	if len(a.MixTaskChecks) == 0 {
-		a.MixTaskChecks = b.MixTaskChecks
-	} else if len(b.MixTaskChecks) != 0 {
-		return errors.New("Cannot merge two sets of non-empty testing data")
-	}
-
-	return nil
 }
 
 func (a *BasicId) Merge(b BasicId) error {
@@ -384,4 +370,71 @@ func (a *PlateReaderConfig) Merge(b PlateReaderConfig) error {
 		a.Devices[id] = cfg
 	}
 	return nil
+}
+
+func (a *Testing) merge(wf *Workflow, b *Testing) error {
+	if b == nil {
+		return nil
+
+	} else if a == nil {
+		wf.Testing = b
+
+	} else if len(a.MixTaskChecks) == 0 {
+		a.MixTaskChecks = b.MixTaskChecks
+		return nil
+
+	} else if len(b.MixTaskChecks) != 0 {
+		return errors.New("Cannot merge two sets of non-empty testing data")
+	}
+	return nil
+}
+
+func (a *Simulation) merge(wf *Workflow, b *Simulation) error {
+	if b == nil {
+		return nil
+
+	} else if a == nil {
+		wf.Simulation = b
+		return nil
+
+	} else {
+		return utils.ErrorSlice{
+			a.SimulationId.Merge(b.SimulationId),
+			a.Elements.merge(b.Elements),
+		}.Pack()
+	}
+}
+
+func (a *SimulatedElements) merge(b SimulatedElements) error {
+	return utils.ErrorSlice{
+		a.Types.merge(b.Types),
+		a.Instances.merge(b.Instances),
+	}.Pack()
+}
+
+func (a SimulatedElementTypes) merge(b SimulatedElementTypes) error {
+	// because of the maps in SimulatedElementType, we can't do
+	// structural equality. So we're just going to error if there's any
+	// overlap of the keys.
+	for k, vB := range b {
+		if _, found := a[k]; found {
+			return fmt.Errorf("Cannot merge two SimulatedElementTypes: %v", k)
+		} else {
+			a[k] = vB
+		}
+	}
+	return nil
+}
+
+func (a SimulatedElementInstances) merge(b SimulatedElementInstances) error {
+	if len(b) == 0 {
+		return nil
+	} else if len(a) != 0 {
+		return errors.New("Cannot merge two sets of non-empty SimulatedElementInstances")
+	} else {
+		for k, vB := range b {
+			a[k] = vB
+		}
+		return nil
+	}
 }

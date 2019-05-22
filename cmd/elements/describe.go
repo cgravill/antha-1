@@ -43,7 +43,10 @@ const (
 
 func describe(l *logger.Logger, args []string) error {
 	flagSet := flag.NewFlagSet(flag.CommandLine.Name()+" describe", flag.ContinueOnError)
-	flagSet.Usage = workflow.NewFlagUsage(flagSet, "Show descriptions of elements")
+	flagSet.Usage = workflow.NewFlagUsage(flagSet,
+		"Show descriptions of elements",
+		"[flags] [workflow-snippet.json...]",
+		"github.com/antha-lang/antha/cmd/elements")
 
 	validOutputFormats := []string{
 		outputFormatHuman,
@@ -206,7 +209,7 @@ func describe(l *logger.Logger, args []string) error {
 func protobufPorts(fields []*compile.Field, kind string) ([]*element.Port, error) {
 	var result []*element.Port
 	for _, field := range fields {
-		typeString, err := field.TypeString()
+		typeString, err := field.FullyQualifiedTypeString()
 		if err != nil {
 			return nil, err
 		}
@@ -331,7 +334,7 @@ func formatFields(defaults map[string]json.RawMessage, fields []*compile.Field, 
 		// If the type is an inline type declaration, this formatting
 		// will go wrong. But life would be bad already if that sort of
 		// thing was going on... so we just hope for the best.
-		if typeStr, err := field.TypeString(); err != nil {
+		if typeStr, err := field.FullyQualifiedTypeString(); err != nil {
 			return "", err
 		} else {
 			// the default can be a multiline thing, eg a map. So we have to be careful:

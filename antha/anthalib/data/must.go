@@ -14,30 +14,30 @@ func handle(err error) {
 	}
 }
 
-// MustCreate panics on any error when creating tables/series.
-type MustCreate struct{}
+// MustGlobal panics on any error when calling global functions.
+type MustGlobal struct{}
 
 // Must returns a proxy object that asserts errors are nil.
-func Must() MustCreate {
-	return MustCreate{}
+func Must() MustGlobal {
+	return MustGlobal{}
 }
 
 // NewSeriesFromSlice is a errors handling wrapper for NewSeriesFromSlice.
-func (m MustCreate) NewSeriesFromSlice(col ColumnName, values interface{}, notNull []bool) *Series {
+func (m MustGlobal) NewSeriesFromSlice(col ColumnName, values interface{}, notNull []bool) *Series {
 	ser, err := NewSeriesFromSlice(col, values, notNull)
 	handle(err)
 	return ser
 }
 
 // NewTableFromStructs is a errors handling wrapper for NewTableFromStructs.
-func (m MustCreate) NewTableFromStructs(structs interface{}) *Table {
+func (m MustGlobal) NewTableFromStructs(structs interface{}) *Table {
 	t, err := NewTableFromStructs(structs)
 	handle(err)
 	return t
 }
 
 // NewTableBuilder is a errors handling wrapper for NewTableBuilder.
-func (m MustCreate) NewTableBuilder(columns []Column) *TableBuilder {
+func (m MustGlobal) NewTableBuilder(columns []Column) *TableBuilder {
 	b, err := NewTableBuilder(columns)
 	handle(err)
 	return b
@@ -292,6 +292,55 @@ func (jo *MustJoinOn) LeftOuter(t *Table, cols ...ColumnName) *Table {
 	return table
 }
 
+// Append
+
+// Append returns a proxy for *Table.Append.
+func (m MustTable) Append(other *Table) *MustAppendSelection {
+	return &MustAppendSelection{m.Table.Append(other)}
+}
+
+// MustAppendSelection is a proxy for AppendSelection.
+type MustAppendSelection struct {
+	*AppendSelection
+}
+
+// Inner append: appends tables vertically, matches their columns by names, types and ordinals.
+// The resulting table contains intersecting columns only.
+func (s *MustAppendSelection) Inner() *Table {
+	t, err := s.AppendSelection.Inner()
+	handle(err)
+	return t
+}
+
+// Outer append: appends tables vertically, matches their columns by names, types and ordinals.
+// The resulting table contains union of columns.
+func (s *MustAppendSelection) Outer() *Table {
+	t, err := s.AppendSelection.Outer()
+	handle(err)
+	return t
+}
+
+// Exact append: appends tables vertically, matches their columns by names, types and ordinals.
+// All the source tables must have the same schemas (except the columns order).
+func (s *MustAppendSelection) Exact() *Table {
+	t, err := s.AppendSelection.Exact()
+	handle(err)
+	return t
+}
+
+// Positional append: appends tables vertically, matches their columns by positions.
+// All the source tables must have the same schemas (except the columns names).
+func (s *MustAppendSelection) Positional() *Table {
+	t, err := s.AppendSelection.Positional()
+	handle(err)
+	return t
+}
+
+// Append returns a proxy for (global) Append.
+func (m MustGlobal) Append(tables ...*Table) *MustAppendSelection {
+	return &MustAppendSelection{Append(tables...)}
+}
+
 // Foreach
 
 // Foreach returns a proxy for *Table.Foreach.
@@ -325,4 +374,22 @@ func (fs *MustForeachSelection) On(cols ...ColumnName) *MustForeachOn {
 func (on *MustForeachOn) Interface(fn func(v ...interface{}), assertions ...SchemaAssertion) {
 	err := on.on.Interface(fn, assertions...)
 	handle(err)
+}
+
+// ForeachKey
+
+// ForeachKey returns a proxy for *Table.ForeachKey.
+func (m MustTable) ForeachKey(key ...ColumnName) *MustForeachKeySelection {
+	return &MustForeachKeySelection{m.Table.ForeachKey(key...)}
+}
+
+// MustForeachKeySelection is a proxy for ForeachKeySelection.
+type MustForeachKeySelection struct {
+	fks *ForeachKeySelection
+}
+
+// By performs ForeachKey on the whole table rows.
+// For wide tables this might be inefficient, consider using Project before By.
+func (fks *MustForeachKeySelection) By(fn func(key Row, data *Table)) {
+	handle(fks.fks.By(fn))
 }

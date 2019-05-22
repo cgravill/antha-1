@@ -23,6 +23,8 @@
 package liquidhandling
 
 import (
+	"time"
+
 	"github.com/antha-lang/antha/antha/anthalib/wtype"
 	"github.com/antha-lang/antha/graph"
 	"github.com/antha-lang/antha/laboratory/effects/id"
@@ -110,8 +112,15 @@ func reachable(ar []*wtype.LHInstruction, ins *wtype.LHInstruction, reachability
 	return false
 }
 
+//
+// --> appendSensitively appends ins to iar
+// iar is a set of sets of instructions
+// instructions in each set are candidates for merger
+// and we can only merge if this doesn't create a cycle, hence
 // we can only append if we don't create cycles
-// this function makes sure this is OK
+// so this adds to the first set it finds which permits this,
+// creating a new one if none is found
+//
 func appendSensitively(iar [][]*wtype.LHInstruction, ins *wtype.LHInstruction, reachability graph.Reachability) [][]*wtype.LHInstruction {
 	done := false
 	for i := 0; i < len(iar); i++ {
@@ -139,12 +148,19 @@ func aggregatePromptsWithSameMessage(idGen *id.IDGenerator, inss []*wtype.LHInst
 	reachability := graph.NewReachability(topolGraph)
 
 	// merge dependencies of any prompts which have a message in common
-	prMessage := make(map[string][][]*wtype.LHInstruction, len(inss))
+
+	type prompter struct {
+		Message  string
+		WaitTime time.Duration
+	}
+
+	prMessage := make(map[prompter][][]*wtype.LHInstruction, len(inss))
 	insOut := make([]graph.Node, 0, len(inss))
 
 	for _, ins := range inss {
 		if ins.Type == wtype.LHIPRM {
-			iar, ok := prMessage[ins.Message]
+
+			iar, ok := prMessage[prompter{Message: ins.Message, WaitTime: ins.WaitTime}]
 
 			if !ok {
 				iar = make([][]*wtype.LHInstruction, 0, len(inss)/2)
@@ -152,27 +168,24 @@ func aggregatePromptsWithSameMessage(idGen *id.IDGenerator, inss []*wtype.LHInst
 
 			iar = appendSensitively(iar, ins, reachability)
 
-			prMessage[ins.Message] = iar
+			prMessage[prompter{Message: ins.Message, WaitTime: ins.WaitTime}] = iar
 		} else {
 			insOut = append(insOut, graph.Node(ins))
 		}
 	}
 
 	// aggregate instructions
-	// TODO --> user control of scope of this aggregation
-	//          i.e. break every plate, some other subset
-
-	for msg, iar := range prMessage {
+	// in case we see sequential identical prompts / waits
+	// we aggregate them here
+	for prompter, iar := range prMessage {
 		// single message may appear multiply in the chain
 		for _, ar := range iar {
 			ins := wtype.NewLHPromptInstruction(idGen)
-			ins.Message = msg
-			ins.AddOutput(wtype.NewLHComponent(idGen))
+			ins.Message = prompter.Message
+			ins.WaitTime = prompter.WaitTime
 			for _, ins2 := range ar {
-				for _, cmp := range ins2.Inputs {
-					ins.Inputs = append(ins.Inputs, cmp)
-					ins.PassThrough[cmp.ID] = ins2.Outputs[0]
-				}
+				ins.Inputs = append(ins.Inputs, ins2.Inputs...)
+				ins.Outputs = append(ins.Outputs, ins2.Outputs...)
 			}
 			insOut = append(insOut, graph.Node(ins))
 		}

@@ -28,10 +28,6 @@ type Workflow struct {
 	// The WorkflowId is the unique Id of this workflow itself, and is
 	// not modified by the event of simulation.
 	WorkflowId BasicId `json:"WorkflowId,omitempty"`
-	// The SimulationId is an Id created by the act of simulation. Thus
-	// a workflow that is simulated twice will have the same WorkflowId
-	// but different SimulationIds.
-	SimulationId BasicId `json:"SimulationId,omitempty"`
 
 	Meta Meta `json:"Meta,omitempty"`
 
@@ -42,14 +38,16 @@ type Workflow struct {
 
 	Config Config `json:"Config"`
 
-	Testing Testing `json:"Testing,omitempty"`
+	Testing *Testing `json:"Testing,omitempty"`
+
+	Simulation *Simulation `json:"Simulation,omitempty"`
 
 	typeNames map[ElementTypeName]*ElementType
 }
 
 func WorkflowFromReaders(rs ...io.ReadCloser) (*Workflow, error) {
 	if len(rs) == 0 {
-		return nil, errors.New("No workflow sources provided.")
+		return nil, errors.New("No workflow provided.")
 	}
 	acc := EmptyWorkflow()
 	for _, r := range rs {
@@ -103,10 +101,8 @@ func WorkflowFromReaders(rs ...io.ReadCloser) (*Workflow, error) {
 func EmptyWorkflow() *Workflow {
 	return &Workflow{
 		SchemaVersion: CurrentSchemaVersion,
-		Meta: Meta{
-			Rest: make(map[string]json.RawMessage),
-		},
-		Repositories: make(Repositories),
+		Meta:          EmptyMeta(),
+		Repositories:  make(Repositories),
 		Elements: Elements{
 			Instances: make(ElementInstances),
 		},
@@ -128,7 +124,7 @@ func (wf *Workflow) EnsureWorkflowId() error {
 func (wf *Workflow) WriteToFile(p string, pretty bool) error {
 	if p == "" || p == "-" {
 		return wf.ToWriter(os.Stdout, pretty)
-	} else if fh, err := os.OpenFile(p, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0400); err != nil {
+	} else if fh, err := utils.CreateFile(p, utils.ReadWrite); err != nil {
 		return err
 	} else {
 		defer fh.Close()
@@ -147,6 +143,14 @@ func (wf *Workflow) ToWriter(w io.Writer, pretty bool) error {
 type Meta struct {
 	Name string                     `json:"Name,omitempty"`
 	Rest map[string]json.RawMessage `json:"-"`
+}
+
+// EmptyMeta returns a fresh but fully initialised Meta. In particular, all
+// directly accessible empty maps are non-nil.
+func EmptyMeta() Meta {
+	return Meta{
+		Rest: make(map[string]json.RawMessage),
+	}
 }
 
 // See https://golang.org/ref/spec#identifier However, we allow the
@@ -226,14 +230,27 @@ func RandomBasicId(prefix BasicId) (BasicId, error) {
 	}
 }
 
+// RepositoryName is the domain-qualified name of a repository, as it would
+// appear in a Go `import` directive. For example,
+// `repos.antha.com/antha-ninja/elements-westeros`.
 type RepositoryName string
-type ElementInstanceName string
-type ElementPath string
-type ElementTypeName string
-type ElementParameterName string
 
+// Repositories is a map of Repository values, keyed by RepositoryName. The keys
+// should be unique, and no key should be a prefix of another. For example, if
+// the keys in this map are github.com/foo/bar and github.com/foo/bar/baz, that
+// will trigger a validation error.
 type Repositories map[RepositoryName]*Repository
 
+// Repository is a local, checked-out clone of a Git repository.
+//
+// Directory is the absolute path to the repository clone on the local file
+// system
+// Branch (optional) is the name of the branch to use.
+// Commit (optional) is the SHA1 hash of the commit to use.
+//
+// You can provide Branch or Commit, but not both. If neither are provided,
+// antha uses the files it finds in the directory as-is, including unstaged
+// changes.
 type Repository struct {
 	Directory string `json:"Directory"`
 	Branch    string `json:"Branch,omitempty"`
@@ -242,6 +259,31 @@ type Repository struct {
 	gitRepo *git.Repository
 }
 
+// ElementInstanceName is the name of an element instance. It cannot start with
+// a '.' character, and it cannot contain the strings '/' or '..'.
+type ElementInstanceName string
+
+// ElementPath is the relative path to an element type from the root of the
+// repository in which it is defined, e.g. `Elements/New-MVL/Aliquot_Liquid`.
+//
+// Note that the path separator in ElementPath should always be '/', even if you
+// happen to be using an OS that uses backslashes (e.g. Windows).
+type ElementPath string
+
+// ElementTypeName is the name of an element type, defined as the final token in
+// its path, e.g. `Aliquot_Liquid`
+//
+// Note that all element types inhabit the same namespace, so two element types
+// can't share the same ElementTypeName, even if they come from different
+// repositories.
+type ElementTypeName string
+
+// ElementParameterName is the name of an element type's parameter, as defined
+// in the element type's source code. e.g. `VolumeToAliquot`
+type ElementParameterName string
+
+// Elements is a collection of all the element-related data in a workflow,
+// including types, instances and connections.
 type Elements struct {
 	Types                ElementTypes                `json:"Types,omitempty"`
 	Instances            ElementInstances            `json:"Instances,omitempty"`
@@ -250,43 +292,76 @@ type Elements struct {
 
 type ElementTypes []*ElementType
 
+// ElementType defines an element type. (Compare this to ElementInstance,
+// which is the realisation of an element type.)
+//
+// RepositoryName must be a name defined in the Repositories section of the
+// workflow, e.g. `repos.antha.com/antha-ninja/elements-westeros`.
+// ElementPath is the path within the repository to the element definition, e.g.
+// `Elements/New-MVL/Aliquot_Liquid`.
 type ElementType struct {
 	RepositoryName RepositoryName `json:"RepositoryName"`
 	ElementPath    ElementPath    `json:"ElementPath"`
 }
 
+// Name returns the nominal name of an ElementType, taken to be the last part of
+// its path.
+//
+// For example, if an ElementType's path is `Elements/New-MVL/Aliquot_Liquid`,
+// Name() returns `Aliquot_Liquid`
 func (et ElementType) Name() ElementTypeName {
 	return ElementTypeName(path.Base(string(et.ElementPath)))
 }
 
+// ImportPath returns the import path for the ElementType, in the format that
+// would be used in a Go import statement.
 func (et ElementType) ImportPath() string {
 	return path.Join(string(et.RepositoryName), string(et.ElementPath))
 }
 
+// ElementInstances is a map of ElementInstance values, keyed by
+// ElementInstanceName.
 type ElementInstances map[ElementInstanceName]*ElementInstance
 
+// ElementInstance is the realistion of an element type.
+//
+// ElementTypeName is the name of the ElementType this instance realises. It
+// must appear as the final token in an ElementPath value within the
+// Elements/Types section of the workflow.
 type ElementInstance struct {
-	ElementTypeName ElementTypeName     `json:"ElementTypeName"`
-	Meta            json.RawMessage     `json:"Meta,omitempty"`
-	Parameters      ElementParameterSet `json:"Parameters,omitempty"`
+	TypeName   ElementTypeName     `json:"TypeName"`
+	Meta       json.RawMessage     `json:"Meta,omitempty"`
+	Parameters ElementParameterSet `json:"Parameters,omitempty"`
 
 	hasConnections bool
 	hasParameters  bool
 }
 
+// IsUsed is true if the element instance has at least one connection or at
+// least one parameter.
 func (ei ElementInstance) IsUsed() bool {
 	return ei.hasConnections || ei.hasParameters
 }
 
 type ElementParameterSet map[ElementParameterName]json.RawMessage
 
+// ElementInstancesConnections is the collection of all the connections in a
+// workflow. Each connection must specify a valid element instance and parameter
+// name for both the source and target.
 type ElementInstancesConnections []ElementConnection
 
+// ElementConnection is a connection between two element sockets. It must have
+// valid source and target values.
 type ElementConnection struct {
 	Source ElementSocket `json:"Source"`
 	Target ElementSocket `json:"Target"`
 }
 
+// ElementSocket is a connector on either the input or output side of an element.
+//
+// ElementInstance should be a valid element instance name; that is, a key from
+// the Elements/Instances section of the workflow.
+// ParameterName must not be empty.
 type ElementSocket struct {
 	ElementInstance ElementInstanceName  `json:"ElementInstance"`
 	ParameterName   ElementParameterName `json:"ParameterName"`

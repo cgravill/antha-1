@@ -44,11 +44,11 @@ func NewComposerBase(logger *logger.Logger, inDir, outDir string) (*ComposerBase
 		return nil, err
 	}
 	// always need to do this:
-	if err := os.MkdirAll(filepath.Join(outDir, "workflow", "data"), 0700); err != nil {
+	if err := utils.MkdirAll(filepath.Join(outDir, "workflow", "data")); err != nil {
 		return nil, err
 	}
 
-	logFH, err := os.OpenFile(filepath.Join(outDir, "logs.txt"), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0400)
+	logFH, err := utils.CreateFile(filepath.Join(outDir, "logs.txt"), utils.ReadWrite)
 	if err != nil {
 		return nil, err
 	} else {
@@ -97,7 +97,7 @@ func (cb *ComposerBase) cloneRepositories(wf *workflow.Workflow) error {
 func (cb *ComposerBase) generateRepositoryGoMods() error {
 	for repoName := range cb.clonedRepositories {
 		path := filepath.Join(cb.OutDir, "src", filepath.FromSlash(string(repoName)), "go.mod")
-		if fh, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0400); err != nil {
+		if fh, err := utils.CreateFile(path, utils.ReadWrite); err != nil {
 			return err
 		} else {
 			defer fh.Close()
@@ -111,7 +111,7 @@ func (cb *ComposerBase) generateRepositoryGoMods() error {
 
 func (cb *ComposerBase) generateWorkflowGoMod() error {
 	path := filepath.Join(cb.OutDir, "workflow", "go.mod")
-	if fh, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0400); err != nil {
+	if fh, err := utils.CreateFile(path, utils.ReadWrite); err != nil {
 		return err
 	} else {
 		defer fh.Close()
@@ -121,7 +121,7 @@ func (cb *ComposerBase) generateWorkflowGoMod() error {
 
 func (cb *ComposerBase) generateGoGenerate() error {
 	path := filepath.Join(cb.OutDir, "workflow", "generate_assets.go")
-	if fh, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0400); err != nil {
+	if fh, err := utils.CreateFile(path, utils.ReadWrite); err != nil {
 		return err
 	} else {
 		defer fh.Close()
@@ -153,13 +153,13 @@ func (cb *ComposerBase) transpile(wf *workflow.Workflow) error {
 func (cb *ComposerBase) token(wf *workflow.Workflow, elem workflow.ElementInstanceName, param workflow.ElementParameterName) (string, error) {
 	if elemInstance, found := wf.Elements.Instances[elem]; !found {
 		return "", fmt.Errorf("No such element instance with name '%v'", elem)
-	} else if elemType, found := cb.elementTypes[elemInstance.ElementTypeName]; !found {
-		return "", fmt.Errorf("No such element type with name '%v' (element instance '%v')", elemInstance.ElementTypeName, elem)
+	} else if elemType, found := cb.elementTypes[elemInstance.TypeName]; !found {
+		return "", fmt.Errorf("No such element type with name '%v' (element instance '%v')", elemInstance.TypeName, elem)
 	} else if elemType.Transpiler == nil {
-		return "", fmt.Errorf("The element type '%v' does not appear to contain an Antha element", elemInstance.ElementTypeName)
+		return "", fmt.Errorf("The element type '%v' does not appear to contain an Antha element", elemInstance.TypeName)
 	} else if tok, found := elemType.Transpiler.TokenByParamName[string(param)]; !found {
 		return "", fmt.Errorf("The element type '%v' has no parameter named '%v' (element instance '%v')",
-			elemInstance.ElementTypeName, param, elem)
+			elemInstance.TypeName, param, elem)
 	} else {
 		return tok.String(), nil
 	}
@@ -176,8 +176,8 @@ type mainComposer struct {
 }
 
 func (cb *ComposerBase) ComposeMainAndRun(keep, run, linkedDrivers bool, wf *workflow.Workflow) error {
-	if wf.SimulationId != "" {
-		return fmt.Errorf("Workflow has already been simulated (SimulationId %v); aborting", wf.SimulationId)
+	if wf.Simulation != nil && wf.Simulation.SimulationId != "" {
+		return fmt.Errorf("Workflow has already been simulated (SimulationId %v); aborting", wf.Simulation.SimulationId)
 	}
 
 	mc := &mainComposer{
@@ -207,7 +207,7 @@ func (mc *mainComposer) generateMain() error {
 		return err
 	} else if err := mc.generateWorkflowGoMod(); err != nil {
 		return err
-	} else if fh, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0400); err != nil {
+	} else if fh, err := utils.CreateFile(path, utils.ReadWrite); err != nil {
 		return err
 	} else {
 		defer fh.Close()
@@ -248,8 +248,8 @@ func (cb *ComposerBase) NewTestsComposer(keep, run, linkedDrivers bool) *testCom
 }
 
 func (tc *testComposer) AddWorkflow(wf *workflow.Workflow, inDir string) error {
-	if wf.SimulationId != "" {
-		return fmt.Errorf("Workflow has already been simulated (SimulationId %v); aborting", wf.SimulationId)
+	if wf.Simulation != nil && wf.Simulation.SimulationId != "" {
+		return fmt.Errorf("Workflow has already been simulated (SimulationId %v); aborting", wf.Simulation.SimulationId)
 	} else if _, found := tc.Workflows[wf.WorkflowId]; found {
 		return fmt.Errorf("Workflow with Id %v already added. Workflow Ids must be unique", wf.WorkflowId)
 	} else {
@@ -308,7 +308,7 @@ func (tc *testComposer) ComposeTestsAndRun() error {
 func (twf *testWorkflow) generateTest() error {
 	path := filepath.Join(twf.OutDir, "workflow", fmt.Sprintf("workflow%d_test.go", twf.index))
 	twf.Logger.Log("progress", "generating workflow test", "path", path)
-	if fh, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0400); err != nil {
+	if fh, err := utils.CreateFile(path, utils.ReadWrite); err != nil {
 		return err
 	} else {
 		defer fh.Close()

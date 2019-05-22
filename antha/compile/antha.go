@@ -77,21 +77,72 @@ func throwErrorf(pos token.Pos, format string, args ...interface{}) {
 type Field struct {
 	*Antha
 	Name string
-	Type ast.Expr // Fully qualified go type name
+	Type ast.Expr // Not fully qualified!
 	Doc  string
 	Tag  string
 }
 
-func (f *Field) TypeString() (string, error) {
-	buf := new(bytes.Buffer)
-	compiler := &Config{
-		Mode:     printerMode,
-		Tabwidth: tabWidth,
+func (f *Field) FullyQualifiedTypeString() (string, error) {
+	return f.Antha.makeFullyQualifiedTypeString(f.Type)
+}
+
+func (p *Antha) makeFullyQualifiedTypeString(e ast.Expr) (string, error) {
+	switch t := e.(type) {
+
+	case nil:
+		return "", nil
+
+	case *ast.Ident:
+		return t.Name, nil
+
+	case *ast.SelectorExpr:
+		if x, err := p.makeFullyQualifiedTypeString(t.X); err != nil {
+			return "", err
+		} else {
+			res := fmt.Sprintf("%s.%s", x, t.Sel.Name)
+			if pkg, ok := t.X.(*ast.Ident); !ok {
+				return res, nil
+			} else if req, found := p.importByName[pkg.Name]; !found {
+				return res, nil
+			} else {
+				return fmt.Sprintf("%s.%s", req.Path, t.Sel.Name), nil
+			}
+		}
+
+	case *ast.BasicLit:
+		return t.Value, nil
+
+	case *ast.ArrayType:
+		if bound, err := p.makeFullyQualifiedTypeString(t.Len); err != nil {
+			return "", err
+		} else if elt, err := p.makeFullyQualifiedTypeString(t.Elt); err != nil {
+			return "", err
+		} else {
+			return fmt.Sprintf("[%s]%s", bound, elt), nil
+		}
+
+	case *ast.StarExpr:
+		if x, err := p.makeFullyQualifiedTypeString(t.X); err != nil {
+			return "", err
+		} else {
+			return fmt.Sprintf("*%s", x), nil
+		}
+
+	case *ast.MapType:
+		if key, err := p.makeFullyQualifiedTypeString(t.Key); err != nil {
+			return "", err
+		} else if val, err := p.makeFullyQualifiedTypeString(t.Value); err != nil {
+			return "", err
+		} else {
+			return fmt.Sprintf("map[%s]%s", key, val), nil
+		}
+
+	default:
+		return "", posError{
+			message: fmt.Sprintf("invalid type spec to get type of: %T", t),
+			pos:     e.Pos(),
+		}
 	}
-	if _, err := compiler.Fprint(buf, f.fileSet, f.Type); err != nil {
-		return "", err
-	}
-	return string(buf.Bytes()), nil
 }
 
 // A Message is an input or an output or user defined type
@@ -185,7 +236,7 @@ type Antha struct {
 	TokenByParamName map[string]token.Token
 	// Imports in protocol and imports to add
 	ImportReqs   ImportReqs
-	importByName map[string]struct{}
+	importByName map[string]*ImportReq
 	Meta         *Meta
 }
 
@@ -201,6 +252,7 @@ var (
 		"MixNamed":      "execute.MixNamed",
 		"MixTo":         "execute.MixTo",
 		"MixerPrompt":   "execute.MixerPrompt",
+		"MixerWait":     "execute.MixerWait",
 		"NewComponent":  "execute.NewComponent",
 		"NewPlate":      "execute.NewPlate",
 		"Prompt":        "execute.Prompt",
@@ -223,6 +275,7 @@ var (
 		"DeviceMetadata":       "api.DeviceMetadata",
 		"Energy":               "wunit.Energy",
 		"File":                 "wtype.File",
+		"FileSeries":           "wtype.FileSeries",
 		"FlowRate":             "wunit.FlowRate",
 		"Force":                "wunit.Force",
 		"JobID":                "jobfile.JobID",
@@ -265,10 +318,13 @@ func NewAntha(fileSet *token.FileSet, src *ast.File, metaBs []byte) (*Antha, err
 		protocolName: src.Name.Name,
 		elementPath:  fileSet.File(src.Package).Name(),
 		description:  src.Doc.Text(),
-		importByName: make(map[string]struct{}),
+		importByName: make(map[string]*ImportReq),
 	}
 
 	// TODO: add usage tracking to replace useExpr
+	p.addImportReq(&ImportReq{
+		Path: "encoding/json",
+	})
 	p.addImportReq(&ImportReq{
 		Path: "github.com/ugorji/go/codec",
 	})
@@ -379,7 +435,7 @@ func (p *Antha) addImportReq(req *ImportReq) {
 	name := req.ImportName()
 	if _, found := p.importByName[name]; !found {
 		p.ImportReqs = append(p.ImportReqs, req)
-		p.importByName[name] = struct{}{}
+		p.importByName[name] = req
 	}
 }
 
@@ -558,6 +614,20 @@ func (p *Antha) addUses() {
 // printFunctions generates synthetic antha functions and data stuctures
 func (p *Antha) printFunctions(out io.Writer, lineMap map[int]int) error {
 	var tmpl = `
+var TypeMeta = &laboratory.ElementTypeMeta{
+	Name: {{printf "%q" .ElementTypeName}},
+	GoSrcPath: {{printf "%q" .GeneratedPath}},
+	AnthaSrcPath: {{printf "%q" .Path}},
+
+{{range $x, $msg := .Messages}}	{{$msg.Kind}}FieldTypes: map[workflow.ElementParameterName]string{
+{{range $y, $field := $msg.Fields}}		{{printf "%q" $field.Name}}: {{printf "%q" $field.FullyQualifiedTypeString}},
+{{end}}	},
+{{end}}
+	LineMap: map[int]int{ // .go -> .an
+		{{range $key, $value := .LineMap}}{{$key}}: {{$value}}, {{end}}
+	},
+}
+
 type {{.ElementTypeName}} struct {
 	name workflow.ElementInstanceName
 
@@ -577,11 +647,21 @@ func (element *{{.ElementTypeName}}) Name() workflow.ElementInstanceName {
 	return element.name
 }
 
-func (element *{{.ElementTypeName}}) TypeName() workflow.ElementTypeName {
-	return {{printf "%q" .ElementTypeName}}
+func (element *{{.ElementTypeName}}) TypeMeta() *laboratory.ElementTypeMeta {
+	return TypeMeta
 }
 
-func Defaults(jh *codec.JsonHandle) (*{{.ElementTypeName}}, error) {
+{{range $x, $msg := .Messages}}func (element *{{$.ElementTypeName}}) {{$msg.Kind}}JSONMap() (map[workflow.ElementParameterName]json.RawMessage, error) {
+	m := make(map[workflow.ElementParameterName]json.RawMessage)
+{{range $y, $field := $msg.Fields}}	if bs, err := json.Marshal(element.{{$msg.Kind}}.{{$field.Name}}); err != nil {
+		return nil, err
+	} else {
+		m[{{printf "%q" $field.Name}}] = bs
+	}
+{{end}}	return m, nil
+}
+
+{{end}}func Defaults(jh *codec.JsonHandle) (*{{.ElementTypeName}}, error) {
 	element := &{{.ElementTypeName}}{}
 {{range $key, $value := .Defaults}}	if err := codec.NewDecoderBytes([]byte({{printf "%q" $value}}), jh).Decode(&element.{{token $key}}.{{$key}}); err != nil {
 		return nil, err
@@ -589,34 +669,23 @@ func Defaults(jh *codec.JsonHandle) (*{{.ElementTypeName}}, error) {
 {{end}}
 	return element, nil
 }
-
-func RegisterLineMap(labBuild *laboratory.LaboratoryBuilder) {
-	lineMap := map[int]int{
-		{{range $key, $value := .LineMap}}{{$key}}: {{$value}}, {{end}}
-	}
-	labBuild.RegisterLineMap(
-		{{printf "%q" .GeneratedPath}},
-		{{printf "%q" .Path}},
-		{{printf "%q" .ElementTypeName}},
-		lineMap)
-}
 `
 	type TVars struct {
-		antha           *Antha
 		ElementTypeName string
 		GeneratedPath   string
 		Path            string
 		LineMap         map[int]int
 		Defaults        map[string]json.RawMessage
+		Messages        []*Message
 	}
 
 	tv := TVars{
-		antha:           p,
 		ElementTypeName: p.protocolName,
 		GeneratedPath:   filepath.Join(filepath.Dir(p.elementPath), elementFilename),
 		Path:            p.elementPath,
 		LineMap:         lineMap,
 		Defaults:        p.Meta.Defaults,
+		Messages:        p.messages,
 	}
 	funcs := template.FuncMap{
 		"token": func(name string) string {

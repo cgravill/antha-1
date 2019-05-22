@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/antha-lang/antha/antha/anthalib/wutil"
 	"github.com/antha-lang/antha/laboratory/effects/id"
+	"github.com/go-test/deep"
 )
 
 // platetype, mfr string, nrows, ncols int, height float64, hunit string, welltype *LHWell, wellXOffset, wellYOffset, wellXStart, wellYStart, wellZStart float64
@@ -240,6 +240,30 @@ func TestMergeWith(t *testing.T) {
 
 	if !(p1.Wellcoords["A2"].WContents.CName == "Butter" && p1.Wellcoords["A2"].WContents.Vol == 80.0 && p1.Wellcoords["A2"].WContents.Vunit == "ul") {
 		t.Fatal("Error: MergeWith should add non user-allocated components to  plate merged with")
+	}
+}
+
+func TestPlateType(t *testing.T) {
+	idGen := id.NewIDGenerator(t.Name())
+	p := makeplatefortest(idGen)
+	p.SetConstrained("A", []string{"X"})
+
+	pt := p.ToPlateType()
+
+	idGen2 := id.NewIDGenerator(t.Name())
+
+	p2 := LHPlateFromType(idGen2, pt)
+
+	if diffs := deep.Equal(p, p2); len(diffs) != 0 {
+		t.Errorf("Plate reconsistuted from plate type not correct\n%v", strings.Join(diffs, "\n"))
+	}
+
+	// now check we get the right plate type out
+
+	pt2 := p2.ToPlateType()
+
+	if diffs := deep.Equal(pt, pt2); len(diffs) != 0 {
+		t.Errorf("Using a plate type to create a plate then extracting the plate type from that plate should result in the same plate type as the original. It didn't.\n%v", strings.Join(diffs, "\n"))
 	}
 }
 
@@ -521,7 +545,6 @@ func TestWellCoordsToCoords(t *testing.T) {
 	if err := plate.GetChildByAddress(MakeWellCoords("A1")).(*LHWell).AddComponent(idGen, c); err != nil {
 		t.Fatal(err)
 	}
-	plate.Welltype.SetLiquidLevelModel(wutil.Quadratic{A: 0.402, B: 7.069, C: 0.0})
 
 	type TestCase struct {
 		Address          string
@@ -544,7 +567,7 @@ func TestWellCoordsToCoords(t *testing.T) {
 		{
 			Address:          "A1",
 			Reference:        LiquidReference,
-			ExpectedPosition: Coordinates3D{X: plate.WellXStart, Y: plate.WellYStart, Z: plate.WellZStart + plate.Welltype.Bottomh + 9.264858420611434},
+			ExpectedPosition: Coordinates3D{X: plate.WellXStart, Y: plate.WellYStart, Z: plate.WellZStart + 0.5*(plate.Welltype.Bottomh+plate.Welltype.GetSize().Z)},
 		},
 		{
 			Address:        "Z1",

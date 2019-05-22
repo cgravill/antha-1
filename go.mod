@@ -1,8 +1,8 @@
 module github.com/antha-lang/antha
 
 require (
-	github.com/Synthace/antha-runner v0.0.0-20190423133811-6b62c9bf3805
-	github.com/Synthace/instruction-plugins v0.0.0-20190423134354-cd8eba7cdbdc
+	github.com/Synthace/antha-runner v0.0.0-20190514132415-965ce6435b43
+	github.com/Synthace/instruction-plugins v0.0.0-20190514102125-e7f49b35d3c7
 	github.com/Synthace/microservice v0.0.0-20190417123801-c7ca6bc971ec
 	github.com/antha-lang/toolbox v0.0.0-20180417132942-6ea11e22448c
 	github.com/apache/arrow/go/arrow v0.0.0-20190412182029-853742021ce1
@@ -28,7 +28,7 @@ require (
 	golang.org/x/net v0.0.0-20190320064053-1272bf9dcd53
 	gonum.org/v1/gonum v0.0.0-20181029232933-400065bf7646
 	gonum.org/v1/plot v0.0.0-20190410204940-3a5f52653745
-	google.golang.org/grpc v1.19.1
+	google.golang.org/grpc v1.20.1
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
 	gopkg.in/src-d/go-git.v4 v4.7.1
 )

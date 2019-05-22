@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -16,7 +15,10 @@ import (
 
 func defaults(l *logger.Logger, args []string) error {
 	flagSet := flag.NewFlagSet(flag.CommandLine.Name()+" defaults", flag.ContinueOnError)
-	flagSet.Usage = workflow.NewFlagUsage(flagSet, "Gather defaults for an element set from metadata.json files in the repo")
+	flagSet.Usage = workflow.NewFlagUsage(flagSet,
+		"Gather defaults for an element set from metadata.json files in the repo",
+		"[flags] [workflow-snippet.json...]",
+		"github.com/antha-lang/antha/cmd/elements")
 
 	var regexStr, inDir string
 	flagSet.StringVar(&regexStr, "regex", "", "Regular expression to match against element type path (optional)")
@@ -69,16 +71,12 @@ func defaults(l *logger.Logger, args []string) error {
 			}
 		}
 
-		bs, err := json.Marshal(defaults)
-		if err != nil {
+		if bs, err := json.Marshal(defaults); err != nil {
 			return err
-		}
-		w := bufio.NewWriter(os.Stdout)
-		_, err = w.Write(bs)
-		if err != nil {
+		} else if _, err := os.Stdout.Write(bs); err != nil {
 			return err
+		} else {
+			return nil
 		}
-
-		return nil
 	}
 }

@@ -14,31 +14,33 @@ package testlab
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"io/ioutil"
-	"os"
 	"testing"
 
 	"github.com/antha-lang/antha/laboratory"
 	"github.com/antha-lang/antha/laboratory/effects"
+	"github.com/antha-lang/antha/utils"
 	"github.com/antha-lang/antha/workflow"
 )
 
 // Used by generated code build by the composer machinery when processing element test workflows.
 func NewTestLabBuilder(t *testing.T, inDir, outDir string, fh io.ReadCloser) *laboratory.LaboratoryBuilder {
 	if outDir != "" {
-		if err := os.MkdirAll(outDir, 0700); err != nil {
+		if err := utils.MkdirAll(outDir); err != nil {
 			t.Fatal(err)
 		}
 	}
 
 	labBuild := laboratory.EmptyLaboratoryBuilder()
 	labBuild.Logger = labBuild.Logger.With("testName", t.Name())
-	labBuild.Fatal = func(err error) { t.Fatal(err) }
-	if err := labBuild.Setup(fh, inDir, outDir); err != nil {
-		labBuild.Fatal(err)
-	}
+	labBuild.Setup(fh, inDir, outDir)
 	labBuild.Workflow.Meta.Set("TestName", t.Name())
+
+	if err := labBuild.Errors(); err != nil {
+		t.Fatal(err)
+	}
 
 	return labBuild
 }
@@ -59,35 +61,40 @@ func WithTestLab(t *testing.T, inDir string, callbacks *TestElementCallbacks) {
 }
 
 func withTestLab(t *testing.T, inDir string, callbacks *TestElementCallbacks) {
+	labBuild := laboratory.EmptyLaboratoryBuilder()
+	labBuild.Logger = labBuild.Logger.With("testName", t.Name())
+
+	defer func() {
+		if err := labBuild.Decommission(); err != nil {
+			t.Fatal(err)
+		} else { // no errors, so tidy up:
+			if err := labBuild.RemoveOutDir(); err != nil {
+				t.Fatal(err)
+			}
+			if inDir == "" { // i.e. we would have created a random indir
+				if err := labBuild.RemoveInDir(); err != nil {
+					t.Fatal(err)
+				}
+			}
+		}
+	}()
+
 	wf := workflow.EmptyWorkflow()
 	wf.WorkflowId = workflow.BasicId("TestLab")
 	wf.Meta.Set("TestName", t.Name())
 	wfBuf := new(bytes.Buffer)
 	if err := wf.ToWriter(wfBuf, false); err != nil {
-		t.Fatal(err)
+		labBuild.RecordError(err, true)
+		return
 	}
 
-	labBuild := laboratory.EmptyLaboratoryBuilder()
-	labBuild.Logger = labBuild.Logger.With("testName", t.Name())
-	labBuild.Fatal = func(err error) { t.Fatal(err) }
-	if err := labBuild.Setup(ioutil.NopCloser(wfBuf), inDir, ""); err != nil {
-		labBuild.Fatal(err)
+	labBuild.Setup(ioutil.NopCloser(wfBuf), inDir, "")
+	if err := labBuild.Errors(); err != nil {
+		return
 	}
+
 	NewTestElement(t, labBuild, callbacks)
-	if err := labBuild.RunElements(); err != nil {
-		labBuild.Fatal(err)
-	}
-	labBuild.Decommission()
-	if !t.Failed() {
-		if err := labBuild.RemoveOutDir(); err != nil {
-			t.Fatal(err)
-		}
-		if inDir == "" {
-			if err := labBuild.RemoveInDir(); err != nil {
-				t.Fatal(err)
-			}
-		}
-	}
+	labBuild.RunElements()
 }
 
 // Useful for tests where you just need the effects without a complete
@@ -142,8 +149,10 @@ func (te *TestElement) Name() workflow.ElementInstanceName {
 	return workflow.ElementInstanceName(name)
 }
 
-func (te *TestElement) TypeName() workflow.ElementTypeName {
-	return workflow.ElementTypeName("TestElement")
+func (te *TestElement) TypeMeta() *laboratory.ElementTypeMeta {
+	return &laboratory.ElementTypeMeta{
+		Name: "TestElement",
+	}
 }
 
 func (te *TestElement) Setup(lab *laboratory.Laboratory) error {
@@ -161,6 +170,7 @@ func (te *TestElement) Steps(lab *laboratory.Laboratory) error {
 		return nil
 	}
 }
+
 func (te *TestElement) Analysis(lab *laboratory.Laboratory) error {
 	if te.cbs.Analysis != nil {
 		return te.cbs.Analysis(lab)
@@ -168,10 +178,27 @@ func (te *TestElement) Analysis(lab *laboratory.Laboratory) error {
 		return nil
 	}
 }
+
 func (te *TestElement) Validation(lab *laboratory.Laboratory) error {
 	if te.cbs.Validation != nil {
 		return te.cbs.Validation(lab)
 	} else {
 		return nil
 	}
+}
+
+func (te *TestElement) InputsJSONMap() (map[workflow.ElementParameterName]json.RawMessage, error) {
+	return nil, nil
+}
+
+func (te *TestElement) OutputsJSONMap() (map[workflow.ElementParameterName]json.RawMessage, error) {
+	return nil, nil
+}
+
+func (te *TestElement) ParametersJSONMap() (map[workflow.ElementParameterName]json.RawMessage, error) {
+	return nil, nil
+}
+
+func (te *TestElement) DataJSONMap() (map[workflow.ElementParameterName]json.RawMessage, error) {
+	return nil, nil
 }

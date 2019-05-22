@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -14,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/antha-lang/antha/utils"
 	"github.com/antha-lang/antha/workflow"
 )
 
@@ -40,9 +40,9 @@ func (cb *ComposerBase) goGenerate() error {
 
 func (mc *mainComposer) goBuild() error {
 	outBin := filepath.Join(mc.OutDir, "bin", "workflow")
-	cmd := exec.Command("go", "build", "-o", outBin)
+	cmd := exec.Command("go", "build", "-mod", "readonly", "-o", outBin)
 	if mc.LinkedDrivers {
-		cmd.Args = append(cmd.Args, "-tags", "linkedDrivers protobuf")
+		cmd.Args = append(cmd.Args, "-tags", "linkedDrivers")
 	}
 	cmd.Dir = filepath.Join(mc.OutDir, "workflow")
 
@@ -131,10 +131,7 @@ func (mc *mainComposer) runWorkflow() error {
 		return nil
 	}
 
-	runOutDir, err := ioutil.TempDir(mc.OutDir, "antha-run-outputs")
-	if err != nil {
-		return err
-	}
+	runOutDir := filepath.Join(mc.OutDir, "simulation")
 	mc.Logger.Log("progress", "running compiled workflow", "outdir", runOutDir, "indir", mc.InDir)
 	outBin := filepath.Join(mc.OutDir, "bin", "workflow")
 	cmd := exec.Command(outBin, "-outdir", runOutDir, "-indir", mc.InDir)
@@ -172,12 +169,12 @@ func (cb *ComposerBase) prepareDrivers(cfg *workflow.Config) error {
 
 	for id, cfg := range conns {
 		outBin := filepath.Join(cb.OutDir, "bin", "drivers", string(id))
-		if err := os.MkdirAll(filepath.Dir(outBin), 0700); err != nil {
+		if err := utils.MkdirAll(filepath.Dir(outBin)); err != nil {
 			return err
 
 		} else if cfg.CompileAndRun != "" {
 			cb.Logger.Log("instructionPlugin", string(id), "building", cfg.CompileAndRun)
-			cmd := exec.Command("go", "build", "-o", outBin, cfg.CompileAndRun)
+			cmd := exec.Command("go", "build", "-mod", "readonly", "-o", outBin, cfg.CompileAndRun)
 			cmd.Dir = filepath.Join(cb.OutDir, "workflow") // we need to rely on the go.mod file being there
 			if err := RunAndLogCommand(cmd, cb.Logger.With("cmd", "build", "instructionPlugin", string(id)).Log); err != nil {
 				return err
@@ -191,7 +188,7 @@ func (cb *ComposerBase) prepareDrivers(cfg *workflow.Config) error {
 				return err
 			}
 			defer src.Close()
-			dst, err := os.OpenFile(outBin, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
+			dst, err := utils.CreateFile(outBin, utils.ReadWriteExec)
 			if err != nil {
 				return err
 			}
@@ -235,12 +232,20 @@ func RunAndLogCommand(cmd *exec.Cmd, logger func(...interface{}) error) error {
 
 func drainToLogger(logger func(...interface{}) error, fh io.ReadCloser, key string) {
 	defer fh.Close()
-	scanner := bufio.NewScanner(fh)
-	for scanner.Scan() {
-		logger(key, scanner.Text())
-	}
-	if err := scanner.Err(); err != nil {
-		logger("error", err.Error())
+
+	reader := bufio.NewReader(fh)
+	for {
+		if s, err := reader.ReadString('\n'); err == nil {
+			logger(key, strings.TrimSuffix(s, "\n"))
+		} else if err == io.EOF {
+			if s != "" {
+				logger(key, strings.TrimSuffix(s, "\n"))
+			}
+			break
+		} else if err != nil {
+			logger("error", err.Error())
+			break
+		}
 	}
 }
 

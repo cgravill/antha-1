@@ -105,8 +105,8 @@ func SummarizeActions(idGen *id.IDGenerator, initialState *driver.LHProperties, 
 		return nil, err
 	}
 
-	// we care about recording transfer and message instructions
-	acts := itree.Refine(driver.TFR, driver.MSG)
+	// we care about recording transfer block and message instructions
+	acts := itree.Refine(driver.TFB, driver.MSG)
 
 	actions := make(ActionsSummary, 0, len(acts))
 	for _, act := range acts {
@@ -127,8 +127,8 @@ func SummarizeActions(idGen *id.IDGenerator, initialState *driver.LHProperties, 
 				cumulativeTime = time.Duration(action.CumulativeTimeEstimate * 1e9)
 				actions = append(actions, action)
 			}
-		case driver.TFR:
-			// record transfer instructions as transfer actions
+		case driver.TFB:
+			// record transfer block instructions as transfer actions
 			if action, err := newTransferAction(idGen, vlh, act, timer, cumulativeTime); err != nil {
 				return nil, err
 			} else {
@@ -404,7 +404,7 @@ type liquidSummary struct {
 // newLiquidSummary create a liquid summary
 func newLiquidSummary(l *wtype.Liquid) *liquidSummary {
 	return &liquidSummary{
-		Name:        l.CName,
+		Name:        l.MeaningfulName(),
 		TotalVolume: &measurementSummary{Value: l.Vol, Unit: l.Vunit},
 		Components:  newSubComponents(l.SubComponents),
 	}
@@ -647,27 +647,38 @@ func newParallelTransfer(idGen *id.IDGenerator, vlh *simulator.VirtualLiquidHand
 		return well
 	}
 
+	// channels are not necessarily contiguous, find which ones are used and the minimum number of channels to represent the transfer
+	channels := cti.Channels()
+	numChannels := 0
+	for _, ch := range channels {
+		if ch+1 > numChannels {
+			numChannels = ch + 1
+		}
+	}
+
 	// fetch each of the source and destination wells
 	// a fair amount of the complexity here is dealing with the "trough" case, when these wells are actually the same wells
-	sourceWells := make([]*wtype.LHWell, 0, cti.Multi)
-	destWells := make([]*wtype.LHWell, 0, cti.Multi)
-	for i := 0; i < cti.Multi; i++ {
-		sourceWells = append(sourceWells, getWell(cti.PltFrom[i], cti.WellFrom[i]))
-		destWells = append(destWells, getWell(cti.PltTo[i], cti.WellTo[i]))
+	sourceWells := make([]*wtype.LHWell, numChannels)
+	destWells := make([]*wtype.LHWell, numChannels)
+	for _, ch := range channels {
+		sourceWells[ch] = getWell(cti.PltFrom[ch], cti.WellFrom[ch])
+		destWells[ch] = getWell(cti.PltTo[ch], cti.WellTo[ch])
 	}
 
 	// map from source well to channel index
 	channelsInWell := make(map[*wtype.LHWell][]int, len(sourceWells))
-	for i, well := range sourceWells {
-		channelsInWell[well] = append(channelsInWell[well], i)
+	for ch, well := range sourceWells {
+		if well != nil {
+			channelsInWell[well] = append(channelsInWell[well], ch)
+		}
 	}
 
 	// what volumes do we expect to be left in the source wells
-	expectedVolume := make(map[*wtype.LHWell]wunit.Volume, cti.Multi)
+	expectedVolume := make(map[*wtype.LHWell]wunit.Volume, len(channels))
 	for well, channels := range channelsInWell {
 		ev := well.CurrentVolume(idGen)
-		for _, i := range channels {
-			ev = wunit.SubtractVolumes(ev, cti.Volume[i])
+		for _, ch := range channels {
+			ev = wunit.SubtractVolumes(ev, cti.Volume[ch])
 		}
 	}
 
@@ -688,119 +699,106 @@ func newParallelTransfer(idGen *id.IDGenerator, vlh *simulator.VirtualLiquidHand
 	}
 
 	// pick out the relevant details from the lowest level instructions
-	aspOptions := make([]pipettingOptions, cti.Multi)
-	dspOptions := make([]pipettingOptions, cti.Multi)
-	pipetteSpeed := make([]*measurementSummary, cti.Multi)
-	lastHeight := make([]*height, cti.Multi)
+	aspOptions := make([]pipettingOptions, numChannels)
+	dspOptions := make([]pipettingOptions, numChannels)
+	pipetteSpeed := make([]*measurementSummary, numChannels)
+	lastHeight := make([]*height, numChannels)
 	seenDispense := false
 
 	for _, ins := range instructions {
 		ins.Visit(driver.RobotInstructionBaseVisitor{
 			HandleSetPipetteSpeed: func(sps *driver.SetPipetteSpeedInstruction) {
 				if sps.Channel < 0 {
-					for i := 0; i < cti.Multi; i++ {
+					for _, ch := range channels {
 						// yes, we really do use "ml/min" as the unit for pipette speed
-						pipetteSpeed[i] = &measurementSummary{Value: sps.Speed, Unit: "ml/min"}
+						pipetteSpeed[ch] = &measurementSummary{Value: sps.Speed, Unit: "ml/min"}
 					}
 				} else {
 					pipetteSpeed[sps.Channel] = &measurementSummary{Value: sps.Speed, Unit: "ml/min"}
 				}
 			},
 			HandleAspirate: func(asp *driver.AspirateInstruction) {
-				for i, psp := range pipetteSpeed {
-					aspOptions[i].FlowRate = &(*psp)
-					aspOptions[i].Height = &(*lastHeight[i])
-				}
-				for i, llf := range asp.LLF {
-					aspOptions[i].LLF = llf
+				for _, ch := range channels {
+					aspOptions[ch].FlowRate = &(*pipetteSpeed[ch])
+					aspOptions[ch].Height = &(*lastHeight[ch])
+					aspOptions[ch].LLF = asp.LLF[ch]
 				}
 			},
 			HandleDispense: func(dsp *driver.DispenseInstruction) {
 				seenDispense = true
-				for i, psp := range pipetteSpeed {
-					dspOptions[i].FlowRate = &(*psp)
-					dspOptions[i].Height = &(*lastHeight[i])
-				}
-				for i, llf := range dsp.LLF {
-					dspOptions[i].LLF = llf
-				}
+				for _, ch := range channels {
+					dspOptions[ch].FlowRate = &(*pipetteSpeed[ch])
+					dspOptions[ch].Height = &(*lastHeight[ch])
+					dspOptions[ch].LLF = dsp.LLF[ch]
 
-				// last move wasn't a touchoff
-				for i := range dspOptions {
-					dspOptions[i].TouchOff = newFalse()
+					// last move wasn't a touchoff
+					dspOptions[ch].TouchOff = newFalse()
 				}
 			},
 			HandleBlowout: func(blo *driver.BlowoutInstruction) {
-				for i, blow := range blo.Volume {
-					dspOptions[i].Blowout = &blowoutSummary{
-						Volume:   newMeasurementSummary(blow),
-						Height:   &(*lastHeight[i]),
-						FlowRate: &(*pipetteSpeed[i]),
+				for _, ch := range channels {
+					dspOptions[ch].Blowout = &blowoutSummary{
+						Volume:   newMeasurementSummary(blo.Volume[ch]),
+						Height:   &(*lastHeight[ch]),
+						FlowRate: &(*pipetteSpeed[ch]),
 					}
-				}
-
-				// last move wasn't a touchoff
-				for i := range dspOptions {
-					dspOptions[i].TouchOff = newFalse()
+					// last move wasn't a touchoff
+					dspOptions[ch].TouchOff = newFalse()
 				}
 			},
 			HandleMix: func(mix *driver.MixInstruction) {
-				for i, vol := range mix.Volume {
+				for _, ch := range channels {
 					ms := &mixSummary{
-						Volume:   newMeasurementSummary(vol),
-						Cycles:   mix.Cycles[i],
-						FlowRate: &(*pipetteSpeed[i]),
-						Height:   &(*lastHeight[i]),
+						Volume:   newMeasurementSummary(mix.Volume[ch]),
+						Cycles:   mix.Cycles[ch],
+						FlowRate: &(*pipetteSpeed[ch]),
+						Height:   &(*lastHeight[ch]),
 					}
 					// nb. LLF not specified in driver.MixInstruction
 					if !seenDispense {
-						aspOptions[i].Mixing = ms
+						aspOptions[ch].Mixing = ms
 					} else {
-						dspOptions[i].Mixing = ms
+						dspOptions[ch].Mixing = ms
 					}
-				}
 
-				// last move wasn't a touchoff
-				for i := range dspOptions {
-					dspOptions[i].TouchOff = newFalse()
+					// last move wasn't a touchoff
+					dspOptions[ch].TouchOff = newFalse()
 				}
 			},
 			HandleMove: func(move *driver.MoveInstruction) {
-
-				for i, ref := range move.Reference {
-					lastHeight[i] = &height{
-						measurementSummary: measurementSummary{Value: move.OffsetZ[i], Unit: "mm"},
-						Reference:          wtype.WellReference(ref),
+				for _, ch := range channels {
+					lastHeight[ch] = &height{
+						measurementSummary: measurementSummary{Value: move.OffsetZ[ch], Unit: "mm"},
+						Reference:          wtype.WellReference(move.Reference[ch]),
 					}
+
+					// set a touchoff if this is the last move
+					dspOptions[ch].TouchOff = newTrue()
 				}
 
-				// set a touchoff if this is the last move
-				for i := range dspOptions {
-					dspOptions[i].TouchOff = newTrue()
-				}
 			},
 		})
 	}
 
 	// now build each transfer
-	transfers := make(map[int]*transferSummary, cti.Multi)
-	for i := 0; i < cti.Multi; i++ {
+	transfers := make(map[int]*transferSummary, len(channels))
+	for _, ch := range channels {
 		// divide total missing volume equally between each channel that was in the source well
-		missing := wunit.SubtractVolumes(expectedVolume[sourceWells[i]], sourceWells[i].CurrentVolume(idGen))
-		missing.DivideBy(float64(len(channelsInWell[sourceWells[i]])))
+		missing := wunit.SubtractVolumes(expectedVolume[sourceWells[ch]], sourceWells[ch].CurrentVolume(idGen))
+		missing.DivideBy(float64(len(channelsInWell[sourceWells[ch]])))
 
 		tfs := &transferSummary{
-			From:              newContentUpdate(idGen, sourceWells[i]),
-			To:                []*contentUpdate{newContentUpdate(idGen, destWells[i])}, // multi dispense will require multiple entries here
-			Volume:            newMeasurementSummary(wunit.CopyVolume(cti.Volume[i])),
+			From:              newContentUpdate(idGen, sourceWells[ch]),
+			To:                []*contentUpdate{newContentUpdate(idGen, destWells[ch])}, // multi dispense will require multiple entries here
+			Volume:            newMeasurementSummary(wunit.CopyVolume(cti.Volume[ch])),
 			Wasted:            newMeasurementSummary(missing),
-			Policy:            cti.What[i],
-			AspirateBehaviour: &aspOptions[i],
-			DispenseBehaviour: &dspOptions[i],
-			Head:              cti.Prms[i].Head,
+			Policy:            cti.What[ch],
+			AspirateBehaviour: &aspOptions[ch],
+			DispenseBehaviour: &dspOptions[ch],
+			Head:              cti.Prms[ch].Head,
 		}
 
-		transfers[i] = tfs
+		transfers[ch] = tfs
 	}
 
 	return &ParallelTransfer{
@@ -845,6 +843,9 @@ func newTransferAction(idGen *id.IDGenerator, vlh *simulator.VirtualLiquidHandle
 
 	children := make([]transferChild, 0, len(act.Children()))
 
+	// keep track of the last time each location was updated so we can update the final name later
+	lastUpdate := make(map[wellLocation]*liquidSummary)
+
 	for _, ins := range instructions {
 		var timeEstimate time.Duration
 
@@ -859,6 +860,11 @@ func newTransferAction(idGen *id.IDGenerator, vlh *simulator.VirtualLiquidHandle
 			if pt, err := newParallelTransfer(idGen, vlh, ins, timeEstimate, cumulativeTimeEstimate); err != nil {
 				return nil, err
 			} else {
+				for _, ch := range pt.Channels {
+					for _, cUpdate := range ch.To {
+						lastUpdate[cUpdate.Location] = cUpdate.NewContent
+					}
+				}
 				children = append(children, pt)
 			}
 		case driver.LOD:
@@ -880,6 +886,23 @@ func newTransferAction(idGen *id.IDGenerator, vlh *simulator.VirtualLiquidHandle
 		default:
 			if err := vlh.Simulate(ins.Leaves()); err != nil {
 				return nil, err
+			}
+		}
+	}
+
+	// the transferBlockInstruction includes the original mix instructions and their outputs with user defined names set,
+	// here we use those to set the final names of the liquids
+	tfb := act.Instruction().(*driver.TransferBlockInstruction)
+
+	for _, ins := range tfb.Inss {
+		for _, output := range ins.Outputs {
+			pl := output.PlateLocation()
+			if content, ok := lastUpdate[wellLocation{DeckItemID: pl.ID, Row: pl.Coords.Y, Column: pl.Coords.X}]; ok {
+				content.Name = output.MeaningfulName()
+				// update the name within the virtual liquidhandler so that it persists if the component is aspirated from later
+				if well := vlh.GetWellAt(pl); well != nil {
+					well.Contents(idGen).SetName(output.MeaningfulName())
+				}
 			}
 		}
 	}
@@ -919,13 +942,11 @@ type TipAction struct {
 
 func newTipAction(vlh *simulator.VirtualLiquidHandler, kind TipActionType, multi, head int, positions, wellcoords []string, timeEstimate, cumulativeTimeEstimate time.Duration) *TipAction {
 	tipSources := make(map[int]*wellLocation, multi)
-	for i := 0; i < multi; i++ {
-		wc := wtype.MakeWellCoords(wellcoords[i])
-
+	for ch := 0; ch < len(positions); ch++ {
 		// ignore channels where no tip is loaded/unloaded
-		if positions[i] != "" && !wc.IsZero() {
-			tipSources[i] = &wellLocation{
-				DeckItemID: wtype.IDOf(vlh.GetObjectAt(positions[i])),
+		if wc := wtype.MakeWellCoords(wellcoords[ch]); positions[ch] != "" && !wc.IsZero() {
+			tipSources[ch] = &wellLocation{
+				DeckItemID: wtype.IDOf(vlh.GetObjectAt(positions[ch])),
 				Row:        wc.Y,
 				Column:     wc.X,
 			}

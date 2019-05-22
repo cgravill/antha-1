@@ -104,7 +104,7 @@ func renderTest(w io.Writer, twf *testWorkflow) error {
 		"name":         func() string { return name },
 		"inDir":        func() string { return tr.testWorkflow.inDir },
 		"outDir": func() string {
-			return filepath.Join(tr.testWorkflow.OutDir, "outputs", fmt.Sprintf("%s-%s", idStr, name))
+			return filepath.Join(tr.testWorkflow.OutDir, "simulations", fmt.Sprintf("%s-%s", idStr, name))
 		},
 	}
 	if t, err := template.New("maintpl").Funcs(funcs).Parse(maintpl); err != nil {
@@ -137,6 +137,7 @@ package main
 
 {{define "main-imports"}}import (
 	"bytes"
+	"os"
 	"io/ioutil"
 
 	"github.com/antha-lang/antha/laboratory"
@@ -162,9 +163,9 @@ package main
 
 {{define "main-main"}}func main() {
 	labBuild := laboratory.NewLaboratoryBuilder(ioutil.NopCloser(bytes.NewBuffer(MustAsset("data/workflow.json"))))
-	defer labBuild.Decommission()
-	if err := runWorkflow(labBuild); err != nil {
-		labBuild.Fatal(err)
+	runWorkflow(labBuild)
+	if err := labBuild.Decommission(); err != nil {
+		os.Exit(1)
 	}
 }
 {{end}}
@@ -172,47 +173,35 @@ package main
 {{define "test-test"}}func TestWorkflow_{{id}}_{{name}}(t *testing.T) {
 	t.Parallel()
 	labBuild := testlab.NewTestLabBuilder(t, {{printf "%q" inDir}}, {{printf "%q" outDir}}, ioutil.NopCloser(bytes.NewBuffer(MustAsset("data/workflow{{id}}.json"))))
-	defer labBuild.Decommission()
-	if err := runWorkflow{{id}}(labBuild); err != nil {
-		labBuild.Fatal(err)
-	}
-
-	if err := labBuild.Compare(); err != nil {
-		labBuild.Fatal(err)
+	runWorkflow{{id}}(labBuild)
+	labBuild.Compare()
+	if err := labBuild.Decommission(); err != nil {
+		t.Fatal(err)
 	}
 }
 {{end}}
 
-{{define "run-workflow"}}func runWorkflow{{id}}(labBuild *laboratory.LaboratoryBuilder) error {
+{{define "run-workflow"}}func runWorkflow{{id}}(labBuild *laboratory.LaboratoryBuilder) {
 	jh := &codec.JsonHandle{}
 	labBuild.RegisterJsonExtensions(jh)
 
 	// Register line maps for the elements we're using
-{{range elementTypes}}{{if .IsAnthaElement}}	{{.Name}}.RegisterLineMap(labBuild)
+{{range elementTypes}}{{if .IsAnthaElement}}	labBuild.RegisterElementType({{.Name}}.TypeMeta, {{printf "%q" .RepositoryName}}, {{printf "%q" .ElementPath}})
 {{end}}{{end}}
 	// Create the elements
-{{range $name, $inst := .Elements.Instances}}	{{if $inst.IsUsed}}{{varName $name}} := {{end}}{{$inst.ElementTypeName}}.New(labBuild, {{printf "%q" $name}})
+{{range $name, $inst := .Elements.Instances}}	{{if $inst.IsUsed}}{{varName $name}} := {{end}}{{$inst.TypeName}}.New(labBuild, {{printf "%q" $name}})
 {{end}}
 	// Add wiring
 {{range .Elements.InstancesConnections}}	labBuild.AddConnection({{varName .Source.ElementInstance}}, {{varName .Target.ElementInstance}}, func() { {{varName .Target.ElementInstance}}.{{token .Target.ElementInstance .Target.ParameterName}}.{{.Target.ParameterName}} = {{varName .Source.ElementInstance}}.{{token .Source.ElementInstance .Source.ParameterName}}.{{.Source.ParameterName}} })
 {{end}}
 	// Set parameters
 {{range $name, $inst := .Elements.Instances}}{{range $param, $value := $inst.Parameters}}	if err := codec.NewDecoderBytes([]byte({{printf "%q" $value}}), jh).Decode(&{{varName $name}}.{{token $name $param}}.{{$param}}); err != nil {
-		return err
+		labBuild.RecordError(err, true)
 	}
 {{end}}{{end}}
 	// Run!
-	errRun := labBuild.RunElements()
-	errSave := labBuild.SaveErrors()
-	if errRun != nil {
-		return errRun
-	}
-	if errSave != nil {
-		return errSave
-	}
+	labBuild.RunElements()
 	labBuild.Compile()
-	labBuild.Export()
-	return nil
 }
 {{end}}
 
