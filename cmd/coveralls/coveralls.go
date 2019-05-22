@@ -43,7 +43,7 @@ func (pkgs *Packages) ToSourceFiles(repoPrefix string) []*SourceFile {
 func (pkg *Package) ToSourceFiles(prefix string) []*SourceFile {
 	res := make([]*SourceFile, 0, len(pkg.Files))
 	for fileName, blks := range pkg.Files {
-		md5sum := md5.Sum([]byte(blks.Source))
+		md5sum := md5.Sum([]byte(blks.Source)) // nolint
 		res = append(res, &SourceFile{
 			Name:         path.Join(filepath.ToSlash(prefix), fileName),
 			Coverage:     blks.Counts,
