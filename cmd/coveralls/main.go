@@ -1,29 +1,40 @@
 package main
 
 import (
-	"fmt"
-	"os"
+	"flag"
 
-	"golang.org/x/tools/cover"
+	"github.com/antha-lang/antha/logger"
+	"github.com/antha-lang/antha/workflow"
 )
 
 func main() {
-	filename := os.Args[1]
-	profiles, err := cover.ParseProfiles(filename)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(len(profiles))
+	flag.Usage = workflow.NewFlagUsage(nil,
+		"Parse and transform go coverage profile data into coveralls format",
+		"[flags] path/to/cover.profile",
+		"github.com/antha-lang/antha/cmd/coveralls")
 
-	byFile := make(map[string]*[]cover.ProfileBlock, len(profiles))
-	for _, profile := range profiles {
-		fmt.Println(profile.FileName)
-		if blocks, found := byFile[profile.FileName]; found {
-			*blocks = append(*blocks, profile.Blocks...)
-		} else {
-			byFile[profile.FileName] = &profile.Blocks
-		}
+	var repoToken, commitSHA, repoName string
+	flag.StringVar(&repoToken, "repotoken", "", "RepoToken for coveralls.")
+	flag.StringVar(&commitSHA, "commitsha", "", "Git Commit SHA")
+	flag.StringVar(&repoName, "reponame", "", "Name of git repository")
+	flag.Parse()
+
+	args := flag.Args()
+
+	l := logger.NewLogger()
+
+	pkgs := NewPackages()
+	if err := pkgs.FromCoverProfile(args...); err != nil {
+		logger.Fatal(l, err)
 	}
-	fmt.Println(len(byFile))
+
+	job := &Job{
+		RepoToken:   repoToken,
+		ServiceName: "antha",
+		CommitSHA:   commitSHA,
+		SourceFiles: pkgs.ToSourceFiles(repoName),
+	}
+	if err := job.Upload(); err != nil {
+		logger.Fatal(l, err)
+	}
 }

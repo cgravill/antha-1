@@ -20,12 +20,13 @@ WORKDIR /lintme
 RUN set -ex && go mod edit "-dropreplace=github.com/Synthace/antha-runner" "-dropreplace=github.com/Synthace/instruction-plugins" && golangci-lint run --deadline=5m -E gosec -E gofmt
 
 FROM eu.gcr.io/antha-images/golang:1.12.4-build AS tests
+ARG COMMIT_SHA
 ARG COVERALLS_TOKEN
 COPY --from=build /root/.netrc /root/.cache /root/
 COPY --from=build /go /go
 COPY --from=build /antha /antha
 WORKDIR /antha
-RUN ./antha-test.sh "$COVERALLS_TOKEN"
+RUN ./antha-test.sh "$COVERALLS_TOKEN" "$COMMIT_SHA"
 
 FROM eu.gcr.io/antha-images/golang:1.12.4-build AS cloud
 ## This target produces an image that is used both for gitlab elements CI, and also workflow execution in the cloud
