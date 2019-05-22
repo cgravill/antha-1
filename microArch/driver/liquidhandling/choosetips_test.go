@@ -254,7 +254,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			ChannelMap: map[ChannelIndex]TipTypeName{
 				0: "type1",
 			},
-			ExpectedError: "no tips found",
+			ExpectedError: "no tips found for type: type1",
 		},
 		{
 			Name:    "skip empty box",
@@ -497,7 +497,7 @@ func TestGilsonTipChooser(t *testing.T) {
 				6: "type1",
 				7: "type1",
 			},
-			ExpectedError: "no tips found",
+			ExpectedError: "no tips found for type: type1",
 		},
 		{
 			Name:    "multi-types-fail",

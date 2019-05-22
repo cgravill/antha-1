@@ -22,12 +22,29 @@ func (ci ChannelIndex) String() string {
 
 type TipTypeName string
 
-var ErrNoTips = errors.New("no tips found")
+type TipNotFoundError struct {
+	Missing []TipTypeName // the tip types which were not found
+}
+
+func NewTipNotFoundError(missing ...TipTypeName) *TipNotFoundError {
+	return &TipNotFoundError{
+		Missing: missing,
+	}
+}
+
+func (tnf *TipNotFoundError) Error() string {
+	s := make([]string, len(tnf.Missing))
+	for i, m := range tnf.Missing {
+		s[i] = string(m)
+	}
+	sort.Strings(s)
+	return fmt.Sprintf("no tips found for type: %s", strings.Join(s, ", "))
+}
 
 // TipChooser a callback function which allows a device plugin to specify which tips to load
 // given the current robot configuration, lhp, the head to load to, and which tip types should be loaded onto each channel, channelMap.
 // If there is no error, the keys in the returned map should equal the keys in channelMap, and the tips should be removed from the lhp object.
-// If not enough tips were found, or the tips that were found couldn't be loaded, ErrNoTips should be returned.
+// If not enough tips were found, or the tips that were found couldn't be loaded a TipNotFoundError should be returned.
 type TipChooser func(lhp *LHProperties, head int, channelMap map[ChannelIndex]TipTypeName) (map[ChannelIndex]TipSource, error)
 
 // chooseTipsGilson TODO: this code should live in the instruction plugin and be provided as a callback once we no longer need to serialize
@@ -92,7 +109,7 @@ func chooseTipsGilson(lhp *LHProperties, head int, channelMap map[ChannelIndex]T
 		}
 	}
 	if box == nil {
-		return nil, ErrNoTips
+		return nil, NewTipNotFoundError(tipType)
 	}
 
 	// loading direction for the heads -- nb. this depends on robot configuration, but likely head 0 is loaded on the left and head 1 on the right
@@ -185,7 +202,7 @@ func chooseTipsHamilton(lhp *LHProperties, head int, channelMap map[ChannelIndex
 			tipboxIndexByType[tt] += 1
 		}
 		// we ran out of tipboxes for this type
-		return nil, wtype.WellCoords{}, ErrNoTips
+		return nil, wtype.WellCoords{}, NewTipNotFoundError(tt)
 	}
 
 	// need to go in channel order
