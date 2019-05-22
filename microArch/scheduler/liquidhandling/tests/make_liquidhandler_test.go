@@ -15,12 +15,22 @@ import (
 )
 
 func setUpTipsFor(lab *laboratory.Laboratory, lhp *liquidhandling.LHProperties) {
-	lab.Inventory.TipBoxes.ForEach(func(tb wtype.LHTipbox) error {
+	err := lab.Inventory.TipBoxes.ForEach(func(tb wtype.LHTipbox) error {
 		if tb.Mnfr == lhp.Mnfr || lhp.Mnfr == "MotherNature" {
-			lhp.Tips = append(lhp.Tips, tb.Tips[0][0])
+			// Don't return filter tips: the iteration order through the
+			// inventory is non deterministic, so if we return filter
+			// tips then we risk the tests failing due to the planner
+			// choosing to use the filter tips.
+			// This conditional is copied from instruction-plugins
+			if !tb.Tiptype.Filtered && tb.Tiptype.Type != "LVGilson200" {
+				lhp.Tips = append(lhp.Tips, tb.Tips[0][0])
+			}
 		}
 		return nil
 	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 const (

@@ -162,15 +162,6 @@ func isOutput(tok token.Token) bool {
 	}
 }
 
-func isInput(tok token.Token) bool {
-	switch tok {
-	case token.INPUTS, token.PARAMETERS:
-		return true
-	default:
-		return false
-	}
-}
-
 func isAnthaGenDeclToken(tok token.Token) bool {
 	switch tok {
 	case token.OUTPUTS, token.DATA, token.PARAMETERS, token.INPUTS:

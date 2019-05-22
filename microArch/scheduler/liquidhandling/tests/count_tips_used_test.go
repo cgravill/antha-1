@@ -36,7 +36,7 @@ func TestTipCounting(t *testing.T) {
 			InputPlates:  []*wtype.LHPlate{GetTroughForTest(idGen)},
 			OutputPlates: []*wtype.LHPlate{GetPlateForTest(idGen)},
 			Assertions: Assertions{
-				TipsUsedAssertion([]wtype.TipEstimate{{TipType: "DFL10 Tip Rack (PIPETMAX 8x20)", NTips: 8 * 3, NTipBoxes: 1}}),
+				TipsUsedAssertion([]wtype.TipEstimate{{TipType: "DL10 Tip Rack (PIPETMAX 8x20)", NTips: 8 * 3, NTipBoxes: 1}}),
 			},
 		},
 		{
@@ -64,7 +64,7 @@ func TestTipCounting(t *testing.T) {
 			InputPlates:  []*wtype.LHPlate{GetTroughForTest(idGen)},
 			OutputPlates: []*wtype.LHPlate{GetPlateForTest(idGen)},
 			Assertions: Assertions{
-				TipsUsedAssertion([]wtype.TipEstimate{{TipType: "DFL10 Tip Rack (PIPETMAX 8x20)", NTips: 8 * 3, NTipBoxes: 1}}),
+				TipsUsedAssertion([]wtype.TipEstimate{{TipType: "DL10 Tip Rack (PIPETMAX 8x20)", NTips: 8 * 3, NTipBoxes: 1}}),
 			},
 		},
 	}.Run(t)

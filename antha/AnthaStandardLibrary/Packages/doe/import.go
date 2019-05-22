@@ -379,9 +379,6 @@ func RunsFromJMPDesignContents(bytes []byte, factorcolumns []int, responsecolumn
 					if responsevalue, err := cell.Float(); celltype == 1 && err == nil {
 
 						// formulas are also given the celltype 1
-						if err != nil {
-							return runs, err
-						}
 						otherresponsevalues = append(otherresponsevalues, responsevalue)
 					} else {
 						responsevalue := cell.String()

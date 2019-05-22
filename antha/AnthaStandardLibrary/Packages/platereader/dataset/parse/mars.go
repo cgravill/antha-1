@@ -360,10 +360,6 @@ func parseWellData(xlsxBinary []byte, sheet int, headerrows int) (welldatamap ma
 						}
 						if strings.Contains(timelabel.String(), "[s]") && timecellcontents.String() != "" {
 							timestring = timecellcontents.String() + "s"
-
-							if err != nil {
-								return welldatamap, err
-							}
 						} else if timecellcontents.String() != "" {
 							timestring = timecellcontents.String()
 						}

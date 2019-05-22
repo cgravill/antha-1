@@ -304,7 +304,10 @@ func (labBuild *LaboratoryBuilder) Compile() {
 		// We have to do this this late because we need the connections
 		// to the plugins established to eg figure out if the device
 		// supports prompting.
-		human.New(labBuild.effects.IDGenerator).DetermineRole(devices)
+		if err := human.New(labBuild.effects.IDGenerator).DetermineRole(devices); err != nil {
+			labBuild.RecordError(err, true)
+			return
+		}
 
 		tasksDir := filepath.Join(labBuild.outDir, "tasks")
 
