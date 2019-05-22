@@ -59,7 +59,6 @@ steps:
   id: docker-push
   waitFor:
   - docker-build
-  - docker-lint
   - gitlab-decrypt
   entrypoint: 'bash'
   args:
