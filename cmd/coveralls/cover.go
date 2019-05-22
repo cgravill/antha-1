@@ -133,7 +133,9 @@ func (blks *FileBlocks) ReadSource(dir string) error {
 		// if a file has 1 line, it'll have 0 \n, hence the 1+
 		counts := make([]*int, 1+strings.Count(blks.Source, "\n"))
 		for _, blk := range blks.Blocks {
-			for lineNo := blk.StartLine; lineNo <= blk.EndLine; lineNo++ {
+			// go cover thinks files start with line 1, not line 0, hence the -1:
+			// And yes, we do essentially want to be inclusive of the EndLine.
+			for lineNo := blk.StartLine - 1; lineNo < blk.EndLine; lineNo++ {
 				if lineNo >= len(counts) {
 					return fmt.Errorf("File %s/%s has %d lines, but cover profile suggests line %d was hit!",
 						dir, blks.FileName, len(counts), lineNo)
