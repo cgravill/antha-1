@@ -941,8 +941,12 @@ type TipAction struct {
 }
 
 func newTipAction(vlh *simulator.VirtualLiquidHandler, kind TipActionType, multi, head int, positions, wellcoords []string, timeEstimate, cumulativeTimeEstimate time.Duration) *TipAction {
+	numChannels := len(positions)
+	if len(wellcoords) < numChannels {
+		numChannels = len(wellcoords)
+	}
 	tipSources := make(map[int]*wellLocation, multi)
-	for ch := 0; ch < len(positions); ch++ {
+	for ch := 0; ch < numChannels; ch++ {
 		// ignore channels where no tip is loaded/unloaded
 		if wc := wtype.MakeWellCoords(wellcoords[ch]); positions[ch] != "" && !wc.IsZero() {
 			tipSources[ch] = &wellLocation{

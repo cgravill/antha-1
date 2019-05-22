@@ -30,10 +30,15 @@ import (
 	"github.com/antha-lang/antha/laboratory/effects/id"
 )
 
-//  TODO remove BBox once shape implements LHObject
+// TipType uniquely indentifies the type of the tip
+type TipType string
+
+var NilTipType = TipType("<nil>")
+
+// LHTip represents a specific tip for transporting liquids
 type LHTip struct {
 	ID              string
-	Type            string
+	Type            TipType
 	Mnfr            string
 	Dirty           bool
 	MaxVol          wunit.Volume
@@ -66,9 +71,9 @@ func (self *LHTip) GetID() string {
 //@implement Typed
 func (self *LHTip) GetType() string {
 	if self == nil {
-		return "<nil>"
+		return string(NilTipType)
 	}
-	return self.Type
+	return string(self.Type)
 }
 
 //@implement Classy
@@ -153,7 +158,7 @@ func (tip *LHTip) GetParams() *LHChannelParameter {
 		return nil
 	}
 
-	lhcp := LHChannelParameter{Name: tip.Type + "Params", Minvol: tip.MinVol, Maxvol: tip.MaxVol, Multi: 1, Independent: false, Orientation: LHVChannel}
+	lhcp := LHChannelParameter{Name: string(tip.Type) + "Params", Minvol: tip.MinVol, Maxvol: tip.MaxVol, Multi: 1, Independent: false, Orientation: LHVChannel}
 	return &lhcp
 }
 
@@ -190,7 +195,7 @@ func (tip *LHTip) dup(idGen *id.IDGenerator, keepIDs bool) *LHTip {
 	return t
 }
 
-func NewLHTip(idGen *id.IDGenerator, mfr, ttype string, minvol, maxvol float64, volunit string, filtered bool, shape *Shape, effectiveHeightMM float64) *LHTip {
+func NewLHTip(idGen *id.IDGenerator, mfr string, ttype TipType, minvol, maxvol float64, volunit string, filtered bool, shape *Shape, effectiveHeightMM float64) *LHTip {
 	if effectiveHeightMM <= 0.0 {
 		effectiveHeightMM = shape.Depth().ConvertToString("mm")
 	}

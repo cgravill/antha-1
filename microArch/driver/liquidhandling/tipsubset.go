@@ -6,6 +6,6 @@ import (
 
 type TipSubset struct {
 	Mask    []bool
-	TipType string
+	TipType wtype.TipType
 	Channel *wtype.LHChannelParameter
 }

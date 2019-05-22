@@ -15,7 +15,7 @@ import (
 // TipChooserTipbox defines the state of a tipbox for testing, should be an array of 8 strings each of length 12
 // where tct[i][j] == '1' means there's a tip at that position, any other value means there isn't
 type TipChooserTestTipbox struct {
-	TipType      string
+	TipType      wtype.TipType
 	TipLocations [8]string
 }
 
@@ -43,7 +43,7 @@ type TipChooserTest struct {
 	// Tipboxes are placed in positions with names "1","2","3", etc
 	Tipboxes        []TipChooserTestTipbox
 	Head            int
-	ChannelMap      map[ChannelIndex]TipTypeName
+	ChannelMap      map[ChannelIndex]wtype.TipType
 	ExpectedError   string
 	ExpectedSources map[ChannelIndex]TipSource
 }
@@ -114,6 +114,9 @@ func (tests TipChooserTests) Run(t *testing.T) {
 	}
 }
 
+var type1 = wtype.TipType("type1")
+var type2 = wtype.TipType("type2")
+
 func TestGilsonTipChooser(t *testing.T) {
 	TipChooserTests{
 		{
@@ -121,7 +124,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			Chooser: chooseTipsGilson,
 			Tipboxes: []TipChooserTestTipbox{
 				{
-					TipType: "type1",
+					TipType: type1,
 					TipLocations: [8]string{
 						"111111111111",
 						"111111111111",
@@ -135,7 +138,7 @@ func TestGilsonTipChooser(t *testing.T) {
 				},
 			},
 			Head: 0,
-			ChannelMap: map[ChannelIndex]TipTypeName{
+			ChannelMap: map[ChannelIndex]wtype.TipType{
 				0: "type1",
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
@@ -150,7 +153,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			Chooser: chooseTipsGilson,
 			Tipboxes: []TipChooserTestTipbox{
 				{
-					TipType: "type1",
+					TipType: type1,
 					TipLocations: [8]string{
 						"111111111111",
 						"111111111111",
@@ -164,7 +167,7 @@ func TestGilsonTipChooser(t *testing.T) {
 				},
 			},
 			Head: 1,
-			ChannelMap: map[ChannelIndex]TipTypeName{
+			ChannelMap: map[ChannelIndex]wtype.TipType{
 				0: "type1",
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
@@ -179,7 +182,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			Chooser: chooseTipsGilson,
 			Tipboxes: []TipChooserTestTipbox{
 				{
-					TipType: "type1",
+					TipType: type1,
 					TipLocations: [8]string{
 						"100000000000",
 						"000000000000",
@@ -193,7 +196,7 @@ func TestGilsonTipChooser(t *testing.T) {
 				},
 			},
 			Head: 0,
-			ChannelMap: map[ChannelIndex]TipTypeName{
+			ChannelMap: map[ChannelIndex]wtype.TipType{
 				0: "type1",
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
@@ -208,7 +211,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			Chooser: chooseTipsGilson,
 			Tipboxes: []TipChooserTestTipbox{
 				{
-					TipType: "type1",
+					TipType: type1,
 					TipLocations: [8]string{
 						"000000000001",
 						"000000000000",
@@ -222,7 +225,7 @@ func TestGilsonTipChooser(t *testing.T) {
 				},
 			},
 			Head: 1,
-			ChannelMap: map[ChannelIndex]TipTypeName{
+			ChannelMap: map[ChannelIndex]wtype.TipType{
 				0: "type1",
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
@@ -237,7 +240,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			Chooser: chooseTipsGilson,
 			Tipboxes: []TipChooserTestTipbox{
 				{
-					TipType: "type1",
+					TipType: type1,
 					TipLocations: [8]string{
 						"000000000000",
 						"000000000000",
@@ -251,7 +254,7 @@ func TestGilsonTipChooser(t *testing.T) {
 				},
 			},
 			Head: 0,
-			ChannelMap: map[ChannelIndex]TipTypeName{
+			ChannelMap: map[ChannelIndex]wtype.TipType{
 				0: "type1",
 			},
 			ExpectedError: "no tips found for type: type1",
@@ -261,7 +264,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			Chooser: chooseTipsGilson,
 			Tipboxes: []TipChooserTestTipbox{
 				{
-					TipType: "type1",
+					TipType: type1,
 					TipLocations: [8]string{
 						"000000000000",
 						"000000000000",
@@ -274,7 +277,7 @@ func TestGilsonTipChooser(t *testing.T) {
 					},
 				},
 				{
-					TipType: "type1",
+					TipType: type1,
 					TipLocations: [8]string{
 						"111111000000",
 						"111111000000",
@@ -288,7 +291,7 @@ func TestGilsonTipChooser(t *testing.T) {
 				},
 			},
 			Head: 0,
-			ChannelMap: map[ChannelIndex]TipTypeName{
+			ChannelMap: map[ChannelIndex]wtype.TipType{
 				0: "type1",
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
@@ -303,7 +306,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			Chooser: chooseTipsGilson,
 			Tipboxes: []TipChooserTestTipbox{
 				{
-					TipType: "type1",
+					TipType: type1,
 					TipLocations: [8]string{
 						"111111111111",
 						"111111111111",
@@ -316,7 +319,7 @@ func TestGilsonTipChooser(t *testing.T) {
 					},
 				},
 				{
-					TipType: "type2",
+					TipType: type2,
 					TipLocations: [8]string{
 						"111111000000",
 						"111111000000",
@@ -330,7 +333,7 @@ func TestGilsonTipChooser(t *testing.T) {
 				},
 			},
 			Head: 0,
-			ChannelMap: map[ChannelIndex]TipTypeName{
+			ChannelMap: map[ChannelIndex]wtype.TipType{
 				0: "type2",
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
@@ -345,7 +348,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			Chooser: chooseTipsGilson,
 			Tipboxes: []TipChooserTestTipbox{
 				{
-					TipType: "type1",
+					TipType: type1,
 					TipLocations: [8]string{
 						"111111111100",
 						"111111111100",
@@ -359,7 +362,7 @@ func TestGilsonTipChooser(t *testing.T) {
 				},
 			},
 			Head: 0,
-			ChannelMap: map[ChannelIndex]TipTypeName{
+			ChannelMap: map[ChannelIndex]wtype.TipType{
 				0: "type1",
 				1: "type1",
 				2: "type1",
@@ -409,7 +412,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			Chooser: chooseTipsGilson,
 			Tipboxes: []TipChooserTestTipbox{
 				{
-					TipType: "type1",
+					TipType: type1,
 					TipLocations: [8]string{
 						"111111111100",
 						"111111111100",
@@ -423,7 +426,7 @@ func TestGilsonTipChooser(t *testing.T) {
 				},
 			},
 			Head: 0,
-			ChannelMap: map[ChannelIndex]TipTypeName{
+			ChannelMap: map[ChannelIndex]wtype.TipType{
 				0: "type1",
 				1: "type1",
 				2: "type1",
@@ -473,7 +476,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			Chooser: chooseTipsGilson,
 			Tipboxes: []TipChooserTestTipbox{
 				{
-					TipType: "type1",
+					TipType: type1,
 					TipLocations: [8]string{
 						"100000000000",
 						"100000000000",
@@ -487,7 +490,7 @@ func TestGilsonTipChooser(t *testing.T) {
 				},
 			},
 			Head: 0,
-			ChannelMap: map[ChannelIndex]TipTypeName{
+			ChannelMap: map[ChannelIndex]wtype.TipType{
 				0: "type1",
 				1: "type1",
 				2: "type1",
@@ -504,7 +507,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			Chooser: chooseTipsGilson,
 			Tipboxes: []TipChooserTestTipbox{
 				{
-					TipType: "type1",
+					TipType: type1,
 					TipLocations: [8]string{
 						"111111111100",
 						"111111111100",
@@ -517,7 +520,7 @@ func TestGilsonTipChooser(t *testing.T) {
 					},
 				},
 				{
-					TipType: "type2",
+					TipType: type2,
 					TipLocations: [8]string{
 						"111111111100",
 						"111111111100",
@@ -531,7 +534,7 @@ func TestGilsonTipChooser(t *testing.T) {
 				},
 			},
 			Head: 0,
-			ChannelMap: map[ChannelIndex]TipTypeName{
+			ChannelMap: map[ChannelIndex]wtype.TipType{
 				0: "type1",
 				1: "type1",
 				2: "type1",
@@ -553,7 +556,7 @@ func TestHamiltonTipChooser(t *testing.T) {
 			Chooser: chooseTipsHamilton,
 			Tipboxes: []TipChooserTestTipbox{
 				{
-					TipType: "type1",
+					TipType: type1,
 					TipLocations: [8]string{
 						"111111111111",
 						"111111111111",
@@ -567,7 +570,7 @@ func TestHamiltonTipChooser(t *testing.T) {
 				},
 			},
 			Head: 0,
-			ChannelMap: map[ChannelIndex]TipTypeName{
+			ChannelMap: map[ChannelIndex]wtype.TipType{
 				0: "type1",
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
@@ -582,7 +585,7 @@ func TestHamiltonTipChooser(t *testing.T) {
 			Chooser: chooseTipsHamilton,
 			Tipboxes: []TipChooserTestTipbox{
 				{
-					TipType: "type1",
+					TipType: type1,
 					TipLocations: [8]string{
 						"000000000111",
 						"000000000111",
@@ -596,7 +599,7 @@ func TestHamiltonTipChooser(t *testing.T) {
 				},
 			},
 			Head: 0,
-			ChannelMap: map[ChannelIndex]TipTypeName{
+			ChannelMap: map[ChannelIndex]wtype.TipType{
 				0: "type1",
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
@@ -611,7 +614,7 @@ func TestHamiltonTipChooser(t *testing.T) {
 			Chooser: chooseTipsHamilton,
 			Tipboxes: []TipChooserTestTipbox{
 				{
-					TipType: "type1",
+					TipType: type1,
 					TipLocations: [8]string{
 						"000000000111",
 						"000000000111",
@@ -625,7 +628,7 @@ func TestHamiltonTipChooser(t *testing.T) {
 				},
 			},
 			Head: 0,
-			ChannelMap: map[ChannelIndex]TipTypeName{
+			ChannelMap: map[ChannelIndex]wtype.TipType{
 				0: "type1",
 				2: "type1",
 				4: "type1",
@@ -655,7 +658,7 @@ func TestHamiltonTipChooser(t *testing.T) {
 			Chooser: chooseTipsHamilton,
 			Tipboxes: []TipChooserTestTipbox{
 				{
-					TipType: "type1",
+					TipType: type1,
 					TipLocations: [8]string{
 						"000000000111",
 						"000000000111",
@@ -668,7 +671,7 @@ func TestHamiltonTipChooser(t *testing.T) {
 					},
 				},
 				{
-					TipType: "type2",
+					TipType: type2,
 					TipLocations: [8]string{
 						"000000111111",
 						"000000111111",
@@ -682,15 +685,15 @@ func TestHamiltonTipChooser(t *testing.T) {
 				},
 			},
 			Head: 0,
-			ChannelMap: map[ChannelIndex]TipTypeName{
-				0: "type1",
-				1: "type2",
-				2: "type1",
-				3: "type2",
-				4: "type1",
-				5: "type2",
-				6: "type1",
-				7: "type2",
+			ChannelMap: map[ChannelIndex]wtype.TipType{
+				0: type1,
+				1: type2,
+				2: type1,
+				3: type2,
+				4: type1,
+				5: type2,
+				6: type1,
+				7: type2,
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
 				0: {

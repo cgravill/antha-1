@@ -35,7 +35,7 @@ func compareOutput(t *testing.T, got, want []liquidhandling.TipSubset) {
 func TestMakeChannelSubsetOneSubset(t *testing.T) {
 	idGen := id.NewIDGenerator(t.Name())
 	prm := makeChannel(idGen)
-	tiptypes := []string{"tip", "tip", "tip", "tip", "", "tip", "tip", ""}
+	tiptypes := []wtype.TipType{"tip", "tip", "tip", "tip", "", "tip", "tip", ""}
 
 	prms := []*wtype.LHChannelParameter{prm, prm, prm, prm, nil, prm, prm, nil}
 
@@ -53,7 +53,7 @@ func TestMakeChannelSubsetOneSubset(t *testing.T) {
 func TestMakeChannelSubsetTwoSubsets(t *testing.T) {
 	idGen := id.NewIDGenerator(t.Name())
 	prm := makeChannel(idGen)
-	tiptypes := []string{"tip", "tip", "tip2", "tip", "", "tip", "tip", ""}
+	tiptypes := []wtype.TipType{"tip", "tip", "tip2", "tip", "", "tip", "tip", ""}
 
 	prms := []*wtype.LHChannelParameter{prm, prm, prm, prm, nil, prm, prm, nil}
 
@@ -72,7 +72,7 @@ func TestMakeChannelSubsetTwoSubsetsParams(t *testing.T) {
 	idGen := id.NewIDGenerator(t.Name())
 	prm := makeChannel(idGen)
 	prm2 := makeChannel(idGen)
-	tiptypes := []string{"tip", "tip", "tip", "tip", "", "tip", "tip", ""}
+	tiptypes := []wtype.TipType{"tip", "tip", "tip", "tip", "", "tip", "tip", ""}
 
 	prms := []*wtype.LHChannelParameter{prm, prm, prm2, prm, nil, prm, prm, nil}
 

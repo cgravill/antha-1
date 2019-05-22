@@ -43,7 +43,7 @@ func TestDeckSpace1(t *testing.T) {
 			lh := GetLiquidHandlerForTest(lab)
 
 			for i := 0; i < len(lh.Properties.Preferences.Tipboxes); i++ {
-				tb, err := lab.Inventory.TipBoxes.NewTipbox(lh.Properties.Tips[0].Type)
+				tb, err := lab.Inventory.TipBoxes.NewTipbox(lh.Properties.Tips[0].GetType())
 				if err != nil {
 					return err
 				}
@@ -53,7 +53,7 @@ func TestDeckSpace1(t *testing.T) {
 				}
 			}
 
-			tb, err := lab.Inventory.TipBoxes.NewTipbox(lh.Properties.Tips[0].Type)
+			tb, err := lab.Inventory.TipBoxes.NewTipbox(lh.Properties.Tips[0].GetType())
 			if err != nil {
 				return err
 			}

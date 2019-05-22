@@ -6,8 +6,8 @@ import (
 	"github.com/antha-lang/antha/antha/anthalib/wtype"
 )
 
-func dupSA(sa []string) []string {
-	r := make([]string, len(sa))
+func dupSA(sa []wtype.TipType) []wtype.TipType {
+	r := make([]wtype.TipType, len(sa))
 
 	for i := 0; i < len(sa); i++ {
 		r[i] = sa[i]
@@ -25,7 +25,7 @@ func dupCHA(cha []*wtype.LHChannelParameter) []*wtype.LHChannelParameter {
 
 	return r
 }
-func MakeChannelSubsets(tiptypes []string, channels []*wtype.LHChannelParameter) ([]TipSubset, error) {
+func MakeChannelSubsets(tiptypes []wtype.TipType, channels []*wtype.LHChannelParameter) ([]TipSubset, error) {
 	finished := false
 
 	ret := make([]TipSubset, 0, 1)
@@ -34,7 +34,7 @@ func MakeChannelSubsets(tiptypes []string, channels []*wtype.LHChannelParameter)
 	cha := dupCHA(channels)
 
 	for i := 0; i <= len(tiptypes); i++ {
-		ts := ""
+		var ts wtype.TipType
 		var ch *wtype.LHChannelParameter
 		mask := make([]bool, len(tiptypes))
 
@@ -49,7 +49,7 @@ func MakeChannelSubsets(tiptypes []string, channels []*wtype.LHChannelParameter)
 				}
 				if ts == tta[j] && ch.Equals(cha[j]) {
 					mask[j] = true
-					tta[j] = ""
+					tta[j] = wtype.TipType("")
 					cha[j] = nil
 				}
 			}

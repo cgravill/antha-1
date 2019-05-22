@@ -20,13 +20,11 @@ func (ci ChannelIndex) String() string {
 	return fmt.Sprintf("%d", ci)
 }
 
-type TipTypeName string
-
 type TipNotFoundError struct {
-	Missing []TipTypeName // the tip types which were not found
+	Missing []wtype.TipType // the tip types which were not found
 }
 
-func NewTipNotFoundError(missing ...TipTypeName) *TipNotFoundError {
+func NewTipNotFoundError(missing ...wtype.TipType) *TipNotFoundError {
 	return &TipNotFoundError{
 		Missing: missing,
 	}
@@ -45,18 +43,18 @@ func (tnf *TipNotFoundError) Error() string {
 // given the current robot configuration, lhp, the head to load to, and which tip types should be loaded onto each channel, channelMap.
 // If there is no error, the keys in the returned map should equal the keys in channelMap, and the tips should be removed from the lhp object.
 // If not enough tips were found, or the tips that were found couldn't be loaded a TipNotFoundError should be returned.
-type TipChooser func(lhp *LHProperties, head int, channelMap map[ChannelIndex]TipTypeName) (map[ChannelIndex]TipSource, error)
+type TipChooser func(lhp *LHProperties, head int, channelMap map[ChannelIndex]wtype.TipType) (map[ChannelIndex]TipSource, error)
 
 // chooseTipsGilson TODO: this code should live in the instruction plugin and be provided as a callback once we no longer need to serialize
 // Tip choice is quite constrained - tips must be contigious and are picked up from right-to-left by the left hand head and left-to-right by the right hand head.
 // When more tips are required than are left in a column, extra tips are first picked up from the next column before returning to the original one.
-func chooseTipsGilson(lhp *LHProperties, head int, channelMap map[ChannelIndex]TipTypeName) (map[ChannelIndex]TipSource, error) {
+func chooseTipsGilson(lhp *LHProperties, head int, channelMap map[ChannelIndex]wtype.TipType) (map[ChannelIndex]TipSource, error) {
 
 	// first, some assertions
 
 	// 1: there can be only one tiptype
-	var tipType TipTypeName
-	tipTypes := make(map[TipTypeName]bool, len(channelMap))
+	var tipType wtype.TipType
+	tipTypes := make(map[wtype.TipType]bool, len(channelMap))
 	for _, tt := range channelMap {
 		tipTypes[tt] = true
 		tipType = tt
@@ -104,7 +102,7 @@ func chooseTipsGilson(lhp *LHProperties, head int, channelMap map[ChannelIndex]T
 	// let's try and find a tipbox with enough tips
 	var box *wtype.LHTipbox
 	for _, bx := range lhp.GetTipboxes() {
-		if TipTypeName(bx.Tiptype.Type) == tipType && bx.N_clean_tips() >= len(channelMap) {
+		if wtype.TipType(bx.Tiptype.Type) == tipType && bx.N_clean_tips() >= len(channelMap) {
 			box = bx
 		}
 	}
@@ -145,7 +143,7 @@ func chooseTipsGilson(lhp *LHProperties, head int, channelMap map[ChannelIndex]T
 // chooseTipsHamilton TODO: this code should live in the instruction plugin and be provided as a callback once we no longer need to serialize
 // The hamilton device has very few limitations for tip choice, so the behaviour here is to take tips in column order, back to front, left to
 // right. This is done independently for each tip type, selecting tipboxes in preference order.
-func chooseTipsHamilton(lhp *LHProperties, head int, channelMap map[ChannelIndex]TipTypeName) (map[ChannelIndex]TipSource, error) {
+func chooseTipsHamilton(lhp *LHProperties, head int, channelMap map[ChannelIndex]wtype.TipType) (map[ChannelIndex]TipSource, error) {
 
 	// some assertions
 
@@ -167,26 +165,26 @@ func chooseTipsHamilton(lhp *LHProperties, head int, channelMap map[ChannelIndex
 	}
 
 	// get unique tiptypes
-	tipTypeMap := make(map[TipTypeName]bool, len(channelMap))
+	tipTypeMap := make(map[wtype.TipType]bool, len(channelMap))
 	for _, tt := range channelMap {
 		tipTypeMap[tt] = true
 	}
-	tipTypes := make([]TipTypeName, 0, len(tipTypeMap))
+	tipTypes := make([]wtype.TipType, 0, len(tipTypeMap))
 	for tt := range tipTypeMap {
 		tipTypes = append(tipTypes, tt)
 	}
 
 	// find the available tipboxes by tip type, in preference order
-	tipboxesByType := make(map[TipTypeName][]*wtype.LHTipbox, len(tipTypes))
+	tipboxesByType := make(map[wtype.TipType][]*wtype.LHTipbox, len(tipTypes))
 	for _, tb := range lhp.GetTipboxes() {
-		tipboxesByType[TipTypeName(tb.Tiptype.Type)] = append(tipboxesByType[TipTypeName(tb.Tiptype.Type)], tb)
+		tipboxesByType[wtype.TipType(tb.Tiptype.Type)] = append(tipboxesByType[wtype.TipType(tb.Tiptype.Type)], tb)
 	}
 
 	// initialise counters to keep track of which position of which box we're looking at for each type
-	tipboxIndexByType := make(map[TipTypeName]int, len(tipTypes))
+	tipboxIndexByType := make(map[wtype.TipType]int, len(tipTypes))
 
 	// moveToNextTip advance the iterator and tipbox index for this tip type to the next tip to be chosen
-	getNextTip := func(tt TipTypeName) (*wtype.LHTipbox, wtype.WellCoords, error) {
+	getNextTip := func(tt wtype.TipType) (*wtype.LHTipbox, wtype.WellCoords, error) {
 		tipboxes := tipboxesByType[tt]
 		for tipboxIndexByType[tt] < len(tipboxes) {
 			tb := tipboxes[tipboxIndexByType[tt]]

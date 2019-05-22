@@ -147,10 +147,10 @@ func tipHeadCompatible(tip *wtype.LHTip, head *wtype.LHHead) bool {
 	return !(tip.MinVol.LessThan(head.Params.Minvol) || tip.MaxVol.GreaterThan(head.Params.Maxvol))
 }
 
-func ChooseChannels(idGen *id.IDGenerator, vols []wunit.Volume, prms *LHProperties) ([]*wtype.LHChannelParameter, []*wtype.LHTip, []string, error) {
+func ChooseChannels(idGen *id.IDGenerator, vols []wunit.Volume, prms *LHProperties) ([]*wtype.LHChannelParameter, []*wtype.LHTip, []wtype.TipType, error) {
 	prmA := make([]*wtype.LHChannelParameter, len(vols))
 	tipA := make([]*wtype.LHTip, len(vols))
-	tipTypeA := make([]string, len(vols))
+	tipTypeA := make([]wtype.TipType, len(vols))
 
 	// we choose individually
 

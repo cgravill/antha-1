@@ -29,14 +29,15 @@ func (inv *Inventory) LoadLibrary() {
 		if _, found := inv.tipboxByType[tb.Type]; found {
 			panic(fmt.Sprintf("tipbox %s already added", tb.Type))
 		}
-		if _, found := inv.tipboxByType[tb.Tiptype.Type]; found {
+		if _, found := inv.tipboxByType[tb.Tiptype.GetType()]; found {
 			panic(fmt.Sprintf("tipbox %s already added", tb.Tiptype.Type))
 		}
 		inv.tipboxByType[tb.Type] = tb
-		inv.tipboxByType[tb.Tiptype.Type] = tb
+		inv.tipboxByType[tb.Tiptype.GetType()] = tb
 	}
 }
 
+// NewTipbox create a new tipbox, either by tipbox type or tip type
 func (inv *Inventory) NewTipbox(typ string) (*wtype.LHTipbox, error) {
 	if tb, err := inv.FetchTipbox(typ); err != nil {
 		return nil, err

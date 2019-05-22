@@ -208,7 +208,7 @@ func (f *FromFactory) UnmarshalJSON(b []byte) error {
 
 type sTip struct {
 	ID              string
-	Type            string
+	Type            TipType
 	Mnfr            string
 	Dirty           bool
 	MaxVol          wunit.Volume

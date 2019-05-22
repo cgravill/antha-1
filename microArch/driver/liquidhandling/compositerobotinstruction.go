@@ -24,6 +24,7 @@ package liquidhandling
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -212,7 +213,7 @@ func (ins *ChannelBlockInstruction) Generate(labEffects *effects.LaboratoryEffec
 	changeTips := true // always load tips to start with
 	var lastThing *wtype.Liquid
 	var channels []*wtype.LHChannelParameter
-	var tiptypes []string
+	var tiptypes []wtype.TipType
 
 	for t := 0; t < len(ins.Volume); t++ {
 		if len(ins.What[t]) == 0 {
@@ -348,7 +349,7 @@ type ChannelTransferInstruction struct {
 	TVolume    []wunit.Volume
 	Multi      int // potentially deprecated
 	Prms       []*wtype.LHChannelParameter
-	TipType    []string
+	TipType    []wtype.TipType
 	Component  []string
 }
 
@@ -394,7 +395,7 @@ func NewChannelTransferInstruction() *ChannelTransferInstruction {
 		TVolume:         []wunit.Volume{},
 		FPlateType:      []string{},
 		TPlateType:      []string{},
-		TipType:         []string{},
+		TipType:         []wtype.TipType{},
 		Component:       []string{},
 	}
 	v.BaseRobotInstruction = NewBaseRobotInstruction(v)
@@ -550,6 +551,7 @@ type LoadTipsMoveInstruction struct {
 	Well       []string
 	FPosition  []string
 	FPlateType []string
+	TipType    []wtype.TipType
 	Multi      int
 	Platform   string
 }
@@ -560,6 +562,7 @@ func NewLoadTipsMoveInstruction() *LoadTipsMoveInstruction {
 		Well:            []string{},
 		FPosition:       []string{},
 		FPlateType:      []string{},
+		TipType:         []wtype.TipType{},
 	}
 	v.BaseRobotInstruction = NewBaseRobotInstruction(v)
 	return v
@@ -611,7 +614,7 @@ func (ins *LoadTipsMoveInstruction) Generate(labEffects *effects.LaboratoryEffec
 
 	lod := NewLoadTipsInstruction()
 	lod.Head = ins.Head
-	lod.TipType = ins.FPlateType
+	lod.TipType = ins.TipType
 	lod.HolderType = ins.FPlateType
 	lod.Multi = ins.Multi
 	lod.Pos = ins.FPosition
@@ -630,6 +633,7 @@ type UnloadTipsMoveInstruction struct {
 	PltTo      []string
 	WellTo     []string
 	TPlateType []string
+	TipType    []wtype.TipType
 	Multi      int
 	Platform   string
 }
@@ -640,6 +644,7 @@ func NewUnloadTipsMoveInstruction() *UnloadTipsMoveInstruction {
 		PltTo:           []string{},
 		WellTo:          []string{},
 		TPlateType:      []string{},
+		TipType:         []wtype.TipType{},
 	}
 	v.BaseRobotInstruction = NewBaseRobotInstruction(v)
 	return v
@@ -691,7 +696,7 @@ func (ins *UnloadTipsMoveInstruction) Generate(labEffects *effects.LaboratoryEff
 
 	uld := NewUnloadTipsInstruction()
 	uld.Head = ins.Head
-	uld.TipType = ins.TPlateType
+	uld.TipType = ins.TipType
 	uld.HolderType = ins.TPlateType
 	uld.Multi = ins.Multi
 	uld.Pos = ins.PltTo
@@ -1153,7 +1158,7 @@ type LoadTipsInstruction struct {
 	Pos        []string
 	Well       []string
 	Channels   []int
-	TipType    []string
+	TipType    []wtype.TipType
 	HolderType []string
 	Multi      int
 	Platform   string
@@ -1163,7 +1168,7 @@ func NewLoadTipsInstruction() *LoadTipsInstruction {
 	v := &LoadTipsInstruction{
 		InstructionType: LOD,
 		Channels:        []int{},
-		TipType:         []string{},
+		TipType:         []wtype.TipType{},
 		HolderType:      []string{},
 		Pos:             []string{},
 		Well:            []string{},
@@ -1218,7 +1223,7 @@ type UnloadTipsInstruction struct {
 	*InstructionType
 	Head       int
 	Channels   []int
-	TipType    []string
+	TipType    []wtype.TipType
 	HolderType []string
 	Multi      int
 	Pos        []string
@@ -1229,7 +1234,7 @@ type UnloadTipsInstruction struct {
 func NewUnloadTipsInstruction() *UnloadTipsInstruction {
 	v := &UnloadTipsInstruction{
 		InstructionType: ULD,
-		TipType:         []string{},
+		TipType:         []wtype.TipType{},
 		HolderType:      []string{},
 		Channels:        []int{},
 		Pos:             []string{},
@@ -1292,7 +1297,7 @@ type SuckInstruction struct {
 	Prms        []*wtype.LHChannelParameter
 	Multi       int
 	Overstroke  bool
-	TipType     []string
+	TipType     []wtype.TipType
 	Component   []string
 }
 
@@ -1323,7 +1328,7 @@ func NewSuckInstruction(idGen *id.IDGenerator, cti *ChannelTransferInstruction) 
 		Prms:            prms,
 		Head:            head,
 		Multi:           cti.Multi,
-		TipType:         make([]string, len(cti.TipType)),
+		TipType:         make([]wtype.TipType, len(cti.TipType)),
 	}
 	ret.BaseRobotInstruction = NewBaseRobotInstruction(ret)
 
@@ -1381,7 +1386,7 @@ func (ins *SuckInstruction) GetParameter(name InstructionParameter) interface{} 
 	}
 }
 
-func getMixVolumes(labEffects *effects.LaboratoryEffects, pol wtype.LHPolicy, policyKey string, insVols []wunit.Volume, insWhat []string, tipTypes []string, prms []*wtype.LHChannelParameter) ([]wunit.Volume, error) {
+func getMixVolumes(labEffects *effects.LaboratoryEffects, pol wtype.LHPolicy, policyKey string, insVols []wunit.Volume, insWhat []string, tipTypes []wtype.TipType, prms []*wtype.LHChannelParameter) ([]wunit.Volume, error) {
 	ret := make([]wunit.Volume, len(insVols))
 	for i := range ret {
 		ret[i] = wunit.ZeroVolume()
@@ -1417,7 +1422,7 @@ func getMixVolumes(labEffects *effects.LaboratoryEffects, pol wtype.LHPolicy, po
 			if !prm.CanMove(ret[i], true) {
 
 				//does the tip have a filter?
-				tb, err := labEffects.Inventory.TipBoxes.NewTipbox(tipTypes[i])
+				tb, err := labEffects.Inventory.TipBoxes.NewTipbox(string(tipTypes[i]))
 				if err != nil {
 					return ret, wtype.LHError(wtype.LH_ERR_OTHER, fmt.Sprintf("While getting tip %v", err))
 				}
@@ -1711,7 +1716,7 @@ type BlowInstruction struct {
 	TVolume    []wunit.Volume
 	Prms       []*wtype.LHChannelParameter
 	Multi      int
-	TipType    []string
+	TipType    []wtype.TipType
 	Component  []string
 }
 
@@ -1744,7 +1749,7 @@ func NewBlowInstruction(idGen *id.IDGenerator, cti *ChannelTransferInstruction) 
 		Component:       make([]string, len(cti.Component)),
 		Prms:            prms,
 		Head:            head,
-		TipType:         make([]string, len(cti.TipType)),
+		TipType:         make([]wtype.TipType, len(cti.TipType)),
 		Multi:           cti.Multi,
 	}
 	ret.BaseRobotInstruction = NewBaseRobotInstruction(ret)
@@ -3060,7 +3065,7 @@ func GetFirstDefined(sa []string) int {
 	return x
 }
 
-func GetTips(labEffects *effects.LaboratoryEffects, tiptypes []string, params *LHProperties, channel []*wtype.LHChannelParameter, usetiptracking bool) ([]RobotInstruction, error) {
+func GetTips(labEffects *effects.LaboratoryEffects, tiptypes []wtype.TipType, params *LHProperties, channel []*wtype.LHChannelParameter, usetiptracking bool) ([]RobotInstruction, error) {
 	// GetCleanTips returns enough sets of tip boxes to get all distinct tip types
 	tipwells, tipboxpositions, tipboxtypes, terr := params.GetCleanTips(labEffects, tiptypes, channel, usetiptracking)
 
@@ -3092,29 +3097,22 @@ func GetTips(labEffects *effects.LaboratoryEffects, tiptypes []string, params *L
 	return inss, nil
 }
 
-func collate(s []string) string {
-	m := make(map[string]int, len(s))
-	for _, v := range s {
-		m[v] += 1
-	}
-
-	r := ""
-
-	for k, v := range m {
-		r += fmt.Sprintf("%d %s, ", v, k)
-	}
-
-	return r
-}
-
-//func DropTips(tiptype string, params *LHProperties, channel *wtype.LHChannelParameter, multi int) (RobotInstruction, error) {
-func DropTips(tiptypes []string, params *LHProperties, channels []*wtype.LHChannelParameter) (RobotInstruction, error) {
+// DropTips generate a robot instruction to unload/eject all tips specified in tiptypes loaded onto channels.
+// Does not check that the given tips are actually loaded onto the given channels
+func DropTips(tiptypes []wtype.TipType, params *LHProperties, channels []*wtype.LHChannelParameter) (RobotInstruction, error) {
 	tipwells, tipwastepositions, tipwastetypes := params.DropDirtyTips(channels)
 
 	if tipwells == nil {
-		ins := NewUnloadTipsMoveInstruction()
-		err := wtype.LHError(wtype.LH_ERR_TIP_WASTE, collate(tiptypes))
-		return ins, err
+		m := make(map[wtype.TipType]int, len(tiptypes))
+		for _, v := range tiptypes {
+			m[v] += 1
+		}
+
+		s := make([]string, len(m))
+		for tt, n := range m {
+			s = append(s, fmt.Sprintf("%d %s", n, tt))
+		}
+		return NewUnloadTipsMoveInstruction(), wtype.LHErrorf(wtype.LH_ERR_TIP_WASTE, "no waste for tips: %s", strings.Join(s, ", "))
 	}
 
 	defpos := GetFirstDefined(tipwells)
@@ -3123,12 +3121,19 @@ func DropTips(tiptypes []string, params *LHProperties, channels []*wtype.LHChann
 		return NewUnloadTipsMoveInstruction(), wtype.LHError(wtype.LH_ERR_NO_TIPS, fmt.Sprint("DROP: type ", tiptypes))
 	}
 
+	multi := 0
+	for _, tt := range tiptypes {
+		if tt != "" {
+			multi += 1
+		}
+	}
+
 	ins := NewUnloadTipsMoveInstruction()
 	ins.Head = channels[defpos].Head
 	ins.WellTo = tipwells
 	ins.PltTo = tipwastepositions
 	ins.TPlateType = tipwastetypes
-	ins.Multi = getMulti(tiptypes)
+	ins.Multi = multi
 	return ins, nil
 }
 
@@ -3171,7 +3176,7 @@ func checkAndSaften(proposed, min, max float64, overrideIfOutOfRange bool) (floa
 //with shorter tips.
 //Does not affect behaviour with troughs and other wells that are big enough for
 //the entire head to fit inside.
-func makeZOffsetSafe(prms *LHProperties, zoffset float64, headIndex int, plates []string, tipTypes []string) ([]float64, error) {
+func makeZOffsetSafe(prms *LHProperties, zoffset float64, headIndex int, plates []string, tipTypes []wtype.TipType) ([]float64, error) {
 	length := len(plates)
 	if len(tipTypes) < length {
 		length = len(tipTypes)

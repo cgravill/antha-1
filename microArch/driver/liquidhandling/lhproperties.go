@@ -695,7 +695,7 @@ func (lhp *LHProperties) GetComponentsSingle(idGen *id.IDGenerator, cmps []*wtyp
 	return plateIDs, wellCoords, vols, nil
 }
 
-func (lhp *LHProperties) GetCleanTips(labEffects *effects.LaboratoryEffects, tiptype []string, channel []*wtype.LHChannelParameter, usetiptracking bool) (wells, positions, boxtypes [][]string, err error) {
+func (lhp *LHProperties) GetCleanTips(labEffects *effects.LaboratoryEffects, tiptype []wtype.TipType, channel []*wtype.LHChannelParameter, usetiptracking bool) (wells, positions, boxtypes [][]string, err error) {
 
 	// these are merged into subsets with tip and channel types in common here
 	// each subset has a mask which is the same size as the number of channels available
@@ -770,7 +770,7 @@ func (lhp *LHProperties) getCleanTipSubset(labEffects *effects.LaboratoryEffects
 
 	if !foundit {
 		// try adding a new tip box
-		bx, err := labEffects.Inventory.TipBoxes.NewTipbox(tipParams.TipType)
+		bx, err := labEffects.Inventory.TipBoxes.NewTipbox(string(tipParams.TipType))
 
 		if err != nil {
 			return nil, nil, nil, wtype.LHError(wtype.LH_ERR_NO_TIPS, fmt.Sprintf("No tipbox of type %s found: %s", tipParams.TipType, err))
