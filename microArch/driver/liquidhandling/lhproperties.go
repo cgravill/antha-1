@@ -29,7 +29,6 @@ import (
 
 	"github.com/antha-lang/antha/antha/anthalib/wtype"
 	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/laboratory/effects"
 	"github.com/antha-lang/antha/laboratory/effects/id"
 	"github.com/antha-lang/antha/workflow"
 )
@@ -693,101 +692,6 @@ func (lhp *LHProperties) GetComponentsSingle(idGen *id.IDGenerator, cmps []*wtyp
 	}
 
 	return plateIDs, wellCoords, vols, nil
-}
-
-func (lhp *LHProperties) GetCleanTips(labEffects *effects.LaboratoryEffects, tiptype []wtype.TipType, channel []*wtype.LHChannelParameter, usetiptracking bool) (wells, positions, boxtypes [][]string, err error) {
-
-	// these are merged into subsets with tip and channel types in common here
-	// each subset has a mask which is the same size as the number of channels available
-	subsets, err2 := MakeChannelSubsets(tiptype, channel)
-
-	if err2 != nil {
-		return [][]string{}, [][]string{}, [][]string{}, err2
-	}
-
-	for _, set := range subsets {
-		sw, sp, sb, err := lhp.getCleanTipSubset(labEffects, set, usetiptracking)
-
-		if err != nil {
-			return [][]string{}, [][]string{}, [][]string{}, err
-		}
-
-		wells = append(wells, sw)
-		positions = append(positions, sp)
-		boxtypes = append(boxtypes, sb)
-	}
-
-	return wells, positions, boxtypes, nil
-}
-
-func countMultiB(ar []bool) int {
-	r := 0
-	for _, v := range ar {
-		if v {
-			r += 1
-		}
-	}
-
-	return r
-}
-
-// this function only returns true if we can get all tips at once
-// TODO -- support not getting in a single operation
-func (lhp *LHProperties) getCleanTipSubset(labEffects *effects.LaboratoryEffects, tipParams TipSubset, usetiptracking bool) (wells, positions, boxtypes []string, err error) {
-	positions = make([]string, len(tipParams.Mask))
-	boxtypes = make([]string, len(tipParams.Mask))
-
-	foundit := false
-	multi := countMultiB(tipParams.Mask)
-
-	for _, addr := range lhp.Preferences.Tipboxes {
-		bx, ok := lhp.Tipboxes[addr]
-		if !ok || bx.Tiptype.Type != tipParams.TipType {
-			continue
-		}
-		wells, err = bx.GetTipsMasked(tipParams.Mask, tipParams.Channel.Orientation, true)
-
-		// TODO -- support partial collections
-		if wells != nil && countMulti(wells) == multi {
-			foundit = true
-			for i := 0; i < len(wells); i++ {
-				if tipParams.Mask[i] {
-					positions[i] = addr
-					boxtypes[i] = bx.Boxname
-				}
-			}
-			break
-		} else if usetiptracking && lhp.HasTipTracking() {
-			bx.Refresh(labEffects.IDGenerator)
-			return lhp.getCleanTipSubset(labEffects, tipParams, usetiptracking)
-		}
-	}
-
-	// if you don't find any suitable tips, why just make a
-	// new box full of them!
-	// nothing can possibly go wrong
-	// surely
-
-	if !foundit {
-		// try adding a new tip box
-		bx, err := labEffects.Inventory.TipBoxes.NewTipbox(string(tipParams.TipType))
-
-		if err != nil {
-			return nil, nil, nil, wtype.LHError(wtype.LH_ERR_NO_TIPS, fmt.Sprintf("No tipbox of type %s found: %s", tipParams.TipType, err))
-		}
-
-		r := lhp.AddTipBox(bx)
-
-		if r != nil {
-			err = r
-			return nil, nil, nil, err
-		}
-
-		return lhp.getCleanTipSubset(labEffects, tipParams, usetiptracking)
-		//		return nil, nil, nil
-	}
-
-	return
 }
 
 // DropDirtyTips figure out where tips attached to the non-nil channels in channels can be disposed

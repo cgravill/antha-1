@@ -654,7 +654,7 @@ func (this *Liquidhandler) Plan(labEffects *effects.LaboratoryEffects, request *
 	// copy them accross to the initial properties
 	for pos, tb := range this.FinalProperties.Tipboxes {
 		initialTb := tb.DupKeepIDs(labEffects.IDGenerator)
-		initialTb.Refresh(labEffects.IDGenerator)
+		initialTb.Refill(labEffects.IDGenerator)
 		this.Properties.AddTipBoxTo(pos, initialTb)
 	}
 
