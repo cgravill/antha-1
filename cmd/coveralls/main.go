@@ -13,10 +13,11 @@ func main() {
 		"[flags] path/to/cover.profile",
 		"github.com/antha-lang/antha/cmd/coveralls")
 
-	var repoToken, commitSHA, repoName string
+	var repoName, repoToken, commitSHA, branchName string
+	flag.StringVar(&repoName, "reponame", "", "Name of git repository")
 	flag.StringVar(&repoToken, "repotoken", "", "RepoToken for coveralls.")
 	flag.StringVar(&commitSHA, "commitsha", "", "Git Commit SHA")
-	flag.StringVar(&repoName, "reponame", "", "Name of git repository")
+	flag.StringVar(&branchName, "branchname", "", "Git Branch Name")
 	flag.Parse()
 
 	args := flag.Args()
@@ -31,8 +32,13 @@ func main() {
 	job := &Job{
 		RepoToken:   repoToken,
 		ServiceName: "antha",
-		CommitSHA:   commitSHA,
 		SourceFiles: pkgs.ToSourceFiles(repoName),
+		Git: Git{
+			Head: Head{
+				Id: commitSHA,
+			},
+			Branch: branchName,
+		},
 	}
 	if err := job.Upload(); err != nil {
 		logger.Fatal(l, err)

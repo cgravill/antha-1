@@ -18,7 +18,7 @@ type Job struct {
 	RepoToken   string        `json:"repo_token"`
 	ServiceName string        `json:"service_name"`
 	SourceFiles []*SourceFile `json:"source_files"`
-	CommitSHA   string        `json:"commit_sha"`
+	Git         Git           `json:"git"`
 }
 
 type SourceFile struct {
@@ -26,6 +26,20 @@ type SourceFile struct {
 	SourceDigest string `json:"source_digest"` // md5, presumably in hex
 	Coverage     []*int `json:"coverage"`
 	Source       string `json:"source"`
+}
+
+type Git struct {
+	Head   Head   `json:"head"`
+	Branch string `json:"branch,omitempty"`
+}
+
+type Head struct {
+	Id             string `json:"id"`
+	AuthorName     string `json:"author_name,omitempty"`
+	AuthorEmail    string `json:"author_email,omitempty"`
+	CommitterName  string `json:"committer_name,omitempty"`
+	CommitterEmail string `json:"committer_email,omitempty"`
+	Message        string `json:"message,omitempty"`
 }
 
 func (pkgs *Packages) ToSourceFiles(repoPrefix string) []*SourceFile {
