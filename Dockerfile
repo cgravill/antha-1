@@ -1,9 +1,7 @@
 FROM eu.gcr.io/antha-images/golang:1.12.4-build AS build
 ARG COMMIT_SHA
 ARG NETRC
-ARG COVERALLS_TOKEN
 RUN printf "%s\n" "$NETRC" > /root/.netrc
-RUN printf "%s\n" "$COVERALLS_TOKEN" > /root/.coveralls_token
 RUN mkdir /antha
 WORKDIR /antha
 RUN set -ex && go mod init antha && go mod edit "-require=github.com/antha-lang/antha@$COMMIT_SHA" && go mod download
@@ -12,11 +10,12 @@ RUN set -ex && go test -c github.com/antha-lang/antha/cmd/elements
 COPY scripts/*.sh /antha/
 
 FROM eu.gcr.io/antha-images/golang:1.12.4-build AS tests
+ARG COVERALLS_TOKEN
 COPY --from=build /root/.netrc /root/.cache /root/
 COPY --from=build /go /go
 COPY --from=build /antha /antha
 WORKDIR /antha
-RUN ./antha-test.sh
+RUN ./antha-test.sh "$COVERALLS_TOKEN"
 
 FROM eu.gcr.io/antha-images/golang:1.12.4-build AS cloud
 ## This target produces an image that is used both for gitlab elements CI, and also workflow execution in the cloud

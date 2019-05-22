@@ -20,7 +20,6 @@ github.com/Synthace/instruction-plugins v0.0.0-20190409101917-f2439f6bee7c h1:BU
 github.com/Synthace/instruction-plugins v0.0.0-20190409101917-f2439f6bee7c/go.mod h1:PeBzUoAoFtTgqmFst9DN7EAJl3xgZyP/CtmKPkZqtL8=
 github.com/Synthace/instruction-plugins v0.0.0-20190423134354-cd8eba7cdbdc h1:2C4grU2d7XfRoDRp09UUAePdoolHLa+xcwsulC9ERVg=
 github.com/Synthace/instruction-plugins v0.0.0-20190423134354-cd8eba7cdbdc/go.mod h1:cJsPv3FiVcMVMNOd4QamLohiFP/xzdINNpLiOPFH3PQ=
-github.com/Synthace/instruction-plugins v0.0.0-20190507142248-541a8a6edf99 h1:kxDvmoAUsvoMKCE93a68zgtWYjqolNcFjituOdS7O1s=
 github.com/Synthace/instruction-plugins v0.0.0-20190514102125-e7f49b35d3c7 h1:lEqTLkEvCu6Lt1gVSjDd51pZbVYkZlTO42r6HG8eUDo=
 github.com/Synthace/instruction-plugins v0.0.0-20190514102125-e7f49b35d3c7/go.mod h1:i00AUYSIYgrseC1yDCAHTGoBkVnWu8DffUncvhTk+gQ=
 github.com/Synthace/microservice v0.0.0-20190417123801-c7ca6bc971ec h1:cQpxyLh9pQTL0jWbHQis1Oh1QdXGsdsT2L9cBwzy+pY=
@@ -39,7 +38,6 @@ github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 h1:kFOfPq6dUM1hTo
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239/go.mod h1:2FmKhYUyUczH0OGQWaF5ceTx0UBShxjsH6f8oGKYe2c=
 github.com/antha-lang/antha v0.0.1-alpha.0.20181122124851-ccc2c2488bd6/go.mod h1:MbMl2i2T5KI7Rm+W55ejnUux0H3qIv3eUp73Rkf3qTc=
 github.com/antha-lang/antha v0.0.1-alpha.0.20190423133102-5f491329dca4/go.mod h1:AZkXvaQfjjqYbewhmS/rqARzRq2vqB0KO6w4vuR3W0M=
-github.com/antha-lang/antha v0.0.1-alpha.0.20190428130441-01f760571877/go.mod h1:h/3rvMYD3xzwS21kIzVBEB6cpRciyofcdOwR7CE822s=
 github.com/antha-lang/antha v0.0.1-alpha.0.20190510134236-73f2ff6e7bb8/go.mod h1:MnjCClz65mJHe9jOHYpft+g8kpY/EonS+NinUX7RMnk=
 github.com/antha-lang/toolbox v0.0.0-20180417132942-6ea11e22448c h1:HxBhuiqdsUDPfWqpiCU69MsT7ey6dDodUpvt7Xf3a0w=
 github.com/antha-lang/toolbox v0.0.0-20180417132942-6ea11e22448c/go.mod h1:F1QKFMetACEKbbsk7Cdr0BzvlphDjKbpbR0QZLMm87Q=
@@ -319,6 +317,7 @@ golang.org/x/tools v0.0.0-20180828015842-6cd1fcedba52/go.mod h1:n7NCudcB/nEzxVGm
 golang.org/x/tools v0.0.0-20190114222345-bf090417da8b/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
 golang.org/x/tools v0.0.0-20190226205152-f727befe758c/go.mod h1:9Yl7xja0Znq3iFh3HoIrodX9oNMXvdceNzlUR8zjMvY=
 golang.org/x/tools v0.0.0-20190311212946-11955173bddd/go.mod h1:LCzVGOaR6xXOjkQ3onu1FJEFr0SW1gC7cKk1uF8kGRs=
+golang.org/x/tools v0.0.0-20190312170243-e65039ee4138 h1:H3uGjxCR/6Ds0Mjgyp7LMK81+LvmbvWWEnJhzk1Pi9E=
 golang.org/x/tools v0.0.0-20190312170243-e65039ee4138/go.mod h1:LCzVGOaR6xXOjkQ3onu1FJEFr0SW1gC7cKk1uF8kGRs=
 gonum.org/v1/gonum v0.0.0-20180722074715-72e79ca98526 h1:fvfKg2skV3FzqQivfUzyUNVmZ1wOvbjBw1/Ni0484Gs=
 gonum.org/v1/gonum v0.0.0-20180722074715-72e79ca98526/go.mod h1:Y+Yx5eoAFn32cQvJDxZx5Dpnq+c3wtXuadVZAcxbbBo=
