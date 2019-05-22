@@ -12,7 +12,7 @@ require (
 	github.com/disintegration/imaging v1.6.0
 	github.com/dustinkirkland/golang-petname v0.0.0-20170921220637-d3c2ba80e75e
 	github.com/go-kit/kit v0.8.0
-	github.com/go-test/deep v1.0.1
+	github.com/go-test/deep v1.0.2-0.20181118220953-042da051cf31
 	github.com/golang/protobuf v1.3.1
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
 	github.com/montanaflynn/stats v0.5.0
