@@ -371,9 +371,9 @@ func (lhp *LHProperties) AddTipBoxTo(addr string, tipbox *wtype.LHTipbox) bool {
 	return true
 }
 
-// GetTipboxes returns a slice of all loaded tipboxes in the preference order defined by lhp.Preferences
-func (lhp *LHProperties) GetTipboxes() []*wtype.LHTipbox {
-	ret := make([]*wtype.LHTipbox, 0, len(lhp.Tipboxes))
+// TipboxesByPreference return the loaded tipboxes in descending preference order
+func (lhp *LHProperties) TipboxesByPreference() []*wtype.LHTipbox {
+	ret := make([]*wtype.LHTipbox, 0, len(lhp.Preferences.Tipboxes))
 	for _, addr := range lhp.Preferences.Tipboxes {
 		if bx := lhp.Tipboxes[addr]; bx != nil {
 			ret = append(ret, bx)

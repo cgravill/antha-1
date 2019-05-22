@@ -10,7 +10,7 @@ import (
 )
 
 type TipSource struct {
-	DeckAddress string           // the name of the deck position containing the tipbox to use
+	TipboxID    string           // the ID of the tipbox from which to take tips
 	WellAddress wtype.WellCoords // the well coordinate to use
 }
 
@@ -40,15 +40,15 @@ func (tnf *TipNotFoundError) Error() string {
 }
 
 // TipChooser a callback function which allows a device plugin to specify which tips to load
-// given the current robot configuration, lhp, the head to load to, and which tip types should be loaded onto each channel, channelMap.
-// If there is no error, the keys in the returned map should equal the keys in channelMap, and the tips should be removed from the lhp object.
-// If not enough tips were found, or the tips that were found couldn't be loaded a TipNotFoundError should be returned.
-type TipChooser func(lhp *LHProperties, head int, channelMap map[ChannelIndex]wtype.TipType) (map[ChannelIndex]TipSource, error)
+// given a copy of the preference-ordered list of available tipboxes, the head to load to, and which tip types should be loaded onto each channel, channelMap.
+// If there is no error, the keys in the returned map should equal the keys in channelMap.
+// If not enough tips were found, or the tips that were found couldn't be loaded a TipNotFoundError should be returned
+type TipChooser func(tipboxes []*wtype.LHTipbox, head int, channelMap map[ChannelIndex]wtype.TipType) (map[ChannelIndex]TipSource, error)
 
 // chooseTipsGilson TODO: this code should live in the instruction plugin and be provided as a callback once we no longer need to serialize
 // Tip choice is quite constrained - tips must be contigious and are picked up from right-to-left by the left hand head and left-to-right by the right hand head.
 // When more tips are required than are left in a column, extra tips are first picked up from the next column before returning to the original one.
-func chooseTipsGilson(lhp *LHProperties, head int, channelMap map[ChannelIndex]wtype.TipType) (map[ChannelIndex]TipSource, error) {
+func chooseTipsGilson(tipboxes []*wtype.LHTipbox, head int, channelMap map[ChannelIndex]wtype.TipType) (map[ChannelIndex]TipSource, error) {
 
 	// first, some assertions
 
@@ -101,7 +101,7 @@ func chooseTipsGilson(lhp *LHProperties, head int, channelMap map[ChannelIndex]w
 
 	// let's try and find a tipbox with enough tips
 	var box *wtype.LHTipbox
-	for _, bx := range lhp.GetTipboxes() {
+	for _, bx := range tipboxes {
 		if wtype.TipType(bx.Tiptype.Type) == tipType && bx.N_clean_tips() >= len(channelMap) {
 			box = bx
 		}
@@ -132,7 +132,7 @@ func chooseTipsGilson(lhp *LHProperties, head int, channelMap map[ChannelIndex]w
 	ret := make(map[ChannelIndex]TipSource, len(channelMap))
 	for i := 0; i < len(channelMap); i++ {
 		ret[ChannelIndex(i)] = TipSource{
-			DeckAddress: lhp.PlateIDLookup[box.ID],
+			TipboxID:    box.ID,
 			WellAddress: coords[len(coords)-1-i],
 		}
 	}
@@ -143,7 +143,7 @@ func chooseTipsGilson(lhp *LHProperties, head int, channelMap map[ChannelIndex]w
 // chooseTipsHamilton TODO: this code should live in the instruction plugin and be provided as a callback once we no longer need to serialize
 // The hamilton device has very few limitations for tip choice, so the behaviour here is to take tips in column order, back to front, left to
 // right. This is done independently for each tip type, selecting tipboxes in preference order.
-func chooseTipsHamilton(lhp *LHProperties, head int, channelMap map[ChannelIndex]wtype.TipType) (map[ChannelIndex]TipSource, error) {
+func chooseTipsHamilton(tipboxes []*wtype.LHTipbox, head int, channelMap map[ChannelIndex]wtype.TipType) (map[ChannelIndex]TipSource, error) {
 
 	// some assertions
 
@@ -176,7 +176,7 @@ func chooseTipsHamilton(lhp *LHProperties, head int, channelMap map[ChannelIndex
 
 	// find the available tipboxes by tip type, in preference order
 	tipboxesByType := make(map[wtype.TipType][]*wtype.LHTipbox, len(tipTypes))
-	for _, tb := range lhp.GetTipboxes() {
+	for _, tb := range tipboxes {
 		tipboxesByType[wtype.TipType(tb.Tiptype.Type)] = append(tipboxesByType[wtype.TipType(tb.Tiptype.Type)], tb)
 	}
 
@@ -217,7 +217,7 @@ func chooseTipsHamilton(lhp *LHProperties, head int, channelMap map[ChannelIndex
 			return ret, err
 		} else {
 			ret[ChannelIndex(ci)] = TipSource{
-				DeckAddress: lhp.PlateIDLookup[tb.ID],
+				TipboxID:    tb.ID,
 				WellAddress: wc,
 			}
 		}

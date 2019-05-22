@@ -3066,35 +3066,109 @@ func GetFirstDefined(sa []string) int {
 }
 
 func GetTips(labEffects *effects.LaboratoryEffects, tiptypes []wtype.TipType, params *LHProperties, channel []*wtype.LHChannelParameter, usetiptracking bool) ([]RobotInstruction, error) {
-	// GetCleanTips returns enough sets of tip boxes to get all distinct tip types
-	tipwells, tipboxpositions, tipboxtypes, terr := params.GetCleanTips(labEffects, tiptypes, channel, usetiptracking)
 
-	if tipwells == nil || terr != nil {
-		err := wtype.LHError(wtype.LH_ERR_NO_TIPS, fmt.Sprintf("PICKUP: types: %v On Deck: %v", tiptypes, params.GetLayout(labEffects.IDGenerator)))
-		return []RobotInstruction{NewLoadTipsMoveInstruction()}, err
+	head := -1
+	for _, ch := range channel {
+		if ch != nil {
+			if head < 0 {
+				head = ch.Head
+			} else if head != ch.Head {
+				return nil, errors.Errorf("cannot load tips to multiple heads simultaneously: %d != %d", head, ch.Head)
+			}
+		}
 	}
 
-	inss := make([]RobotInstruction, 0, 1)
+	channelMap := make(map[ChannelIndex]wtype.TipType, len(tiptypes))
+	for ch, tt := range tiptypes {
+		if !tt.IsNil() {
+			channelMap[ChannelIndex(ch)] = tt
+		}
+	}
 
-	for i := 0; i < len(tipwells); i++ {
-		// all instructions in a block must have a head in common
-		defPos := GetFirstDefined(tipwells[i])
+	// this is how we decide which TipChooser to use
+	// Ideally the function should be provided as a callback and be attahced to params already, currently blocked by the need to serialise
+	tipChooser, ok := map[string]TipChooser{
+		"gilson":   chooseTipsGilson,
+		"hamilton": chooseTipsHamilton,
+		"tecan":    chooseTipsHamilton,
+	}[strings.ToLower(params.Mnfr)]
+	if !ok {
+		panic(fmt.Sprintf("unsupported manufacturer: %s", params.Mnfr))
+	}
 
-		if defPos == -1 {
-			return inss, fmt.Errorf("Error: tip get failed for types %v", tiptypes)
+	// make repeated calls to the tipChooser, adding tips to the configuration until we either successfully find enough tips
+	// or we run out of deckspace and fail
+	for {
+		// tipChooser can make changes to the tipboxes, so make a fresh copy for each attempt
+		tipboxes := make([]*wtype.LHTipbox, 0, len(params.Tipboxes))
+		for _, bx := range params.TipboxesByPreference() {
+			tipboxes = append(tipboxes, bx.DupKeepIDs(labEffects.IDGenerator))
 		}
 
-		ins := NewLoadTipsMoveInstruction()
-		ins.Head = channel[defPos].Head
-		ins.Well = tipwells[i]
-		ins.FPosition = tipboxpositions[i]
-		ins.FPlateType = tipboxtypes[i]
-		ins.Multi = countMulti(tipwells[i])
+		sourceMap, err := tipChooser(tipboxes, head, channelMap)
+		if err == nil {
+			// we found some valid sources
+			ins := NewLoadTipsMoveInstruction()
+			ins.Head = head
+			ins.Multi = len(sourceMap)
+			ins.Platform = params.Mnfr
+			length := 0
+			for ch := range sourceMap {
+				if int(ch)+1 > length {
+					length = int(ch) + 1
+				}
+			}
+			ins.Well = make([]string, length)
+			ins.FPosition = make([]string, length)
+			ins.FPlateType = make([]string, length)
+			ins.TipType = make([]wtype.TipType, length)
+			for ch, src := range sourceMap {
+				position := params.PlateIDLookup[src.TipboxID]
+				bx := params.Tipboxes[position]
+				ins.Well[ch] = src.WellAddress.FormatA1()
+				ins.FPosition[ch] = position
+				ins.FPlateType[ch] = bx.Type
+				ins.TipType[ch] = bx.Tiptype.Type
 
-		inss = append(inss, ins)
+				bx.RemoveTip(src.WellAddress)
+			}
+
+			return []RobotInstruction{ins}, nil
+		} else if tipErr, ok := err.(*TipNotFoundError); !ok {
+			return nil, err
+		} else if usetiptracking {
+			// in "DriverTipTracking" mode the user has to refresh the tipboxes themselves, so
+			// find the first non-empty instance of tips of the missing type(s) and refresh them
+		TIPTYPE:
+			for _, tt := range tipErr.Missing {
+				for _, tb := range params.TipboxesByPreference() {
+					// checking for missing tips is _probably_ unnecessary here since we're not likely to be
+					// loading more than one tipbox at a time in the immediate future
+					if tb.Tiptype.Type == tt && tb.N_clean_tips() < tb.NRows()*tb.NCols() {
+						tb.Refill(labEffects.IDGenerator)
+						// we've added some more tips for this type, so move on to the next one
+						continue TIPTYPE
+					}
+				}
+				// we didn't find any boxes for this tiptype so add one
+				if tb, err := labEffects.Inventory.TipBoxes.NewTipbox(string(tt)); err != nil {
+					return nil, err
+				} else if err := params.AddTipBox(tb); err != nil {
+					return nil, err
+				}
+			}
+		} else {
+			// add a new tipbox of each of the missing types and try again
+			for _, tt := range tipErr.Missing {
+				if tb, err := labEffects.Inventory.TipBoxes.NewTipbox(string(tt)); err != nil {
+					return nil, err
+				} else if err := params.AddTipBox(tb); err != nil {
+					return nil, err
+				}
+			}
+		}
 	}
 
-	return inss, nil
 }
 
 // DropTips generate a robot instruction to unload/eject all tips specified in tiptypes loaded onto channels.

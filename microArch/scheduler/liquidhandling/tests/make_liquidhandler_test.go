@@ -98,6 +98,8 @@ func makeLayout(lab *laboratory.Laboratory) *liquidhandling.LHProperties {
 
 func makeIndependentLH(lab *laboratory.Laboratory) *liquidhandling.LHProperties {
 	lhp := makeLayout(lab)
+	// set manufacturer so the right tipChooser is selected
+	lhp.Mnfr = "Hamilton"
 
 	// test independent liquidhandler has only one head to avoid multi-head instruction issues
 	config := getIndependentConfig(lab.IDGenerator)

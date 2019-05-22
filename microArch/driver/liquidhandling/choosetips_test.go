@@ -9,7 +9,6 @@ import (
 
 	"github.com/antha-lang/antha/antha/anthalib/wtype"
 	"github.com/antha-lang/antha/laboratory/effects/id"
-	"github.com/antha-lang/antha/workflow"
 )
 
 // TipChooserTipbox defines the state of a tipbox for testing, should be an array of 8 strings each of length 12
@@ -40,7 +39,7 @@ type TipChooserTest struct {
 	Name    string
 	Chooser TipChooser // the function to test
 	// Tipboxes define what tipboxes should be available for the test and what state they should be in.
-	// Tipboxes are placed in positions with names "1","2","3", etc
+	// Tipboxe IDs are replaced with "1","2","3", etc for testing
 	Tipboxes        []TipChooserTestTipbox
 	Head            int
 	ChannelMap      map[ChannelIndex]wtype.TipType
@@ -55,28 +54,15 @@ func (test *TipChooserTest) Run(t *testing.T) {
 func (test *TipChooserTest) run(t *testing.T) {
 	idGen := id.NewIDGenerator(fmt.Sprintf("test_%s", test.Name))
 
-	// setup the tipboxes in a minimal lhproperties
-	positions := make(map[string]*wtype.LHPosition, len(test.Tipboxes))
-	names := make([]string, 0, len(test.Tipboxes))
-	for i := range test.Tipboxes {
-		name := fmt.Sprintf("%d", i+1)
-		positions[name] = wtype.NewLHPosition(name, wtype.Coordinates3D{}, wtype.Coordinates2D{})
-		names = append(names, name)
-	}
-	lhp := NewLHProperties(idGen, "testmodel", "testmnfr", LLLiquidHandler, DisposableTips, positions)
-	lhp.Preferences = &workflow.LayoutOpt{
-		Tipboxes: workflow.Addresses(names),
-	}
-
-	// initialise and add the tipboxes
-	for _, tipbox := range test.Tipboxes {
-		if err := lhp.AddTipBox(tipbox.init(idGen)); err != nil {
-			t.Fatal(err)
-		}
+	// setup the tipboxes
+	tipboxes := make([]*wtype.LHTipbox, len(test.Tipboxes))
+	for i, tipbox := range test.Tipboxes {
+		tipboxes[i] = tipbox.init(idGen)
+		tipboxes[i].ID = fmt.Sprintf("%d", i+1)
 	}
 
 	// now run the test
-	sources, err := test.Chooser(lhp, test.Head, test.ChannelMap)
+	sources, err := test.Chooser(tipboxes, test.Head, test.ChannelMap)
 	if !test.expecting(err) {
 		t.Fatalf("errors don't match:\ng: %s\ne: %s", err, test.ExpectedError)
 	}
@@ -84,13 +70,6 @@ func (test *TipChooserTest) run(t *testing.T) {
 	if err == nil {
 		if diffs := deep.Equal(sources, test.ExpectedSources); len(diffs) != 0 {
 			t.Errorf("sources don't match:\n%s", strings.Join(diffs, "\n"))
-		}
-
-		// test that tips were removed from the locations
-		for _, src := range sources {
-			if lhp.Tipboxes[src.DeckAddress].HasTipAt(src.WellAddress) {
-				t.Errorf("tip not removed from %s@%s", src.WellAddress.FormatA1(), src.DeckAddress)
-			}
 		}
 	}
 
@@ -143,7 +122,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
 				0: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("H12"),
 				},
 			},
@@ -172,7 +151,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
 				0: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("H1"),
 				},
 			},
@@ -201,7 +180,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
 				0: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("A1"),
 				},
 			},
@@ -230,7 +209,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
 				0: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("A12"),
 				},
 			},
@@ -296,7 +275,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
 				0: {
-					DeckAddress: "2",
+					TipboxID:    "2",
 					WellAddress: wtype.MakeWellCoords("C6"),
 				},
 			},
@@ -338,7 +317,7 @@ func TestGilsonTipChooser(t *testing.T) {
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
 				0: {
-					DeckAddress: "2",
+					TipboxID:    "2",
 					WellAddress: wtype.MakeWellCoords("C6"),
 				},
 			},
@@ -374,35 +353,35 @@ func TestGilsonTipChooser(t *testing.T) {
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
 				0: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("A10"),
 				},
 				1: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("B10"),
 				},
 				2: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("C10"),
 				},
 				3: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("D10"),
 				},
 				4: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("E10"),
 				},
 				5: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("F10"),
 				},
 				6: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("G10"),
 				},
 				7: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("H10"),
 				},
 			},
@@ -438,35 +417,35 @@ func TestGilsonTipChooser(t *testing.T) {
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
 				0: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("E9"),
 				},
 				1: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("F9"),
 				},
 				2: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("G9"),
 				},
 				3: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("H9"),
 				},
 				4: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("A10"),
 				},
 				5: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("B10"),
 				},
 				6: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("C10"),
 				},
 				7: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("D10"),
 				},
 			},
@@ -575,7 +554,7 @@ func TestHamiltonTipChooser(t *testing.T) {
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
 				0: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("A1"),
 				},
 			},
@@ -604,7 +583,7 @@ func TestHamiltonTipChooser(t *testing.T) {
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
 				0: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("C9"),
 				},
 			},
@@ -636,19 +615,19 @@ func TestHamiltonTipChooser(t *testing.T) {
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
 				0: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("C9"),
 				},
 				2: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("D9"),
 				},
 				4: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("E9"),
 				},
 				6: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("F9"),
 				},
 			},
@@ -697,35 +676,35 @@ func TestHamiltonTipChooser(t *testing.T) {
 			},
 			ExpectedSources: map[ChannelIndex]TipSource{
 				0: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("C9"),
 				},
 				1: {
-					DeckAddress: "2",
+					TipboxID:    "2",
 					WellAddress: wtype.MakeWellCoords("D6"),
 				},
 				2: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("D9"),
 				},
 				3: {
-					DeckAddress: "2",
+					TipboxID:    "2",
 					WellAddress: wtype.MakeWellCoords("E6"),
 				},
 				4: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("E9"),
 				},
 				5: {
-					DeckAddress: "2",
+					TipboxID:    "2",
 					WellAddress: wtype.MakeWellCoords("F6"),
 				},
 				6: {
-					DeckAddress: "1",
+					TipboxID:    "1",
 					WellAddress: wtype.MakeWellCoords("F9"),
 				},
 				7: {
-					DeckAddress: "2",
+					TipboxID:    "2",
 					WellAddress: wtype.MakeWellCoords("G6"),
 				},
 			},
