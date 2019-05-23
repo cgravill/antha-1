@@ -45,6 +45,7 @@ func (c *HTTPCall) Call() error {
 	}
 
 	httpReq.Header.Add("Authorization", "bearer "+c.Token)
+	httpReq.Header.Add("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(httpReq)
 	if err != nil {
@@ -132,7 +133,7 @@ func run() error {
 				},
 			},
 			Response: resp,
-			Path:     "/api/pub-v1/defaults/workflow/set",
+			Path:     "/web/pub-v1/defaults/workflow/set",
 		}
 
 		if err := call.Call(); err != nil {

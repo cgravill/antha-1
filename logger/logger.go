@@ -19,12 +19,19 @@ type Logger struct {
 	swappable *kitlog.SwapLogger
 }
 
-func (l *Logger) Log(pairs ...interface{}) {
-	if err := l.kit.Log(pairs...); err != nil {
+// Log keyvals through the logger. Keyvals is a slice of key-value
+// pairs, and are logged as key=value. The logger logs the context and
+// the keyvals.
+func (l *Logger) Log(keyvals ...interface{}) {
+	if err := l.kit.Log(keyvals...); err != nil {
 		panic(err)
 	}
 }
 
+// With returns a new child logger with context set to the existing
+// logger's context with keyvals appended. As with Log, keyvals is a
+// slice of key-value pairs. The underlying logger (i.e. writers etc)
+// is shared by the parent and child logger.
 func (l *Logger) With(keyvals ...interface{}) *Logger {
 	logger := kitlog.With(l.kit, keyvals...)
 	return &Logger{
@@ -33,6 +40,16 @@ func (l *Logger) With(keyvals ...interface{}) *Logger {
 	}
 }
 
+// ForSingletonPrefix returns a logging function for use with
+// composer.RunAndLogCommand. The function returned inspects the
+// number of arguments supplied. If only 1 argument is supplied then
+// Logger.Log is called with (prefix, args[0]) as the key-value
+// pairs. Otherwise, Logger.Log is called with the complete slice of
+// arguments.
+//
+// The purpose is to cope with reading complete lines from a
+// subprocess, but coping errors or other out-of-band messages that
+// come through and need to be logged.
 func (l *Logger) ForSingletonPrefix(prefix string) func(...interface{}) {
 	return func(keyvals ...interface{}) {
 		if len(keyvals) == 1 {
@@ -79,7 +96,8 @@ func NewLogger(ws ...io.Writer) *Logger {
 
 // Replace the underlying writers of not only this logger, but the
 // entire tree of loggers created by any calls to With from the root
-// downwards.
+// downwards. As with NewLogger, if len(ws) == 0 then os.Stderr is
+// used, otherwise only ws is used.
 func (l *Logger) SwapWriters(ws ...io.Writer) {
 	w := io.Writer(os.Stderr)
 	if len(ws) != 0 {

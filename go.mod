@@ -23,9 +23,9 @@ require (
 	github.com/studio-b12/gowebdav v0.0.0-20190103184047-38f79aeaf1ac
 	github.com/tealeg/xlsx v1.0.3
 	github.com/ugorji/go v1.1.4
-	github.com/willf/bitset v1.1.10
 	github.com/xitongsys/parquet-go v0.0.0-20190327025424-682b98622266
 	golang.org/x/net v0.0.0-20190320064053-1272bf9dcd53
+	golang.org/x/tools v0.0.0-20190312170243-e65039ee4138
 	gonum.org/v1/gonum v0.0.0-20181029232933-400065bf7646
 	gonum.org/v1/plot v0.0.0-20190410204940-3a5f52653745
 	google.golang.org/grpc v1.20.1
