@@ -6,6 +6,8 @@
 
 *~
 
+cover.profile
+
 .idea/
 
 .build/
@@ -16,4 +18,5 @@ cmd/elements/elements
 cmd/migrate/migrate
 cmd/upload-metadata/upload-metadata
 cmd/simulationfiles/simulationfiles
+cmd/coveralls/coveralls
 workflow/simulaterequestpb/dumpjson/dumpjson
