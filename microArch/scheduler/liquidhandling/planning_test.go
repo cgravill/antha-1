@@ -3,13 +3,15 @@ package liquidhandling
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"math"
 	"reflect"
 	"sort"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/antha-lang/antha/antha/anthalib/mixer"
 	"github.com/antha-lang/antha/antha/anthalib/wtype"
@@ -502,6 +504,35 @@ func Mixes(outputPlateType string, components TestMixComponents) InstructionBuil
 		}
 
 		return ret
+	}
+}
+
+func SourceForTest(ctx context.Context, volUl float64, lType string) *wtype.Liquid {
+	source := GetComponentForTest(ctx, lType, wunit.NewVolume(volUl, "ul"))
+	source.Type = wtype.LTMultiWater
+	return source
+}
+
+func TimedPrompt(msg string, duration string, inputInstruction *wtype.LHInstruction) InstructionBuilder {
+
+	d, err := time.ParseDuration(duration)
+	if err != nil {
+		panic(fmt.Sprintf("Unaccepted time duration %s, %v", duration, err))
+	}
+
+	return func(ctx context.Context) []*wtype.LHInstruction {
+		lhi := wtype.NewLHPromptInstruction()
+		lhi.Message = msg
+		lhi.Inputs = inputInstruction.Outputs
+
+		for _, i := range lhi.Inputs {
+			o := wtype.NewLHComponent()
+			o.SetName(i.Name())
+			lhi.AddOutput(o)
+		}
+
+		lhi.WaitTime = d
+		return []*wtype.LHInstruction{inputInstruction, lhi}
 	}
 }
 
