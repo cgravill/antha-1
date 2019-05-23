@@ -16,7 +16,6 @@ The sections are:
   * [I want to run a workflow](#I-want-to-run-a-workflow)
   * [I want to test a repository](#I-want-to-test-a-repository)
   * [I want to migrate an old workflow](#I-want-to-migrate-an-old-workflow)
-  * [What next?](#What-next)
 
 ## I want to install Antha
 
@@ -75,8 +74,8 @@ elements-westeros
 
 That's great - we've got copies of the files that we need. **BUT** we are now also responsible for them.
 
-  * If we want to use different versions of antha, we'll need use `git` to get the versions that we want and then [reinstall the commands](#4.-Install-the-commands).
-  * If we want to edit an antha build, we'll need to make our edits, and then [reinstall the commands](#4.-Install-the-commands).
+  * If we want to use different versions of antha, we'll need use `git` to get the versions that we want and then [reinstall the commands](#4-install-the-antha-commands).
+  * If we want to edit an antha build, we'll need to make our edits, and then [reinstall the commands](#4-install-the-antha-commands).
   * If we want to use different elements repositories, we'll need to use `git` to get the versions that we want.
   * If we want to make local edits, we'll need to make edits in that folder.
 
@@ -84,7 +83,7 @@ That's great - we've got copies of the files that we need. **BUT** we are now al
 
 ### 4. Install the Antha commands
 
-We've got the code, lets build and install the Antha commands. Assuming you're in [your working directory](#1.-Create-a-working-directory), enter the following:
+We've got the code, lets build and install the Antha commands. Assuming you're in [your working directory](#1-create-a-working-directory), enter the following:
 
 ```bash
 cd antha
@@ -127,7 +126,7 @@ composer --help
 ```
 
 That's a bit more useful, you should see some information about the syntax for the command.
-We can also check the go documentation for the command. Run the following from your [working directory](#1.-Create-a-working-directory)
+We can also check the go documentation for the command. Run the following from your [working directory](#1-create-a-working-directory)
 
 ```bash
 go doc ./antha/cmd/composer
@@ -152,12 +151,12 @@ That completes installation of the Antha commands; we can move on to using them.
 
 During installation we:
 
-* [Created a working directory](#1.-Create-a-working-directory)
-* [Got a copy of the Antha Code](#2.-Clone-required-repositories)
-* [Got a copy of an elements repository](#2.-Clone-required-repositories)
-* [Checked we had the right versions of our code and elements](#3.-Housekeeping)
-* [Installed the commands](#4.-Install-the-commands)
-* [Checked that we can access help and documentation for the commands](#What-has-this-got-me)
+* [Created a working directory](#1-create-a-working-directory)
+* [Got a copy of the Antha Code](#2-clone-required-repositories)
+* [Got a copy of an elements repository](#2-clone-required-repositories)
+* [Checked we had the right versions of our code and elements](#3-housekeeping)
+* [Installed the commands](#4-install-the-antha-commands)
+* [Checked that we can access help and documentation for the commands](#what-has-this-got-me)
 
 We're all set to do some work
 
@@ -204,7 +203,7 @@ Let's create our `json` with repository information. Create a file `local-reposi
 
 **IMPORTANT** You will need to change the **Directory** (here `/Users/tutor/antha/elements-westeros`) to wherever your copy of `elements-westeros` is. You cannot use the `~` notation for a home directory here.
 
-We can now use this to run the workflow, using this new file to indicate where our elements are installed. Run the following from your [working directory](#1.-Create-a-working-directory):
+We can now use this to run the workflow, using this new file to indicate where our elements are installed. Run the following from your [working directory](#1-create-a-working-directory):
 
 ```bash
 composer -indir=./elements-westeros/DemoWorkflows/DOE/SimpleExample/testdata/defaultDOEExample_workflow  ./local-repository.json
@@ -275,7 +274,7 @@ We should see:
 bin		logs.txt	simulation	src		workflow
 ```
 
-That all looks useful! We'll come to what it means in [a later section](#What-is-in-this-output), but for now let's finish tidying how we run this.
+That all looks useful! We'll come to what it means in [a later section](#what-is-in-this-output), but for now let's finish tidying how we run this.
 
 #### Other tidy ups
 
@@ -404,7 +403,7 @@ The remaining data is found in the test output location - when run as above, thi
 
   * `/testWorkflows` - this folder contains the results of running the discovered workflows.
     * `logs.txt` - this is the log from running all the workflows. This is usually the first thing to check.
-    * `/simulation` - this is usually the second thing to look at, once you know which tests are failing. It contains the individual results from each workflow that was run - the output is [as previously discussed here](#What-is-in-this-output).
+    * `/simulation` - this is usually the second thing to look at, once you know which tests are failing. It contains the individual results from each workflow that was run - the output is [as previously discussed here](#what-is-in-this-output).
     * `/src` - copies of all the source files used in the run.
     * `/workflow` - the generated workflows.
     * `/bin` - the compiled versions of drivers if used.

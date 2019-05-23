@@ -98,8 +98,8 @@ e.g. for information on the representation of workflows: `go doc -all github.com
 
 The following commands are installed:
 
-  * [composer](#using-composer) for composing and running workflows.
-  * [elements](#using-elements) for managing elements.
+  * [composer](#using-the-composer-command) for composing and running workflows.
+  * [elements](#using-the-elements-command) for managing elements.
   * [migrate](#migrating-old-workflows) for migrating old workflow data into current format.
 
 Antha commands generally allow for workflow files to be composed. This is useful during development, as it allows different parts of a workflow to be shared between different workflows. For example:
@@ -192,7 +192,7 @@ This is the standard method of running Go unit tests.
 * For installations including source code:
     * `go test ./...` from within the installed `antha` directory.
 
-* For [sourceless installations](#antha-install-without-source-code):
+* For [sourceless installations](#install-antha-without-source-code):
     * `go test github.com/antha-lang/antha/...`
 
 #### Running element tests
@@ -212,7 +212,7 @@ Which indicates test output to be written to `/tmp/foobar` and repositories to b
 
     `rm -rf /tmp/foobar && go test -v -args -keep -outdir=/tmp/foobar ../composer/repositories.json 2>&1 | tee /tmp/log`
 
-If the installation is [sourceless](#antha-install-without-source-code) then the elements package should be specified on the command line:
+If the installation is [sourceless](#install-antha-without-source-code) then the elements package should be specified on the command line:
 
     `rm -rf /tmp/foobar && go test github.com/antha-lang/antha/cmd/elements -v -args -keep -outdir=/tmp/foobar ../composer/repositories.json 2>&1 | tee /tmp/log`
 
