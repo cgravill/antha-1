@@ -23,7 +23,7 @@ func main() {
 	flag.StringVar(&outDir, "outdir", "", "Directory to write to (default: a temporary directory will be created)")
 	flag.BoolVar(&keep, "keep", false, "Keep build environment if compilation is successful")
 	flag.BoolVar(&run, "run", true, "Run the workflow if compilation is successful")
-	flag.BoolVar(&linkedDrivers, "linkedDrivers", false, "Compile workflow with linked-in drivers")
+	flag.BoolVar(&linkedDrivers, "linkedDrivers", true, "Compile workflow with linked-in drivers")
 	flag.Parse()
 
 	l := logger.NewLogger()

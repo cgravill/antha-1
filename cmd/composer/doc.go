@@ -83,16 +83,16 @@
 //    By default, the compiled workflow is executed (step 8). If
 //    -run=false then the composer exits after step 7.
 //
-//  -linkedDrivers (boolean, default false)
-//    By default we do not require a checkout of the
-//    github.com/Synthace/instruction-plugins repository, which means
-//    that every device within the workflow that requires an
-//    instruction plugin must have a valid 'Connection' field. If
-//    -linkedDrivers=true then during compilation of the workflow, we
-//    attempt to compile and link in all the instruction plugins. If
-//    this succeeds, then any device in the workflow configured
-//    without a 'Connection' field will instead fall back on the
-//    relevant linked instruction plugin.
+//  -linkedDrivers (boolean, default true)
+//    By default we require a checkout of the
+//    github.com/Synthace/instruction-plugins repository. If this is
+//    available, then the 'Connection' field of device configuration
+//    can be omitted. However, if the repository is not available,
+//    then set -linkedDrivers=false, and every device within the
+//    workflow that requires an instruction plugin must have a valid
+//    non-empty 'Connection' field. If -linkedDrivers=true and a
+//    'Connection' field is non-empty, then the 'Connection' field
+//    takes precedence.
 //
 // On the command line, any further arguments are interpreted as paths
 // to workflow snippet json files (in addition to -indir, if provided)
