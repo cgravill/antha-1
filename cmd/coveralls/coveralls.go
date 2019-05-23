@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -57,9 +58,16 @@ func (pkgs *Packages) ToSourceFiles(repoPrefix string) []*SourceFile {
 	return res
 }
 
+// https://github.com/golang/go/issues/13560
+var isGeneratedRegex = regexp.MustCompile(`(?m)^// Code generated .* DO NOT EDIT.$`)
+
 func (pkg *Package) ToSourceFiles(prefix string) []*SourceFile {
 	res := make([]*SourceFile, 0, len(pkg.Files))
 	for fileName, blks := range pkg.Files {
+		// Do not measure code coverage for generated code:
+		if isGeneratedRegex.MatchString(blks.Source) {
+			continue
+		}
 		md5sum := md5.Sum([]byte(blks.Source)) // nolint
 		res = append(res, &SourceFile{
 			Name:         path.Join(filepath.ToSlash(prefix), fileName),

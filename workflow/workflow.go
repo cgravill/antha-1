@@ -21,7 +21,7 @@ import (
 	git "gopkg.in/src-d/go-git.v4"
 )
 
-//go:generate go-bindata -o ./schemas.go -pkg workflow -prefix schemas/ ./schemas/
+//go:generate go-bindata -o ./schemas.gen.go -pkg workflow -prefix schemas/ ./schemas/
 
 type Workflow struct {
 	SchemaVersion SchemaVersion `json:"SchemaVersion"`

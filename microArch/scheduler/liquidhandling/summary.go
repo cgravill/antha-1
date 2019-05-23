@@ -22,7 +22,7 @@ const (
 	ActionsSummaryVersion = "1.0"
 )
 
-//go:generate go-bindata -o ./schemas.go -pkg liquidhandling -prefix schemas/ ./schemas/
+//go:generate go-bindata -o ./schemas.gen.go -pkg liquidhandling -prefix schemas/ ./schemas/
 
 func validateJSON(schemaName string, jsonToValidate []byte) error {
 
