@@ -23,11 +23,12 @@ FROM eu.gcr.io/antha-images/golang:1.12.4-build AS tests
 ARG COMMIT_SHA
 ARG BRANCH_NAME
 ARG COVERALLS_TOKEN
+ARG BUILD_ID
 COPY --from=build /root/.netrc /root/.cache /root/
 COPY --from=build /go /go
 COPY --from=build /antha /antha
 WORKDIR /antha
-RUN ./antha-test.sh "$COVERALLS_TOKEN" "$COMMIT_SHA" "$BRANCH_NAME"
+RUN ./antha-test.sh "$COVERALLS_TOKEN" "$COMMIT_SHA" "$BRANCH_NAME" "$BUILD_ID"
 
 FROM eu.gcr.io/antha-images/golang:1.12.4-build AS cloud
 ## This target produces an image that is used both for gitlab elements CI, and also workflow execution in the cloud

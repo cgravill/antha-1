@@ -48,7 +48,7 @@ steps:
     set -x -o nounset -o errexit -o pipefail
     target=tests
     if [ "$BRANCH_NAME" = "feature/future_sanity" ]; then target=cloud; fi
-    docker build --force-rm -t 'eu.gcr.io/antha-images/antha-core:$COMMIT_SHA' --target=$target --build-arg COMMIT_SHA=$COMMIT_SHA --build-arg BRANCH_NAME=$BRANCH_NAME --build-arg NETRC="$(cat .netrc)" --build-arg COVERALLS_TOKEN=$(cat .coveralls_token) .
+    docker build --force-rm -t 'eu.gcr.io/antha-images/antha-core:$COMMIT_SHA' --target=$target --build-arg COMMIT_SHA=$COMMIT_SHA --build-arg BRANCH_NAME=$BRANCH_NAME --build-arg BUILD_ID=$BUILD_ID --build-arg NETRC="$(cat .netrc)" --build-arg COVERALLS_TOKEN=$(cat .coveralls_token) .
 
 - name: 'gcr.io/cloud-builders/gsutil'
   id: gitlab-fetch

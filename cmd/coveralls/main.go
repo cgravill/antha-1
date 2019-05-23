@@ -13,11 +13,12 @@ func main() {
 		"[flags] path/to/cover.profile",
 		"github.com/antha-lang/antha/cmd/coveralls")
 
-	var repoName, repoToken, commitSHA, branchName string
+	var repoName, repoToken, commitSHA, branchName, buildId string
 	flag.StringVar(&repoName, "reponame", "", "Name of git repository")
 	flag.StringVar(&repoToken, "repotoken", "", "RepoToken for coveralls.")
 	flag.StringVar(&commitSHA, "commitsha", "", "Git Commit SHA")
 	flag.StringVar(&branchName, "branchname", "", "Git Branch Name")
+	flag.StringVar(&buildId, "buildid", "", "Build Id")
 	flag.Parse()
 
 	args := flag.Args()
@@ -30,9 +31,10 @@ func main() {
 	}
 
 	job := &Job{
-		RepoToken:   repoToken,
-		ServiceName: "antha",
-		SourceFiles: pkgs.ToSourceFiles(repoName),
+		RepoToken:    repoToken,
+		ServiceName:  "antha-coveralls",
+		ServiceJobId: buildId,
+		SourceFiles:  pkgs.ToSourceFiles(repoName),
 		Git: Git{
 			Head: Head{
 				Id: commitSHA,

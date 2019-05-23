@@ -14,11 +14,14 @@ import (
 	"strings"
 )
 
+// Code in here is to create the necessary payload and upload to coveralls.
+
 type Job struct {
-	RepoToken   string        `json:"repo_token"`
-	ServiceName string        `json:"service_name"`
-	SourceFiles []*SourceFile `json:"source_files"`
-	Git         Git           `json:"git"`
+	RepoToken    string        `json:"repo_token"`
+	ServiceName  string        `json:"service_name"`
+	ServiceJobId string        `json:"service_job_id,omitempty"`
+	SourceFiles  []*SourceFile `json:"source_files"`
+	Git          Git           `json:"git"`
 }
 
 type SourceFile struct {

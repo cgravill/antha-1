@@ -13,6 +13,9 @@ import (
 	"golang.org/x/tools/cover"
 )
 
+// Code in here is to process the results of go cover, find the
+// relevant sources and build the necessary cover information.
+
 type Packages struct {
 	m map[string]*Package
 }
@@ -29,6 +32,9 @@ func (pkgs *Packages) FromCoverProfile(filenames ...string) error {
 			return err
 		} else {
 			for _, profile := range profiles {
+				if profile.Mode != "atomic" {
+					return fmt.Errorf("We can only cope with coverage collected with -covermode=atomic. Found %s", profile.Mode)
+				}
 				pkgs.AddProfile(profile)
 			}
 		}

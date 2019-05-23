@@ -7,6 +7,7 @@ shopt -s failglob
 COVERALLS_TOKEN=${1:-}
 COMMIT_SHA=${2:-}
 BRANCH_NAME=${3:-}
+BUILD_ID=${4:-}
 
 ## There are some packages that only contain test files. Go test gets
 ## upset if you try to include these packages in coverage, so we have
@@ -16,5 +17,5 @@ COVERPKG=$(go list -f '{{if (len .GoFiles) gt 0}}{{.ImportPath}}{{end}}' github.
 go test -covermode=atomic -coverprofile=cover.profile -coverpkg="${COVERPKG}" github.com/antha-lang/antha/...
 
 if [[ -n "${COVERALLS_TOKEN}" && -s cover.profile ]]; then
-    coveralls -reponame="github.com/antha-lang/antha" -repotoken="${COVERALLS_TOKEN}" -commitsha="${COMMIT_SHA}" -branchname="${BRANCH_NAME}" cover.profile
+    coveralls -reponame="github.com/antha-lang/antha" -repotoken="${COVERALLS_TOKEN}" -commitsha="${COMMIT_SHA}" -branchname="${BRANCH_NAME}" -buildid="${BUILD_ID}" cover.profile
 fi
