@@ -285,30 +285,6 @@ func (self *LHTipbox) GetBoxIntersections(box BBox) []LHObject {
 	return ret
 }
 
-func trimToMask(wells []string, mask []bool) []string {
-	if len(mask) >= len(wells) {
-		return wells
-	}
-	ret := make([]string, len(mask))
-	s := false
-	x := 0
-	for i := 0; i < len(wells); i++ {
-		if wells[i] != "" && !s {
-			s = true
-		}
-
-		if s {
-			ret[x] = wells[i]
-			x += 1
-		}
-
-		if x == len(mask) {
-			break
-		}
-	}
-	return ret
-}
-
 func (self *LHTipbox) GetPointIntersections(point Coordinates3D) []LHObject {
 	//relative point
 	relPoint := point.Subtract(OriginOf(self))

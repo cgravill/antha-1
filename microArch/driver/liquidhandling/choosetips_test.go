@@ -22,7 +22,7 @@ func (tct TipChooserTestTipbox) init(idGen *id.IDGenerator) *wtype.LHTipbox {
 	shp := wtype.NewShape(wtype.CylinderShape, "mm", 7.3, 7.3, 51.2)
 	w := wtype.NewLHWell(idGen, "ul", 250.0, 10.0, shp, wtype.FlatWellBottom, 7.3, 7.3, 51.2, 0.0, "mm")
 	tiptype := wtype.NewLHTip(idGen, "me", tct.TipType, 0.5, 1000.0, "ul", false, shp, 44.7)
-	tb := wtype.NewLHTipbox(idGen, 8, 12, wtype.Coordinates3D{127.76, 85.48, 120.0}, "me", "mytype", tiptype, w, 9.0, 9.0, 0.5, 0.5, 0.0)
+	tb := wtype.NewLHTipbox(idGen, 8, 12, wtype.Coordinates3D{X: 127.76, Y: 85.48, Z: 120.0}, "me", "mytype", tiptype, w, 9.0, 9.0, 0.5, 0.5, 0.0)
 
 	for i := 0; i < 8; i++ {
 		for j := 0; j < 12; j++ {
