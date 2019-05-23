@@ -1,0 +1,34 @@
+steps:
+
+- name: 'gcr.io/cloud-builders/gsutil'
+  id: netrc-fetch
+  waitFor: ['-']
+  args: ['cp', 'gs://cloud-build-antha-images/read-github-netrc.enc', '.']
+
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: netrc-decrypt
+  waitFor:
+  - netrc-fetch
+  args:
+  - kms
+  - decrypt
+  - --ciphertext-file=read-github-netrc.enc
+  - --plaintext-file=.netrc
+  - --location=global
+  - --keyring=continuous-deployment
+  - --key=read-github
+
+- name: 'gcr.io/cloud-builders/docker'
+  id: docker-build
+  waitFor:
+  - netrc-decrypt
+  entrypoint: '/bin/bash'
+  args:
+  - '-c'
+  - |
+    set -x -o nounset -o errexit -o pipefail
+    docker build --force-rm --build-arg NETRC="$(cat .netrc)" .
+
+timeout: 1000s
+options:
+  machineType: 'N1_HIGHCPU_8'
