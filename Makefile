@@ -1,4 +1,4 @@
-all: build lint test
+all: build lint test testelements
 
 build:
 	go build ./...
@@ -10,4 +10,7 @@ lint:
 test:
 	./scripts/antha-test.sh
 
-.PHONY: all build lint test
+testelements: cmd/composer/repositories.json
+	go test github.com/antha-lang/antha/cmd/elements -v -args -keep $(abspath $<)
+
+.PHONY: all build lint test testelements
