@@ -206,7 +206,7 @@ Let's create our `json` with repository information. Create a file `local-reposi
 We can now use this to run the workflow, using this new file to indicate where our elements are installed. Run the following from your [working directory](#1-create-a-working-directory):
 
 ```bash
-composer -indir=./elements-westeros/DemoWorkflows/DOE/SimpleExample/testdata/defaultDOEExample_workflow  ./local-repository.json
+composer -indir=./elements-westeros/DemoWorkflows/DOE/SimpleExample/testdata/defaultDOEExample_workflow ./local-repository.json
 ```
 
 That's it - it should run the workflow. You'll see lots of output to the command line, ending with something like:
@@ -258,7 +258,7 @@ Or maybe not, if it's scrolled too far.
 Our new command line looks like:
 
 ```bash
-composer -outdir=./output -keep -indir=./elements-westeros/DemoWorkflows/DOE/SimpleExample/testdata/defaultDOEExample_workflow  ./local-repository.json
+composer -outdir=./output -keep -indir=./elements-westeros/DemoWorkflows/DOE/SimpleExample/testdata/defaultDOEExample_workflow ./local-repository.json
 ```
 
 Note the addition of `-outdir=./output`. (_Note also_ that it must come **before** `./local-repository.json` - otherwise `composer` will assume the extra text is a workflow json to be merged in.)
@@ -281,7 +281,7 @@ That all looks useful! We'll come to what it means in [a later section](#what-is
 I'm excited! Let's run the workflow again:
 
 ```bash
-composer -outdir=./output -keep -indir=./elements-westeros/DemoWorkflows/DOE/SimpleExample/testdata/defaultDOEExample_workflow  ./local-repository.json
+composer -outdir=./output -keep -indir=./elements-westeros/DemoWorkflows/DOE/SimpleExample/testdata/defaultDOEExample_workflow ./local-repository.json
 ```
 
 Oh dear! Assuming you're following along you'll see something like:
@@ -294,22 +294,22 @@ ts=2019-05-16T12:37:41.797346Z fatal="Provided outdir './output' must be empty (
 
 ```
 rm -rf ./output
-composer -outdir=./output -keep -indir=./elements-westeros/DemoWorkflows/DOE/SimpleExample/testdata/defaultDOEExample_workflow  ./local-repository.json
+composer -outdir=./output -keep -indir=./elements-westeros/DemoWorkflows/DOE/SimpleExample/testdata/defaultDOEExample_workflow ./local-repository.json
 ```
 
 That looks better. If we're going to be running this a lot, you might want to chain these together in one line:
 
 ```
-rm -rf ./output && composer -outdir=./output -keep -indir=./elements-westeros/DemoWorkflows/DOE/SimpleExample/testdata/defaultDOEExample_workflow  ./local-repository.json
+rm -rf ./output && composer -outdir=./output -keep -indir=./elements-westeros/DemoWorkflows/DOE/SimpleExample/testdata/defaultDOEExample_workflow ./local-repository.json
 ```
 
 We can now repeatedly run a workflow, but there's an awful lot of output in the console. Let's redirect it somewhere so that I can look at it later. I've chosen `run-output.txt`.
 
 ```
-rm -rf ./output && composer -outdir=./output -keep -indir=./elements-westeros/DemoWorkflows/DOE/SimpleExample/testdata/defaultDOEExample_workflow  ./local-repository.json > run-output.txt 2>&1
+rm -rf ./output && composer -outdir=./output -keep -indir=./elements-westeros/DemoWorkflows/DOE/SimpleExample/testdata/defaultDOEExample_workflow ./local-repository.json 2>&1 | tee run-output.txt
 ```
 
-(Note the addition of `> run-output.txt 2>&1` at the **END** of the command. This sends both normal and error messages to the specified file.)
+(Note the addition of `2>&1 | tee run-output.txt` at the **END** of the command. This sends both normal and error messages to the specified file, as well as displaying them in the terminal)
 
 We can check the output from the command at our convenience:
 
@@ -356,8 +356,9 @@ This also is included in the antha command set - it's possible to test a large n
 Let's test the repository that we have. From your working directory, type the following:
 
 ```bash
+cd antha/cmd/elements
 rm -rf test-output
-go test ./antha/cmd/elements -v -args -keep -outdir=`pwd`/test-output `pwd`/local-repository.json
+go test -v -args -keep -outdir=test-output ../../../local-repository.json
 ```
 
 This may take some time to run, there are over 150 tests in the standard Antha repository.
@@ -368,23 +369,24 @@ The test framework is doing the following for you:
 
 Let's disect the commands to understand what's going on:
 
+  * `cd antha/cmd/elements` - it's simplest to be in the elements cmd directory to run these tests
   * `rm -rf test-output` - this is to clean out any already existing test output. (The tests will fail if there is pre-existing test output.)
-  * `go test ./antha/cmd/elements` - runs the Go tests in `elements` (This elements directory contains the test logic that we need.)
+  * `go test` - runs the Go tests
   * `-v` - turn on verbose output.
   * `-args` - specifies that all following args are Antha specific controls.
   * `-keep` - keeps all output (rather than deleting successful runs).
-  * ``-outdir=`pwd`/test-output`` - specifies that we'll write all results to `test-output` directory. (This will be created if it doesn't already exist.) **NOTE** the `` `pwd` `` has been used to add the current directory to the output path. A full path should be supplied here, due to `go test` changing directories. We could instead use any absolute path for our output directory.
-  * `` `pwd`/local-repository.json `` - specifies the json file specifying a repository to test. **NOTE** that `` `pwd` `` has been used here, to add the full directory information for `local-repository.json`. Because the go tests change directory, the full path to the json file should be supplied. (Generally, instead of `` `pwd` `` we could use `/Users/tutor/antha/local-repository.json`, or your equivalent.)
+  * `-outdir=test-output` - specifies that we'll write all results to `test-output` directory which will be created in the current directory
+  * `../../../local-repository.json` - the json file specifying element repositories to test
 
 Similarly to the way we [improved our command line for composer](#other-tidy-ups) we may want to do similar here:
 
 ```bash
-rm -rf test-output && go test ./antha/cmd/elements -v -args -keep -outdir=`pwd`/test-output `pwd`/local-repository.json > test-output.txt 2>&1
+(cd antha/cmd/elements && rm -rf test-output && go test -v -args -keep -outdir=test-output ../../../local-repository.json 2>&1 | tee test-output.txt)
 ```
 
 Where we have:
   * Combined our statements into a single line.
-  * Piped the output to `test-output.txt` to make it easier to inspect after.
+  * Saved the output to `test-output.txt` to make it easier to inspect after.
 
 ### What is the test output?
 
@@ -444,7 +446,7 @@ If you've been following along, you should have a file `local-repository.json` f
 That's everything we need! From your working directory, run:
 
 ```bash
-migrate -from=old-elements-westeros/DemoWorkflows/qPCR/Large_Sample_Set_QPCR_DemoWorkflow.jso -outdir=migrated -gilson-device=gil  ./local-repository.json
+migrate -from=old-elements-westeros/DemoWorkflows/qPCR/Large_Sample_Set_QPCR_DemoWorkflow.jso -outdir=migrated -gilson-device=gil ./local-repository.json
 ```
 
 We have specified:
@@ -522,7 +524,7 @@ The most direct method is simply remove the `Repositories` element from the work
 Once this has been removed, we then need to supply the missing information whenever running the workflow, for example:
 
 ```bash
-rm -rf ./output && composer -outdir=./output -keep -indir=./migrated  ./local-repository.json
+rm -rf ./output && composer -outdir=./output -keep -indir=./migrated ./local-repository.json
 ```
 
 Note the addition of `./local-repository.json` at the end of this, to add back the repository information.
