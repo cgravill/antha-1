@@ -3,6 +3,8 @@
 For a quick guide walking through a installation and basic tasks, look at the [quickstart guide](README_Quickstart.md).
 This document contains more detailed information, and discussion of further options for installation and use.
 
+[![Coverage Status](https://coveralls.io/repos/github/antha-lang/antha/badge.svg?branch=feature/future_sanity)](https://coveralls.io/github/antha-lang/antha?branch=feature/future_sanity)
+
 ## Getting Started
 
 There are a number of installation options, depending on your use case.
