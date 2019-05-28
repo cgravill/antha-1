@@ -1196,6 +1196,18 @@ func TestExecutionPlanning(t *testing.T) {
 						FinalOutputVolumesAssertion(0.001, map[string]float64{"A1": 100.0, "C1": 100.0, "E1": 100.0, "G1": 100.0}),
 					},
 				},
+				{
+					Name:          "Timed prompt",
+					Liquidhandler: GetIndependentLiquidHandlerForTest(lab),
+					Instructions: TimedPrompt("TestPrompt", "60s",
+						getTestMix(lab, []*wtype.Liquid{mixer.Sample(lab, SourceForTest(lab, 1000, "water"),
+							wunit.NewVolume(100.0, "ul"))}, "A1")),
+					InputPlates:  []*wtype.LHPlate{GetTroughForTest(lab.IDGenerator)},
+					OutputPlates: []*wtype.LHPlate{GetPlateForTest(lab.IDGenerator)},
+					Assertions: Assertions{
+						ActionsSummaryAssertion("timedprompt.actions.json"),
+					},
+				},
 			}.Run(t)
 			return nil
 		},

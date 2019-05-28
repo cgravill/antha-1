@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -524,6 +525,35 @@ func Mixes(outputPlateType wtype.PlateTypeName, components TestMixComponents) In
 		}
 
 		return ret, nil
+	}
+}
+
+func SourceForTest(lab *laboratory.Laboratory, volUl float64, lType string) *wtype.Liquid {
+	source := GetComponentForTest(lab, lType, wunit.NewVolume(volUl, "ul"))
+	source.Type = wtype.LTMultiWater
+	return source
+}
+
+func TimedPrompt(msg string, duration string, inputInstruction *wtype.LHInstruction) InstructionBuilder {
+
+	d, err := time.ParseDuration(duration)
+	if err != nil {
+		panic(fmt.Sprintf("Unaccepted time duration %s, %v", duration, err))
+	}
+
+	return func(lab *laboratory.Laboratory) ([]*wtype.LHInstruction, error) {
+		lhi := wtype.NewLHPromptInstruction(lab.IDGenerator)
+		lhi.Message = msg
+		lhi.Inputs = inputInstruction.Outputs
+
+		for _, i := range lhi.Inputs {
+			o := wtype.NewLHComponent(lab.IDGenerator)
+			o.SetName(i.Name())
+			lhi.AddOutput(o)
+		}
+
+		lhi.WaitTime = d
+		return []*wtype.LHInstruction{inputInstruction, lhi}, nil
 	}
 }
 

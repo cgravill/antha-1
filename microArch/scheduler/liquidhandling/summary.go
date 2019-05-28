@@ -979,7 +979,8 @@ func newPromptAction(vlh *simulator.VirtualLiquidHandler, act *driver.ITree, cum
 	}
 	return &PromptAction{
 		Message:                msg.Message,
-		CumulativeTimeEstimate: cumulativeTime.Seconds(),
+		CumulativeTimeEstimate: (msg.WaitTime + cumulativeTime).Seconds(),
+		TimeEstimate:           msg.WaitTime.Seconds(),
 	}, nil
 }
 
