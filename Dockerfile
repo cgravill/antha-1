@@ -5,6 +5,7 @@ RUN printf "%s\n" "$NETRC" > /root/.netrc
 RUN mkdir /antha
 WORKDIR /antha
 RUN set -ex && go mod init antha && go mod edit "-require=github.com/antha-lang/antha@$COMMIT_SHA" && go mod download
+RUN set -ex && go build github.com/antha-lang/antha/...
 RUN set -ex && go install github.com/antha-lang/antha/cmd/...
 RUN set -ex && go test -c github.com/antha-lang/antha/cmd/elements
 COPY scripts/*.sh /antha/
@@ -17,7 +18,7 @@ WORKDIR /antha
 RUN set -ex && go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.16.0
 RUN set -ex && cp -a $(go list -f '{{ .Dir }}' github.com/antha-lang/antha) /lintme
 WORKDIR /lintme
-RUN set -ex && go mod edit "-dropreplace=github.com/Synthace/antha-runner" "-dropreplace=github.com/Synthace/instruction-plugins" && golangci-lint run --deadline=5m -E gosec -E gofmt
+RUN set -ex && go mod edit "-dropreplace=github.com/Synthace/antha-runner" "-dropreplace=github.com/Synthace/instruction-plugins" && go mod download && golangci-lint run --deadline=5m -E gosec -E gofmt
 
 FROM eu.gcr.io/antha-images/golang:1.12.5-build AS tests
 ARG COMMIT_SHA
