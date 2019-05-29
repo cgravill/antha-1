@@ -15,16 +15,7 @@ func GetLiquidHandlerForTest(lab *laboratory.Laboratory) *lh.Liquidhandler {
 }
 
 func GetIndependentLiquidHandlerForTest(lab *laboratory.Laboratory) *lh.Liquidhandler {
-	gilson := makeGilson(lab)
-	for _, head := range gilson.Heads {
-		head.Params.Independent = true
-	}
-
-	for _, adaptor := range gilson.Adaptors {
-		adaptor.Params.Independent = true
-	}
-
-	return lh.Init(gilson)
+	return lh.Init(makeIndependentLH(lab))
 }
 
 func GetLHRequestForTest(idGen *id.IDGenerator) *lh.LHRequest {
@@ -52,7 +43,7 @@ func TestDeckSpace1(t *testing.T) {
 			lh := GetLiquidHandlerForTest(lab)
 
 			for i := 0; i < len(lh.Properties.Preferences.Tipboxes); i++ {
-				tb, err := lab.Inventory.TipBoxes.NewTipbox(lh.Properties.Tips[0].Type)
+				tb, err := lab.Inventory.TipBoxes.NewTipbox(lh.Properties.Tips[0].GetType())
 				if err != nil {
 					return err
 				}
@@ -62,7 +53,7 @@ func TestDeckSpace1(t *testing.T) {
 				}
 			}
 
-			tb, err := lab.Inventory.TipBoxes.NewTipbox(lh.Properties.Tips[0].Type)
+			tb, err := lab.Inventory.TipBoxes.NewTipbox(lh.Properties.Tips[0].GetType())
 			if err != nil {
 				return err
 			}

@@ -10,7 +10,7 @@ import (
 	"github.com/antha-lang/antha/microArch/driver/liquidhandling"
 )
 
-func getTestBlow(idGen *id.IDGenerator, ch *wtype.LHChannelParameter, multi int, tipType string) liquidhandling.RobotInstruction {
+func getTestBlow(idGen *id.IDGenerator, ch *wtype.LHChannelParameter, multi int, tipType wtype.TipType) liquidhandling.RobotInstruction {
 	cti := &liquidhandling.ChannelTransferInstruction{
 		Multi:      multi,
 		What:       make([]string, 0, multi),
@@ -20,7 +20,7 @@ func getTestBlow(idGen *id.IDGenerator, ch *wtype.LHChannelParameter, multi int,
 		TPlateType: make([]string, 0, multi),
 		TVolume:    make([]wunit.Volume, 0, multi),
 		Prms:       make([]*wtype.LHChannelParameter, 0, multi),
-		TipType:    make([]string, 0, multi),
+		TipType:    make([]wtype.TipType, 0, multi),
 		Component:  make([]string, 0, multi),
 	}
 
@@ -39,7 +39,7 @@ func getTestBlow(idGen *id.IDGenerator, ch *wtype.LHChannelParameter, multi int,
 	return liquidhandling.NewBlowInstruction(idGen, cti)
 }
 
-func getTestSuck(idGen *id.IDGenerator, ch *wtype.LHChannelParameter, multi int, tipType string, plateType string, wellCoords []string) liquidhandling.RobotInstruction {
+func getTestSuck(idGen *id.IDGenerator, ch *wtype.LHChannelParameter, multi int, tipType wtype.TipType, plateType string, wellCoords []string) liquidhandling.RobotInstruction {
 	cti := &liquidhandling.ChannelTransferInstruction{
 		Multi:      multi,
 		What:       make([]string, 0, multi),
@@ -49,7 +49,7 @@ func getTestSuck(idGen *id.IDGenerator, ch *wtype.LHChannelParameter, multi int,
 		FPlateType: make([]string, 0, multi),
 		FVolume:    make([]wunit.Volume, 0, multi),
 		Prms:       make([]*wtype.LHChannelParameter, 0, multi),
-		TipType:    make([]string, 0, multi),
+		TipType:    make([]wtype.TipType, 0, multi),
 		Component:  make([]string, 0, multi),
 	}
 

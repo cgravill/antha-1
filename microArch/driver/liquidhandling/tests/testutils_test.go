@@ -53,7 +53,7 @@ func getLVConfig(idGen *id.IDGenerator) *wtype.LHChannelParameter {
 	return wtype.NewLHChannelParameter(idGen, "LVconfig", "GilsonPipetmax", newminvol, newmaxvol, newminspd, newmaxspd, 8, false, wtype.LHVChannel, 1)
 }
 
-func MakeGilsonForTest(lab *laboratory.Laboratory, tipList []string) *liquidhandling.LHProperties {
+func MakeGilsonForTest(lab *laboratory.Laboratory, tipList []wtype.TipType) *liquidhandling.LHProperties {
 	// gilson pipetmax
 
 	layout := make(map[string]*wtype.LHPosition)
@@ -116,14 +116,10 @@ func MakeGilsonForTest(lab *laboratory.Laboratory, tipList []string) *liquidhand
 	return lhp
 }
 
-func SetUpTipsFor(lab *laboratory.Laboratory, lhp *liquidhandling.LHProperties, tipList []string) *liquidhandling.LHProperties {
-	inList := func(s string, sa []string) bool {
-		for _, ss := range sa {
-			if s == ss {
-				return true
-			}
-		}
-		return false
+func SetUpTipsFor(lab *laboratory.Laboratory, lhp *liquidhandling.LHProperties, tipList []wtype.TipType) *liquidhandling.LHProperties {
+	tipTypeEnabled := make(map[wtype.TipType]bool, len(tipList))
+	for _, tt := range tipList {
+		tipTypeEnabled[tt] = true
 	}
 
 	seen := make(map[string]bool)
@@ -137,17 +133,16 @@ func SetUpTipsFor(lab *laboratory.Laboratory, lhp *liquidhandling.LHProperties, 
 
 			// ignore tips not in the list
 
-			if !inList(tb.Tiptype.Type, tipList) {
-				return nil
-			}
-			tip := tb.Tips[0][0]
-			str := tip.Mnfr + tip.Type + tip.MinVol.ToString() + tip.MaxVol.ToString()
-			if seen[str] {
-				return nil
-			}
+			if tipTypeEnabled[tb.Tiptype.Type] {
+				tip := tb.Tips[0][0]
+				str := tip.Mnfr + string(tip.Type) + tip.MinVol.ToString() + tip.MaxVol.ToString()
+				if seen[str] {
+					return nil
+				}
 
-			seen[str] = true
-			lhp.Tips = append(lhp.Tips, tb.Tips[0][0])
+				seen[str] = true
+				lhp.Tips = append(lhp.Tips, tb.Tips[0][0])
+			}
 		}
 		return nil
 	})

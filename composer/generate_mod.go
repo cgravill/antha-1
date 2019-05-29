@@ -2,6 +2,7 @@ package composer
 
 import (
 	"io"
+	"os"
 	"path"
 	"path/filepath"
 	"runtime"
@@ -41,6 +42,8 @@ require (
 {{range $repoName, $repo := .Repositories}}	{{$repoName}} v0.0.0
 {{end}})
 {{if .ReplaceAntha}}replace github.com/antha-lang/antha => {{.AnthaDir}}{{end}}
+{{if .ReplaceRunner}}replace github.com/Synthace/antha-runner => {{.RunnerDir}}{{end}}
+{{if .ReplacePlugins}}replace github.com/Synthace/instruction-plugins => {{.PluginsDir}}{{end}}
 {{range $repoName, $repo := .Repositories}}replace {{$repoName}} => {{repopath $repoName}}
 {{end}}{{end}}
 `
@@ -105,9 +108,13 @@ func renderRepositoryMod(w io.Writer, repoName workflow.RepositoryName) error {
 
 type workflowMod struct {
 	*repositoryMod
-	Repositories workflow.Repositories
-	AnthaDir     string
-	ReplaceAntha bool
+	Repositories   workflow.Repositories
+	AnthaDir       string
+	ReplaceAntha   bool
+	RunnerDir      string
+	ReplaceRunner  bool
+	PluginsDir     string
+	ReplacePlugins bool
 }
 
 func newWorkflowMod(repos workflow.Repositories) *workflowMod {
@@ -120,6 +127,16 @@ func newWorkflowMod(repos workflow.Repositories) *workflowMod {
 		wm.ReplaceAntha = true
 		if _, file, _, ok := runtime.Caller(0); ok {
 			wm.AnthaDir = filepath.Dir(filepath.Dir(file))
+		}
+		runnerDir := filepath.Join(filepath.Dir(wm.AnthaDir), "antha-runner")
+		if _, err := os.Stat(runnerDir); !os.IsNotExist(err) {
+			wm.ReplaceRunner = true
+			wm.RunnerDir = runnerDir
+		}
+		pluginsDir := filepath.Join(filepath.Dir(wm.AnthaDir), "instruction-plugins")
+		if _, err := os.Stat(pluginsDir); !os.IsNotExist(err) {
+			wm.ReplacePlugins = true
+			wm.PluginsDir = pluginsDir
 		}
 	}
 

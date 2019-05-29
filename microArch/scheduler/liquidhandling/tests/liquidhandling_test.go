@@ -538,16 +538,16 @@ func extractMoveAspirateDispenseInstructions(ins []liquidhandling.TerminalRobotI
 	return ma, md
 }
 
-func allElemsSame(nums []float64) bool {
-	if len(nums) > 1 {
-		n := nums[0]
-		for _, m := range nums[1:] {
-			if n != m {
-				return false
-			}
+func allZOffsetsSame(mov *liquidhandling.MoveInstruction) bool {
+	offsets := make(map[float64]bool, len(mov.OffsetZ))
+	for i, off := range mov.OffsetZ {
+		// offsets are only meaningful if they correspont to a channel being used
+		if mov.Pos[i] != "" {
+			offsets[off] = true
 		}
 	}
-	return true
+
+	return len(offsets) <= 1
 }
 
 func TestMultiZOffset(t *testing.T) {
@@ -575,11 +575,11 @@ func TestMultiZOffset(t *testing.T) {
 			}
 
 			for i, singlePair := range singleAspPairs {
-				if !allElemsSame(singlePair.mov.OffsetZ) {
+				if !allZOffsetsSame(singlePair.mov) {
 					return fmt.Errorf("Z offsets not all the same (single asp pair): %#v", singlePair.mov.OffsetZ)
 				}
 				multiPair := multiAspPairs[i]
-				if !allElemsSame(multiPair.mov.OffsetZ) {
+				if !allZOffsetsSame(multiPair.mov) {
 					return fmt.Errorf("Z offsets not all the same (multi asp pair): %#v", multiPair.mov.OffsetZ)
 				}
 				if singlePair.mov.OffsetZ[0] != multiPair.mov.OffsetZ[0] {
@@ -589,11 +589,11 @@ func TestMultiZOffset(t *testing.T) {
 			}
 
 			for i, singlePair := range singleDspPairs {
-				if !allElemsSame(singlePair.mov.OffsetZ) {
+				if !allZOffsetsSame(singlePair.mov) {
 					return fmt.Errorf("Z offsets not all the same (single asp pair): %#v", singlePair.mov.OffsetZ)
 				}
 				multiPair := multiDspPairs[i]
-				if !allElemsSame(multiPair.mov.OffsetZ) {
+				if !allZOffsetsSame(multiPair.mov) {
 					return fmt.Errorf("Z offsets not all the same (multi asp pair): %#v", multiPair.mov.OffsetZ)
 				}
 				if singlePair.mov.OffsetZ[0] != multiPair.mov.OffsetZ[0] {
@@ -1077,6 +1077,24 @@ func TestExecutionPlanning(t *testing.T) {
 					},
 				},
 				{
+					Name:          "multi channel independent different tips",
+					Liquidhandler: GetIndependentLiquidHandlerForTest(lab),
+					Instructions: Mixes("pcrplate_skirted_riser", TestMixComponents{
+						{
+							LiquidName:    "water",
+							VolumesByWell: ColumnWise(8, []float64{10.0, 100.0, 10.0, 100.0, 10.0, 100.0, 10.0, 100.0}),
+							LiquidType:    wtype.LTWater,
+							Sampler:       mixer.Sample,
+						},
+					}),
+					InputPlates:  []*wtype.LHPlate{GetTroughForTest(lab.IDGenerator)},
+					OutputPlates: []*wtype.LHPlate{GetPlateForTest(lab.IDGenerator)},
+					Assertions: Assertions{
+						NumberOfAssertion(liquidhandling.ASP, 1), //full multichanneling
+						NumberOfAssertion(liquidhandling.DSP, 1), //full multichanneling
+					},
+				},
+				{
 					Name: "multi channel split-sample",
 					Instructions: func(lab *laboratory.Laboratory) ([]*wtype.LHInstruction, error) {
 
@@ -1198,7 +1216,7 @@ func TestExecutionPlanning(t *testing.T) {
 				},
 				{
 					Name:          "Timed prompt",
-					Liquidhandler: GetIndependentLiquidHandlerForTest(lab),
+					Liquidhandler: GetLiquidHandlerForTest(lab),
 					Instructions: TimedPrompt("TestPrompt", "60s",
 						getTestMix(lab, []*wtype.Liquid{mixer.Sample(lab, SourceForTest(lab, 1000, "water"),
 							wunit.NewVolume(100.0, "ul"))}, "A1")),

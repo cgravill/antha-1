@@ -20,7 +20,7 @@ type TransferParams struct {
 	FVolume    wunit.Volume              // volume in 'from' well
 	TVolume    wunit.Volume              // volume in 'to' well
 	Channel    *wtype.LHChannelParameter // which channel to use
-	TipType    string                    // type of tip to use
+	TipType    wtype.TipType             // type of tip to use
 	FPlateWX   int                       // X dimension in 'from' plate
 	FPlateWY   int                       // Y dimension in 'from' plate
 	TPlateWX   int                       // X dimension in 'to' plate
@@ -237,8 +237,8 @@ func (mtp MultiTransferParams) Channel(idGen *id.IDGenerator) []*wtype.LHChannel
 	return r
 }
 
-func (mtp MultiTransferParams) TipType() []string {
-	r := make([]string, mtp.Multi)
+func (mtp MultiTransferParams) TipType() []wtype.TipType {
+	r := make([]wtype.TipType, mtp.Multi)
 	for i, t := range mtp.Transfers {
 		r[i] = t.TipType
 	}
@@ -465,8 +465,8 @@ func (mtp SetOfMultiTransferParams) Channel(idGen *id.IDGenerator) []*wtype.LHCh
 	return r
 }
 
-func (mtp SetOfMultiTransferParams) TipType() []string {
-	r := make([]string, 0, len(mtp))
+func (mtp SetOfMultiTransferParams) TipType() []wtype.TipType {
+	r := make([]wtype.TipType, 0, len(mtp))
 	for _, t := range mtp {
 		r = append(r, t.TipType()...)
 	}

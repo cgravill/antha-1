@@ -230,7 +230,7 @@ func makeLHPlate(idGen *id.IDGenerator, p *LHPlateParams, name string) *wtype.Pl
 
 type LHTipParams struct {
 	mfr             string
-	ttype           string
+	ttype           wtype.TipType
 	minvol          float64
 	maxvol          float64
 	volunit         string
@@ -447,7 +447,7 @@ func defaultLHTipbox(idGen *id.IDGenerator, name string) *wtype.LHTipbox {
 		boxtype:      "tipbox",
 		tiptype: LHTipParams{
 			mfr:             "test_tip mfg",
-			ttype:           "test_tip type",
+			ttype:           wtype.TipType("test_tip type"),
 			minvol:          50,
 			maxvol:          1000,
 			volunit:         "ul",
@@ -487,7 +487,7 @@ func smallLHTipbox(idGen *id.IDGenerator, name string) *wtype.LHTipbox {
 		boxtype:      "tipbox",
 		tiptype: LHTipParams{
 			mfr:             "test_tip mfg",
-			ttype:           "test_tip type",
+			ttype:           wtype.TipType("test_tip type"),
 			minvol:          0,
 			maxvol:          200,
 			volunit:         "ul",

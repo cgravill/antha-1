@@ -1061,7 +1061,7 @@ func (self *VirtualLiquidHandler) LoadTips(channels []int, head, multi int,
 	}
 
 	if len(channels) == 0 {
-		//inver channels from well argument
+		//infer channels from well argument
 		channels = make([]int, 0, n_channels)
 		for i, w := range well {
 			if w != "" {

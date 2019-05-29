@@ -1,7 +1,7 @@
 module github.com/antha-lang/antha
 
 require (
-	github.com/Synthace/antha-runner v0.0.0-20190514132415-965ce6435b43
+	github.com/Synthace/antha-runner v0.0.0-20190522165007-bb6dad12ce01
 	github.com/Synthace/instruction-plugins v0.0.0-20190514102125-e7f49b35d3c7
 	github.com/Synthace/microservice v0.0.0-20190417123801-c7ca6bc971ec
 	github.com/antha-lang/toolbox v0.0.0-20180417132942-6ea11e22448c
@@ -12,7 +12,7 @@ require (
 	github.com/disintegration/imaging v1.6.0
 	github.com/dustinkirkland/golang-petname v0.0.0-20170921220637-d3c2ba80e75e
 	github.com/go-kit/kit v0.8.0
-	github.com/go-test/deep v1.0.1
+	github.com/go-test/deep v1.0.2-0.20181118220953-042da051cf31
 	github.com/golang/protobuf v1.3.1
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
 	github.com/montanaflynn/stats v0.5.0

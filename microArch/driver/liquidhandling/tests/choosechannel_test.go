@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/antha-lang/antha/antha/anthalib/wtype"
 	"github.com/antha-lang/antha/antha/anthalib/wunit"
 	"github.com/antha-lang/antha/laboratory"
 	"github.com/antha-lang/antha/laboratory/testlab"
@@ -41,15 +42,6 @@ func getMaxvols1() []wunit.Volume {
 	return ret
 }
 
-/*
-
- */
-func getTypes1() []string {
-	ret := []string{"Gilson20", "Gilson20", "Gilson20", "Gilson20", "Gilson20", "Gilson20", "Gilson200", "Gilson200", "Gilson200", "Gilson200"}
-
-	return ret
-}
-
 func getVols2() []wunit.Volume {
 	// a selection of volumes
 	vols := make([]wunit.Volume, 0, 1)
@@ -78,17 +70,8 @@ func getMaxvols2() []wunit.Volume {
 	return ret
 }
 
-/*
-
- */
-func getTypes2() []string {
-	ret := []string{"LVGilson200", "LVGilson200", "LVGilson200", "LVGilson200", "LVGilson200", "LVGilson200", "LVGilson200", "LVGilson200", "LVGilson200"}
-
-	return ret
-}
-
-func defaultTipList() []string {
-	return []string{"Gilson20", "Gilson200"}
+func defaultTipList() []wtype.TipType {
+	return []wtype.TipType{"Gilson20", "Gilson200"}
 }
 
 func TestDefaultChooser(t *testing.T) {
@@ -98,7 +81,7 @@ func TestDefaultChooser(t *testing.T) {
 			lhp := MakeGilsonForTest(lab, defaultTipList())
 			minvols := getMinvols1()
 			maxvols := getMaxvols1()
-			types := getTypes1()
+			types := []wtype.TipType{"Gilson20", "Gilson20", "Gilson20", "Gilson20", "Gilson20", "Gilson20", "Gilson200", "Gilson200", "Gilson200", "Gilson200"}
 
 			for i, vol := range vols {
 				prm, tip, err := liquidhandling.ChooseChannel(vol, lhp)
@@ -106,7 +89,7 @@ func TestDefaultChooser(t *testing.T) {
 					return err
 				}
 
-				tiptype := ""
+				var tiptype wtype.TipType
 
 				if tip != nil {
 					tiptype = tip.Type
@@ -135,10 +118,10 @@ func TestHVHVHVLVChooser(t *testing.T) {
 	testlab.WithTestLab(t, "", &testlab.TestElementCallbacks{
 		Steps: func(lab *laboratory.Laboratory) error {
 			vols := getVols2()
-			lhp := MakeGilsonForTest(lab, []string{"LVGilson200"})
+			lhp := MakeGilsonForTest(lab, []wtype.TipType{"LVGilson200"})
 			minvols := getMinvols2()
 			maxvols := getMaxvols2()
-			types := getTypes2()
+			types := []wtype.TipType{"LVGilson200", "LVGilson200", "LVGilson200", "LVGilson200", "LVGilson200", "LVGilson200", "LVGilson200", "LVGilson200", "LVGilson200"}
 
 			for i, vol := range vols {
 				prm, tip, err := liquidhandling.ChooseChannel(vol, lhp)
@@ -146,7 +129,7 @@ func TestHVHVHVLVChooser(t *testing.T) {
 					return err
 				}
 
-				tiptype := ""
+				var tiptype wtype.TipType
 
 				if tip != nil {
 					tiptype = tip.Type
