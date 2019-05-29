@@ -1,4 +1,4 @@
-FROM eu.gcr.io/antha-images/golang:1.12.4-build AS build
+FROM eu.gcr.io/antha-images/golang:1.12.5-build AS build
 ARG COMMIT_SHA
 ARG NETRC
 RUN printf "%s\n" "$NETRC" > /root/.netrc
@@ -9,7 +9,7 @@ RUN set -ex && go install github.com/antha-lang/antha/cmd/...
 RUN set -ex && go test -c github.com/antha-lang/antha/cmd/elements
 COPY scripts/*.sh /antha/
 
-FROM eu.gcr.io/antha-images/golang:1.12.4-build AS lint
+FROM eu.gcr.io/antha-images/golang:1.12.5-build AS lint
 COPY --from=build /root/.netrc /root/.cache /root/
 COPY --from=build /go /go
 COPY --from=build /antha /antha
@@ -19,7 +19,7 @@ RUN set -ex && cp -a $(go list -f '{{ .Dir }}' github.com/antha-lang/antha) /lin
 WORKDIR /lintme
 RUN set -ex && go mod edit "-dropreplace=github.com/Synthace/antha-runner" "-dropreplace=github.com/Synthace/instruction-plugins" && golangci-lint run --deadline=5m -E gosec -E gofmt
 
-FROM eu.gcr.io/antha-images/golang:1.12.4-build AS tests
+FROM eu.gcr.io/antha-images/golang:1.12.5-build AS tests
 ARG COMMIT_SHA
 ARG BRANCH_NAME
 ARG COVERALLS_TOKEN
@@ -30,7 +30,7 @@ COPY --from=build /antha /antha
 WORKDIR /antha
 RUN ./antha-test.sh "$COVERALLS_TOKEN" "$COMMIT_SHA" "$BRANCH_NAME" "$BUILD_ID"
 
-FROM eu.gcr.io/antha-images/golang:1.12.4-build AS cloud
+FROM eu.gcr.io/antha-images/golang:1.12.5-build AS cloud
 ## This target produces an image that is used both for gitlab elements CI, and also workflow execution in the cloud
 COPY --from=tests /root/.cache /root/
 COPY --from=tests /go /go
