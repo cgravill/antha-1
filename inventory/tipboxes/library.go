@@ -176,19 +176,26 @@ func makeTecanTipBoxes(idGen *id.IDGenerator) []*wtype.LHTipbox {
 func makeHamiltonTipboxes(idGen *id.IDGenerator) []*wtype.LHTipbox {
 	var ret []*wtype.LHTipbox
 
-	//Filter tips
+	// nb. lower volume limit taken as first correction-curve point in Hamilton LiquidClass definitions for water
+
+	// 1000ul, see https://www.hamiltoncompany.com/automated-liquid-handling/disposable-tips/1000-%CE%BCl-conductive-sterile-filter-tips
+	shp := wtype.NewShape(wtype.CylinderShape, "mm", 7.3, 7.3, 95.1)
+	w := wtype.NewLHWell(idGen, "ul", 1000.0, 10.0, shp, 0, 7.3, 7.3, 95.1, 0.0, "mm")
+	tip := wtype.NewLHTip(idGen, "Hamilton", "Hx1000F", 10.0, 1000.0, "ul", false, shp, 95.1)
+	tb := wtype.NewLHTipbox(idGen, 8, 12, getTipboxSize(), "Hamilton", "Hx1000F Tipbox", tip, w, 9.0, 9.0, XOffset, YOffset, 95.1)
+	ret = append(ret, tb)
 
 	// 300ul, see https://www.hamiltoncompany.com/automated-liquid-handling/disposable-tips/300-%CE%BCl-conductive-sterile-filter-tips
-	shp := wtype.NewShape(wtype.CylinderShape, "mm", 7.3, 7.3, 59.9)
-	w := wtype.NewLHWell(idGen, "ul", 300.0, 20.0, shp, 0, 7.3, 7.3, 59.9, 0.0, "mm")
-	tip := wtype.NewLHTip(idGen, "Hamilton", "Hx300F", 20.0, 300.0, "ul", false, shp, 59.9)
-	tb := wtype.NewLHTipbox(idGen, 8, 12, getTipboxSize(), "Hamilton", "Hx300F Tipbox", tip, w, 9.0, 9.0, XOffset, YOffset, 59.9)
+	shp = wtype.NewShape(wtype.CylinderShape, "mm", 7.3, 7.3, 59.9)
+	w = wtype.NewLHWell(idGen, "ul", 300.0, 0.5, shp, 0, 7.3, 7.3, 59.9, 0.0, "mm")
+	tip = wtype.NewLHTip(idGen, "Hamilton", "Hx300F", 0.5, 300.0, "ul", false, shp, 59.9)
+	tb = wtype.NewLHTipbox(idGen, 8, 12, getTipboxSize(), "Hamilton", "Hx300F Tipbox", tip, w, 9.0, 9.0, XOffset, YOffset, 59.9)
 	ret = append(ret, tb)
 
 	// 50ul, see https://www.hamiltoncompany.com/automated-liquid-handling/disposable-tips/50-%CE%BCl-conductive-sterile-filter-tips
 	shp = wtype.NewShape(wtype.CylinderShape, "mm", 7.3, 7.3, 50.4)
-	w = wtype.NewLHWell(idGen, "ul", 50.0, 1.0, shp, 0, 7.3, 7.3, 50.4, 0.0, "mm")
-	tip = wtype.NewLHTip(idGen, "Hamilton", "Hx50F", 1.0, 50.0, "ul", false, shp, 50.4)
+	w = wtype.NewLHWell(idGen, "ul", 50.0, 0.5, shp, 0, 7.3, 7.3, 50.4, 0.0, "mm")
+	tip = wtype.NewLHTip(idGen, "Hamilton", "Hx50F", 0.5, 50.0, "ul", false, shp, 50.4)
 	tb = wtype.NewLHTipbox(idGen, 8, 12, getTipboxSize(), "Hamilton", "Hx50F Tipbox", tip, w, 9.0, 9.0, XOffset, YOffset, 50.4)
 	ret = append(ret, tb)
 
