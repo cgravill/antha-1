@@ -133,7 +133,7 @@ func run() error {
 				},
 			},
 			Response: resp,
-			Path:     "/api/pub-v1/defaults/workflow/set",
+			Path:     "/web/pub-v1/defaults/workflow/set",
 		}
 
 		if err := call.Call(); err != nil {
