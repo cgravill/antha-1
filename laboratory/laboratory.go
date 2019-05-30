@@ -73,7 +73,6 @@ type LaboratoryBuilder struct {
 
 	*lineMapManager
 	Logger *logger.Logger
-	logFH  *os.File
 
 	effects *effects.LaboratoryEffects
 
@@ -175,14 +174,6 @@ func (labBuild *LaboratoryBuilder) SetupPaths(inDir, outDir string) error {
 		}
 	}
 
-	// Switch the logger over to write to disk too:
-	if logFH, err := utils.CreateFile(filepath.Join(labBuild.outDir, "logs.txt"), utils.ReadWrite); err != nil {
-		return err
-	} else {
-		labBuild.logFH = logFH
-		labBuild.Logger.SwapWriters(logFH, os.Stderr)
-	}
-
 	// Sort out inDir:
 	if labBuild.inDir == "" {
 		// We do this to make certain that we have a root path to join
@@ -263,17 +254,6 @@ func (labBuild *LaboratoryBuilder) Decommission() error {
 
 	if err := runner.Export(labBuild.effects.IDGenerator, labBuild.inDir, labBuild.outDir, labBuild.instrs, labBuild.Errors()); err != nil {
 		labBuild.RecordError(err, true)
-	}
-
-	if labBuild.logFH != nil {
-		labBuild.Logger.SwapWriters(os.Stderr)
-		if err := labBuild.logFH.Sync(); err != nil {
-			labBuild.Logger.Log("msg", "Error when syncing log file handle", "error", err)
-		}
-		if err := labBuild.logFH.Close(); err != nil {
-			labBuild.Logger.Log("msg", "Error when closing log file handle", "error", err)
-		}
-		labBuild.logFH = nil
 	}
 
 	return labBuild.Errors()

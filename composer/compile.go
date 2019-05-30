@@ -75,7 +75,7 @@ func (tc *testComposer) goTest() error {
 		cmd.Args = append(cmd.Args, "-tags", "linkedDrivers")
 	}
 
-	if err := RunAndLogCommand(cmd, MakeRawLogger(os.Stdout), MakeRawLogger(os.Stderr)); err != nil {
+	if err := RunAndLogCommand(cmd, tc.Logger.LogRaw, tc.Logger.LogRaw); err != nil {
 		return err
 	} else {
 		tc.Logger.Log("testing", "successful")
@@ -141,7 +141,7 @@ func (mc *mainComposer) runWorkflow() error {
 	cmd.Env = []string{}
 
 	// the workflow uses a proper logger these days so we don't need to do any wrapping
-	return RunAndLogCommand(cmd, MakeRawLogger(os.Stdout), MakeRawLogger(os.Stderr))
+	return RunAndLogCommand(cmd, mc.Logger.LogRaw, mc.Logger.LogRaw)
 }
 
 func (cb *ComposerBase) prepareDrivers(cfg *workflow.Config) error {
@@ -250,14 +250,6 @@ func drainToLogger(logger func(...interface{}), fh io.ReadCloser) {
 				logger("error", err.Error())
 			}
 			break
-		}
-	}
-}
-
-func MakeRawLogger(w io.Writer) func(...interface{}) {
-	return func(vs ...interface{}) {
-		if _, err := fmt.Fprintln(w, vs...); err != nil {
-			panic(err)
 		}
 	}
 }

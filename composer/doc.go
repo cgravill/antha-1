@@ -28,7 +28,8 @@
 //      main.go         # the generated main.go
 //      data/
 //        workflow.json # the merged and validated workflow
-//    logs.txt          # logs from the composer runtime only
+//    logs.txt          # logs from the composer runtime, and
+//                      # workflow runtime if run
 //    bin/
 //      workflow        # the compiled binary for the whole workflow
 //                      # (result of compiling main.go)
@@ -43,7 +44,6 @@
 //                      # each element gets a elemName.json file in
 //                      # here which is the serialization of the element
 //                      # after it has run
-//    logs.txt          # logs from the workflow runtime
 //    devices/
 //      task-id/
 //        device-id/

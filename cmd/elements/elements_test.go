@@ -115,7 +115,7 @@ func goTest(l *logger.Logger, outDir string, wf *workflow.Workflow, coverPkgs st
 
 		cmd.Args = append(cmd.Args, path.Join(string(repoName), "..."))
 
-		if err := composer.RunAndLogCommand(cmd, composer.MakeRawLogger(os.Stdout), composer.MakeRawLogger(os.Stderr)); err != nil {
+		if err := composer.RunAndLogCommand(cmd, l.LogRaw, l.LogRaw); err != nil {
 			return err
 		}
 	}
