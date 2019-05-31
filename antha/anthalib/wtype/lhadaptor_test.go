@@ -10,9 +10,6 @@ func assertIDsEqual(t *testing.T, a, b *LHAdaptor) {
 	if a.ID != b.ID {
 		t.Error("Adaptor.ID changed")
 	}
-	if a.Params.ID != b.Params.ID {
-		t.Error("Adaptor.Params.ID changed")
-	}
 
 	for i := range a.Tips {
 		if aT, bT := a.Tips[i], b.Tips[i]; aT != nil && bT != nil {
@@ -26,9 +23,6 @@ func assertIDsEqual(t *testing.T, a, b *LHAdaptor) {
 func assertIDsChanged(t *testing.T, a, b *LHAdaptor) {
 	if a.ID == b.ID {
 		t.Error("Adaptor.ID not changed")
-	}
-	if a.Params.ID == b.Params.ID {
-		t.Error("Adaptor.Params.ID not changed")
 	}
 
 	for i := range a.Tips {

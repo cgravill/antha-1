@@ -37,10 +37,10 @@ func (head *LHHead) dup(idGen *id.IDGenerator, keepIDs bool) *LHHead {
 	h.TipLoading = head.TipLoading
 	if keepIDs {
 		h.ID = head.ID
-		h.Params = head.Params.DupKeepIDs(idGen)
+		h.Params = head.Params.Dup()
 		h.Adaptor = head.Adaptor.DupKeepIDs(idGen)
 	} else {
-		h.Params = head.Params.Dup(idGen)
+		h.Params = head.Params.Dup()
 		h.Adaptor = head.Adaptor.Dup(idGen)
 	}
 	return h

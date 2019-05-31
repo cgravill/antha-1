@@ -82,7 +82,7 @@ func NewVirtualLiquidHandler(idGen *id.IDGenerator, props *liquidhandling.LHProp
 
 	//add the adaptors
 	for _, assembly := range props.HeadAssemblies {
-		vlh.state.AddAdaptorGroup(NewAdaptorGroup(idGen, assembly))
+		vlh.state.AddAdaptorGroup(NewAdaptorGroup(assembly))
 	}
 
 	//Make the deck

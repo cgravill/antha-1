@@ -64,8 +64,8 @@ type ChannelParams struct {
 	Head        int
 }
 
-func makeLHChannelParameter(idGen *id.IDGenerator, cp ChannelParams) *wtype.LHChannelParameter {
-	return wtype.NewLHChannelParameter(idGen,
+func makeLHChannelParameter(cp ChannelParams) *wtype.LHChannelParameter {
+	return wtype.NewLHChannelParameter(
 		cp.Name,
 		cp.Platform,
 		wunit.NewVolume(cp.Minvol.Value, cp.Minvol.Unit),
@@ -88,7 +88,7 @@ func makeLHAdaptor(idGen *id.IDGenerator, ap AdaptorParams) *wtype.LHAdaptor {
 	return wtype.NewLHAdaptor(idGen,
 		ap.Name,
 		ap.Mfg,
-		makeLHChannelParameter(idGen, ap.Channel))
+		makeLHChannelParameter(ap.Channel))
 }
 
 type HeadParams struct {
@@ -100,7 +100,7 @@ type HeadParams struct {
 }
 
 func makeLHHead(idGen *id.IDGenerator, hp HeadParams) *wtype.LHHead {
-	ret := wtype.NewLHHead(idGen, hp.Name, hp.Mfg, makeLHChannelParameter(idGen, hp.Channel))
+	ret := wtype.NewLHHead(idGen, hp.Name, hp.Mfg, makeLHChannelParameter(hp.Channel))
 	ret.Adaptor = makeLHAdaptor(idGen, hp.Adaptor)
 	ret.TipLoading = hp.TipBehaviour
 	return ret

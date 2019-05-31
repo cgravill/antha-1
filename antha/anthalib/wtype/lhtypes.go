@@ -24,6 +24,7 @@ package wtype
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/pkg/errors"
 
@@ -83,7 +84,6 @@ func (lhmcc LHMultiChannelConstraint) Equals(lhmcc2 LHMultiChannelConstraint) bo
 
 // describes sets of parameters which can be used to create a configuration
 type LHChannelParameter struct {
-	ID          string
 	Platform    string
 	Name        string
 	Minvol      wunit.Volume
@@ -97,7 +97,13 @@ type LHChannelParameter struct {
 }
 
 func (lhcprm *LHChannelParameter) Equals(prm2 *LHChannelParameter) bool {
-	return lhcprm.ID == prm2.ID
+	// convert to the same units
+	cp := &(*prm2)
+	cp.Minvol = cp.Minvol.MustVolumeInUnit(lhcprm.Minvol.Unit())
+	cp.Maxvol = cp.Maxvol.MustVolumeInUnit(lhcprm.Maxvol.Unit())
+	cp.Minspd = cp.Minspd.MustFlowRateInUnit(lhcprm.Minspd.Unit())
+	cp.Maxspd = cp.Maxspd.MustFlowRateInUnit(lhcprm.Maxspd.Unit())
+	return reflect.DeepEqual(lhcprm, cp)
 }
 
 // can you move this much? If oneshot is true it's strictly Minvol <= v <= Maxvol
@@ -144,53 +150,35 @@ func (lhcp LHChannelParameter) GetConstraint(n int) LHMultiChannelConstraint {
 	return LHMultiChannelConstraint{x, y, max}
 }
 
-func (lhcp *LHChannelParameter) Dup(idGen *id.IDGenerator) *LHChannelParameter {
-	return lhcp.dup(idGen, false)
-}
-
-func (lhcp *LHChannelParameter) DupKeepIDs(idGen *id.IDGenerator) *LHChannelParameter {
-	return lhcp.dup(idGen, true)
-}
-
-func (lhcp *LHChannelParameter) dup(idGen *id.IDGenerator, keepIDs bool) *LHChannelParameter {
+func (lhcp *LHChannelParameter) Dup() *LHChannelParameter {
 	if lhcp == nil {
 		return nil
 	}
-	r := NewLHChannelParameter(idGen, lhcp.Name, lhcp.Platform, lhcp.Minvol, lhcp.Maxvol, lhcp.Minspd, lhcp.Maxspd, lhcp.Multi, lhcp.Independent, lhcp.Orientation, lhcp.Head)
-	if keepIDs {
-		r.ID = lhcp.ID
-	}
-
-	return r
+	return NewLHChannelParameter(lhcp.Name, lhcp.Platform, lhcp.Minvol, lhcp.Maxvol, lhcp.Minspd, lhcp.Maxspd, lhcp.Multi, lhcp.Independent, lhcp.Orientation, lhcp.Head)
 }
 
-func NewLHChannelParameter(idGen *id.IDGenerator, name, platform string, minvol, maxvol wunit.Volume, minspd, maxspd wunit.FlowRate, multi int, independent bool, orientation ChannelOrientation, head int) *LHChannelParameter {
-	var lhp LHChannelParameter
-	lhp.ID = idGen.NextID()
-	lhp.Name = name
-	lhp.Platform = platform
-	lhp.Minvol = minvol
-	lhp.Maxvol = maxvol
-	lhp.Minspd = minspd
-	lhp.Maxspd = maxspd
-	lhp.Multi = multi
-	lhp.Independent = independent
-	lhp.Orientation = orientation
-	lhp.Head = head
-	return &lhp
+func NewLHChannelParameter(name, platform string, minvol, maxvol wunit.Volume, minspd, maxspd wunit.FlowRate, multi int, independent bool, orientation ChannelOrientation, head int) *LHChannelParameter {
+	return &LHChannelParameter{
+		Name:        name,
+		Platform:    platform,
+		Minvol:      wunit.CopyVolume(minvol),
+		Maxvol:      wunit.CopyVolume(maxvol),
+		Minspd:      wunit.CopyFlowRate(minspd),
+		Maxspd:      wunit.CopyFlowRate(maxspd),
+		Multi:       multi,
+		Independent: independent,
+		Orientation: orientation,
+		Head:        head,
+	}
 }
 
 func (lhcp *LHChannelParameter) MergeWithTip(tip *LHTip) *LHChannelParameter {
-	lhcp2 := *lhcp
-	if tip.MinVol.GreaterThanRounded(lhcp2.Minvol, 1) {
-		lhcp2.Minvol = wunit.CopyVolume(tip.MinVol)
+	ret := lhcp.Dup()
+	if tip != nil {
+		ret.Minvol = wunit.MaxVolume(lhcp.Minvol, tip.MinVol)
+		ret.Maxvol = wunit.MinVolume(lhcp.Maxvol, tip.MaxVol)
 	}
-
-	if tip.MaxVol.LessThanRounded(lhcp2.Maxvol, 1) {
-		lhcp2.Maxvol = wunit.CopyVolume(tip.MaxVol)
-	}
-
-	return &lhcp2
+	return ret
 }
 
 // defines an addendum to a liquid handler

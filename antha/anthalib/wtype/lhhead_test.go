@@ -26,9 +26,7 @@ func TestHeadDup(t *testing.T) {
 			ID:     "originalID",
 			Params: &LHChannelParameter{},
 		},
-		Params: &LHChannelParameter{
-			ID: "originalID",
-		},
+		Params: &LHChannelParameter{},
 	}
 
 	newID := head.Dup(idGen)
@@ -40,9 +38,6 @@ func TestHeadDup(t *testing.T) {
 	if head.Adaptor.ID != oldID.Adaptor.ID {
 		t.Error("head.Adaptor.ID was changed by DupKeepIDs")
 	}
-	if head.Params.ID != oldID.Params.ID {
-		t.Error("head.Params.ID was changed by DupKeepIDs")
-	}
 
 	if head.ID == newID.ID {
 		t.Error("head.ID was changed by Dup")
@@ -50,10 +45,6 @@ func TestHeadDup(t *testing.T) {
 	if head.Adaptor.ID == newID.Adaptor.ID {
 		t.Error("head.Adaptor.ID was changed by Dup")
 	}
-	if head.Params.ID == newID.Params.ID {
-		t.Error("head.Params.ID was changed by Dup")
-	}
-
 }
 
 type headCanReachTest struct {

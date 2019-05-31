@@ -32,7 +32,6 @@ import (
 	"github.com/antha-lang/antha/antha/anthalib/wunit"
 	"github.com/antha-lang/antha/antha/anthalib/wutil"
 	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/laboratory/effects/id"
 )
 
 type TransferInstruction struct {
@@ -116,7 +115,7 @@ func (tfri *TransferInstruction) Add(tp MultiTransferParams) {
 }
 
 //what, pltfrom, pltto, wellfrom, wellto, fplatetype, tplatetype []string, volume, fvolume, tvolume []wunit.Volume, FPlateWX, FPlateWY, TPlateWX, TPlateWY []int, Components []string
-func (ins *TransferInstruction) Dup(idGen *id.IDGenerator) *TransferInstruction {
+func (ins *TransferInstruction) Dup() *TransferInstruction {
 	tfri := &TransferInstruction{
 		InstructionType: TFR,
 		Transfers:       make([]MultiTransferParams, 0, 1),
@@ -125,14 +124,14 @@ func (ins *TransferInstruction) Dup(idGen *id.IDGenerator) *TransferInstruction 
 	tfri.BaseRobotInstruction = NewBaseRobotInstruction(tfri)
 
 	for _, tfr := range ins.Transfers {
-		tfri.Add(tfr.Dup(idGen))
+		tfri.Add(tfr.Dup())
 	}
 
 	return tfri
 }
 
-func (ins *TransferInstruction) MergeWith(idGen *id.IDGenerator, ins2 *TransferInstruction) *TransferInstruction {
-	ret := ins.Dup(idGen)
+func (ins *TransferInstruction) MergeWith(ins2 *TransferInstruction) *TransferInstruction {
+	ret := ins.Dup()
 
 	for _, v := range ins2.Transfers {
 		ins.Add(v)
@@ -417,7 +416,7 @@ func (ins *TransferInstruction) Generate(labEffects *effects.LaboratoryEffects, 
 	// after ensuring that the transfers are within limitations of the liquid handler
 
 	if prms.GetLHType() == HLLiquidHandler {
-		err := ins.ReviseTransferVolumes(labEffects.IDGenerator, prms)
+		err := ins.ReviseTransferVolumes(prms)
 
 		if err != nil {
 			return []RobotInstruction{}, err
@@ -511,7 +510,7 @@ func (ins *TransferInstruction) Generate(labEffects *effects.LaboratoryEffects, 
 		}
 
 		if multi {
-			mtp := ins.Transfers[set].Dup(labEffects.IDGenerator)
+			mtp := ins.Transfers[set].Dup()
 			for i := 0; i < len(mtp.Transfers); i++ {
 				mtp.Transfers[i].Volume = vols[i].Dup()
 				mtp.Transfers[i].Channel = channels[set]
@@ -540,7 +539,7 @@ func (ins *TransferInstruction) Generate(labEffects *effects.LaboratoryEffects, 
 	return []RobotInstruction{mci}, nil
 }
 
-func (ins *TransferInstruction) ReviseTransferVolumes(idGen *id.IDGenerator, prms *LHProperties) error {
+func (ins *TransferInstruction) ReviseTransferVolumes(prms *LHProperties) error {
 	newTransfers := make([]MultiTransferParams, 0, len(ins.Transfers))
 
 	for _, mtp := range ins.Transfers {
@@ -550,7 +549,7 @@ func (ins *TransferInstruction) ReviseTransferVolumes(idGen *id.IDGenerator, prm
 			if tp.What == "" {
 				continue
 			}
-			newTPs, err := safeTransfers(idGen, tp, prms)
+			newTPs, err := safeTransfers(tp, prms)
 			if err != nil {
 				return err
 			}
@@ -567,7 +566,7 @@ func (ins *TransferInstruction) ReviseTransferVolumes(idGen *id.IDGenerator, prm
 	return nil
 }
 
-func safeTransfers(idGen *id.IDGenerator, tp TransferParams, prms *LHProperties) ([]TransferParams, error) {
+func safeTransfers(tp TransferParams, prms *LHProperties) ([]TransferParams, error) {
 
 	if tp.What == "" {
 		return []TransferParams{tp}, nil
@@ -587,7 +586,7 @@ func safeTransfers(idGen *id.IDGenerator, tp TransferParams, prms *LHProperties)
 	twv := tp.TVolume.Dup()
 
 	for _, v := range tvs {
-		ntp := tp.Dup(idGen)
+		ntp := tp.Dup()
 		ntp.Volume = v
 		ntp.FVolume = fwv.Dup()
 		ntp.TVolume = twv.Dup()

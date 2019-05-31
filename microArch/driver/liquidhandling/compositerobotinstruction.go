@@ -34,7 +34,6 @@ import (
 	"github.com/antha-lang/antha/antha/anthalib/wunit"
 	"github.com/antha-lang/antha/antha/anthalib/wutil/text"
 	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/laboratory/effects/id"
 	anthadriver "github.com/antha-lang/antha/microArch/driver"
 )
 
@@ -174,16 +173,12 @@ func (ins *ChannelBlockInstruction) MaxMulti() int {
 	return mx
 }
 
-func mergeTipsAndChannels(idGen *id.IDGenerator, channels []*wtype.LHChannelParameter, tips []*wtype.LHTip) []*wtype.LHChannelParameter {
+func mergeTipsAndChannels(channels []*wtype.LHChannelParameter, tips []*wtype.LHTip) []*wtype.LHChannelParameter {
 	ret := make([]*wtype.LHChannelParameter, len(channels))
 
 	for i := 0; i < len(channels); i++ {
 		if channels[i] != nil {
-			if tips[i] != nil {
-				ret[i] = channels[i].MergeWithTip(tips[i])
-			} else {
-				ret[i] = channels[i].Dup(idGen)
-			}
+			ret[i] = channels[i].MergeWithTip(tips[i])
 		}
 	}
 
@@ -237,7 +232,7 @@ func (ins *ChannelBlockInstruction) Generate(labEffects *effects.LaboratoryEffec
 
 		// split the transfer up
 		// volumes no longer equal
-		tvs, err := TransferVolumesMulti(VolumeSet(ins.Volume[t]), mergeTipsAndChannels(labEffects.IDGenerator, newchannels, newtips))
+		tvs, err := TransferVolumesMulti(VolumeSet(ins.Volume[t]), mergeTipsAndChannels(newchannels, newtips))
 		if err != nil {
 			return ret, err
 		}
@@ -353,7 +348,7 @@ type ChannelTransferInstruction struct {
 	Component  []string
 }
 
-func (scti *ChannelTransferInstruction) Params(idGen *id.IDGenerator, k int) TransferParams {
+func (scti *ChannelTransferInstruction) Params(k int) TransferParams {
 	var tp TransferParams
 	tp.What = scti.What[k]
 	tp.PltFrom = scti.PltFrom[k]
@@ -365,7 +360,7 @@ func (scti *ChannelTransferInstruction) Params(idGen *id.IDGenerator, k int) Tra
 	tp.TPlateType = scti.TPlateType[k]
 	tp.FVolume = wunit.CopyVolume(scti.FVolume[k])
 	tp.TVolume = wunit.CopyVolume(scti.TVolume[k])
-	tp.Channel = scti.Prms[k].Dup(idGen)
+	tp.Channel = scti.Prms[k].Dup()
 	tp.TipType = scti.TipType[k]
 	tp.Component = scti.Component[k]
 	return tp
@@ -445,7 +440,7 @@ func (ins *ChannelTransferInstruction) GetParameter(name InstructionParameter) i
 }
 
 func (ins *ChannelTransferInstruction) Generate(labEffects *effects.LaboratoryEffects, policy *wtype.LHPolicyRuleSet, prms *LHProperties) ([]RobotInstruction, error) {
-	return []RobotInstruction{NewSuckInstruction(labEffects.IDGenerator, ins), NewBlowInstruction(labEffects.IDGenerator, ins)}, nil
+	return []RobotInstruction{NewSuckInstruction(ins), NewBlowInstruction(ins)}, nil
 }
 
 type StateChangeInstruction struct {
@@ -593,7 +588,6 @@ func NewLoadTipsMoveFromTipSources(params *LHProperties, head int, sourceMap map
 	}
 	return ins
 }
-
 func (ins *LoadTipsMoveInstruction) Visit(visitor RobotInstructionVisitor) {
 	visitor.LoadTipsMove(ins)
 }
@@ -1327,10 +1321,10 @@ type SuckInstruction struct {
 	Component   []string
 }
 
-func NewSuckInstruction(idGen *id.IDGenerator, cti *ChannelTransferInstruction) *SuckInstruction {
+func NewSuckInstruction(cti *ChannelTransferInstruction) *SuckInstruction {
 	prms := make([]*wtype.LHChannelParameter, len(cti.Prms))
 	for i, cp := range cti.Prms {
-		prms[i] = cp.DupKeepIDs(idGen)
+		prms[i] = cp.Dup()
 	}
 
 	head := -1
@@ -1746,12 +1740,12 @@ type BlowInstruction struct {
 	Component  []string
 }
 
-func NewBlowInstruction(idGen *id.IDGenerator, cti *ChannelTransferInstruction) *BlowInstruction {
+func NewBlowInstruction(cti *ChannelTransferInstruction) *BlowInstruction {
 	// we're assuming here that the channels parameters are the same for each channel, i.e. that the same tip and head was chosen for each
 	prms := make([]*wtype.LHChannelParameter, len(cti.Prms))
 	for i, cp := range cti.Prms {
 		if cp != nil {
-			prms[i] = cp.DupKeepIDs(idGen)
+			prms[i] = cp.Dup()
 		}
 	}
 
@@ -1832,7 +1826,7 @@ func (ins *BlowInstruction) GetParameter(name InstructionParameter) interface{} 
 	}
 }
 
-func (scti *BlowInstruction) Params(idGen *id.IDGenerator) MultiTransferParams {
+func (scti *BlowInstruction) Params() MultiTransferParams {
 	tp := NewMultiTransferParams(scti.Multi)
 	/*
 		tp.What = scti.What
@@ -1845,7 +1839,7 @@ func (scti *BlowInstruction) Params(idGen *id.IDGenerator) MultiTransferParams {
 	*/
 
 	for i := 0; i < len(scti.What); i++ {
-		tp.Transfers = append(tp.Transfers, TransferParams{What: scti.What[i], PltTo: scti.PltTo[i], WellTo: scti.WellTo[i], Volume: scti.Volume[i], TPlateType: scti.TPlateType[i], TVolume: scti.TVolume[i], Channel: scti.Prms[i].Dup(idGen)})
+		tp.Transfers = append(tp.Transfers, TransferParams{What: scti.What[i], PltTo: scti.PltTo[i], WellTo: scti.WellTo[i], Volume: scti.Volume[i], TPlateType: scti.TPlateType[i], TVolume: scti.TVolume[i], Channel: scti.Prms[i].Dup()})
 	}
 
 	return tp
@@ -2217,8 +2211,7 @@ func (ins *BlowInstruction) Generate(labEffects *effects.LaboratoryEffects, poli
 
 	if weneedtoreset && !overridereset {
 		resetinstruction := NewResetInstruction()
-
-		resetinstruction.AddMultiTransferParams(ins.Params(labEffects.IDGenerator))
+		resetinstruction.AddMultiTransferParams(ins.Params())
 		ret = append(ret, resetinstruction)
 	}
 

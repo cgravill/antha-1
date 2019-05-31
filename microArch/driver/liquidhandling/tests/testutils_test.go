@@ -7,7 +7,6 @@ import (
 	"github.com/antha-lang/antha/antha/anthalib/wunit"
 	"github.com/antha-lang/antha/inventory/components"
 	"github.com/antha-lang/antha/laboratory"
-	"github.com/antha-lang/antha/laboratory/effects/id"
 	"github.com/antha-lang/antha/microArch/driver/liquidhandling"
 	"github.com/antha-lang/antha/workflow"
 )
@@ -35,22 +34,22 @@ func MakeGilsonWithTipboxesForTest(lab *laboratory.Laboratory) *liquidhandling.L
 	return ret
 }
 
-func getHVConfig(idGen *id.IDGenerator) *wtype.LHChannelParameter {
+func getHVConfig() *wtype.LHChannelParameter {
 	minvol := wunit.NewVolume(20, "ul")
 	maxvol := wunit.NewVolume(200, "ul")
 	minspd := wunit.NewFlowRate(HVMinRate, "ml/min")
 	maxspd := wunit.NewFlowRate(HVMaxRate, "ml/min")
 
-	return wtype.NewLHChannelParameter(idGen, "HVconfig", "GilsonPipetmax", minvol, maxvol, minspd, maxspd, 8, false, wtype.LHVChannel, 0)
+	return wtype.NewLHChannelParameter("HVconfig", "GilsonPipetmax", minvol, maxvol, minspd, maxspd, 8, false, wtype.LHVChannel, 0)
 }
 
-func getLVConfig(idGen *id.IDGenerator) *wtype.LHChannelParameter {
+func getLVConfig() *wtype.LHChannelParameter {
 	newminvol := wunit.NewVolume(0.5, "ul")
 	newmaxvol := wunit.NewVolume(20, "ul")
 	newminspd := wunit.NewFlowRate(LVMinRate, "ml/min")
 	newmaxspd := wunit.NewFlowRate(LVMaxRate, "ml/min")
 
-	return wtype.NewLHChannelParameter(idGen, "LVconfig", "GilsonPipetmax", newminvol, newmaxvol, newminspd, newmaxspd, 8, false, wtype.LHVChannel, 1)
+	return wtype.NewLHChannelParameter("LVconfig", "GilsonPipetmax", newminvol, newmaxvol, newminspd, newmaxspd, 8, false, wtype.LHVChannel, 1)
 }
 
 func MakeGilsonForTest(lab *laboratory.Laboratory, tipList []wtype.TipType) *liquidhandling.LHProperties {
@@ -90,12 +89,12 @@ func MakeGilsonForTest(lab *laboratory.Laboratory, tipList []wtype.TipType) *liq
 		Wastes:    workflow.Addresses{"position_9"},
 	}
 
-	hvconfig := getHVConfig(lab.IDGenerator)
+	hvconfig := getHVConfig()
 	hvadaptor := wtype.NewLHAdaptor(lab.IDGenerator, "DummyAdaptor", "Gilson", hvconfig)
 	hvhead := wtype.NewLHHead(lab.IDGenerator, "HVHead", "Gilson", hvconfig)
 	hvhead.Adaptor = hvadaptor
 
-	lvconfig := getLVConfig(lab.IDGenerator)
+	lvconfig := getLVConfig()
 	lvadaptor := wtype.NewLHAdaptor(lab.IDGenerator, "DummyAdaptor", "Gilson", lvconfig)
 	lvhead := wtype.NewLHHead(lab.IDGenerator, "LVHead", "Gilson", lvconfig)
 	lvhead.Adaptor = lvadaptor
@@ -150,6 +149,10 @@ func SetUpTipsFor(lab *laboratory.Laboratory, lhp *liquidhandling.LHProperties, 
 		panic(err) // it really can't be != nil because the above fun never returns a non nil err
 	}
 	return lhp
+}
+
+func defaultTipList() []wtype.TipType {
+	return []wtype.TipType{"Gilson20", "Gilson200"}
 }
 
 func makeGilsonWithTipboxesForTest(lab *laboratory.Laboratory) (*liquidhandling.LHProperties, error) {

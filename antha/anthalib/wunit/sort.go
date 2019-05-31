@@ -155,25 +155,28 @@ func SortVolumes(volumes []Volume, descending ...SortOption) (sorted []Volume, e
 }
 
 // MinVolume returns the lowest Volume value from a set of volume values.
-// An error will be returned if no values are specified or the base units of any of the volumes are incompatible,
-func MinVolume(volumes []Volume) (min Volume, err error) {
-	sorted, err := SortVolumes(volumes)
-	if err != nil {
-		err = fmt.Errorf("Cannot return minimum concentration: %s", err.Error())
-		return
+func MinVolume(volumes ...Volume) Volume {
+	if len(volumes) == 0 {
+		return ZeroVolume()
 	}
-	return sorted[0], nil
+	min := volumes[0]
+	for _, v := range volumes[1:] {
+		if v.LessThan(min) {
+			min = v
+		}
+	}
+	return min
 }
 
 // MaxVolume returns the highest Volume value from a set of volume values.
-// An error will be returned if no values are specified or the base units of any of the volumes are incompatible,
-func MaxVolume(volumes []Volume) (max Volume, err error) {
-	sorted, err := SortVolumes(volumes)
-	if err != nil {
-		err = fmt.Errorf("Cannot return maximum volume: %s", err.Error())
-		return
+func MaxVolume(volumes ...Volume) Volume {
+	max := ZeroVolume()
+	for _, v := range volumes {
+		if v.GreaterThan(max) {
+			max = v
+		}
 	}
-	return sorted[len(sorted)-1], nil
+	return max
 }
 
 type volumeSet []Volume

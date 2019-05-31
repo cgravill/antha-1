@@ -234,7 +234,6 @@ func TestParent(t *testing.T) {
 
 func testLHCP() LHChannelParameter {
 	return LHChannelParameter{
-		ID:          "dummydummy",
 		Name:        "mrdummy",
 		Minvol:      wunit.NewVolume(1.0, "ul"),
 		Maxvol:      wunit.NewVolume(1.0, "ul"),

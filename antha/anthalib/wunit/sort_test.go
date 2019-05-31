@@ -86,12 +86,12 @@ func (self *VolumeSortTest) Run(t *testing.T) {
 				t.Errorf("sorting failed: expected %v: got %v", expected, sorted)
 			}
 
-			min, _ := MinVolume(self.Input) // nolint - error is the same as above
+			min := MinVolume(self.Input...)
 			if e := self.Input[self.Order[0]]; e != min {
 				t.Errorf("finding minimum failed: expected %v: got %v", e, min)
 			}
 
-			max, _ := MaxVolume(self.Input) // nolint - error is the same as above
+			max := MaxVolume(self.Input...)
 			if e := self.Input[self.Order[len(self.Order)-1]]; e != max {
 				t.Errorf("finding maximum failed: expected %v: got %v", e, min)
 			}

@@ -10,24 +10,24 @@ import (
 	"github.com/antha-lang/antha/microArch/driver/liquidhandling"
 )
 
-func getChannelForTest(idGen *id.IDGenerator) *wtype.LHChannelParameter {
-	return wtype.NewLHChannelParameter(idGen, "ch", "gilson", wunit.NewVolume(20.0, "ul"), wunit.NewVolume(200.0, "ul"), wunit.NewFlowRate(0.0, "ml/min"), wunit.NewFlowRate(100.0, "ml/min"), 8, false, wtype.LHVChannel, 1)
+func getChannelForTest() *wtype.LHChannelParameter {
+	return wtype.NewLHChannelParameter("ch", "gilson", wunit.NewVolume(20.0, "ul"), wunit.NewVolume(200.0, "ul"), wunit.NewFlowRate(0.0, "ml/min"), wunit.NewFlowRate(100.0, "ml/min"), 8, false, wtype.LHVChannel, 1)
 }
 
 func getSingleChannelSuck(idGen *id.IDGenerator, what string, volume wunit.Volume) *liquidhandling.SuckInstruction {
-	return liquidhandling.NewSuckInstruction(idGen, &liquidhandling.ChannelTransferInstruction{
+	return liquidhandling.NewSuckInstruction(&liquidhandling.ChannelTransferInstruction{
 		What:   []string{what},
 		Volume: []wunit.Volume{volume},
-		Prms:   []*wtype.LHChannelParameter{getChannelForTest(idGen)},
+		Prms:   []*wtype.LHChannelParameter{getChannelForTest()},
 		Multi:  1,
 	})
 }
 
 func getSingleChannelBlow(idGen *id.IDGenerator, what string, volume wunit.Volume) *liquidhandling.BlowInstruction {
-	return liquidhandling.NewBlowInstruction(idGen, &liquidhandling.ChannelTransferInstruction{
+	return liquidhandling.NewBlowInstruction(&liquidhandling.ChannelTransferInstruction{
 		What:   []string{what},
 		Volume: []wunit.Volume{volume},
-		Prms:   []*wtype.LHChannelParameter{getChannelForTest(idGen)},
+		Prms:   []*wtype.LHChannelParameter{getChannelForTest()},
 		Multi:  1,
 	})
 }
@@ -164,11 +164,11 @@ func getWaterInstructions(idGen *id.IDGenerator) []liquidhandling.RobotInstructi
 
 	cti := &liquidhandling.ChannelTransferInstruction{
 		What: waters,
-		Prms: []*wtype.LHChannelParameter{getChannelForTest(idGen)},
+		Prms: []*wtype.LHChannelParameter{getChannelForTest()},
 	}
 
 	{
-		ins := liquidhandling.NewBlowInstruction(idGen, cti)
+		ins := liquidhandling.NewBlowInstruction(cti)
 		ret = append(ret, ins)
 	}
 
@@ -179,12 +179,12 @@ func getWaterInstructions(idGen *id.IDGenerator) []liquidhandling.RobotInstructi
 	}
 
 	{
-		ins := liquidhandling.NewSuckInstruction(idGen, cti)
+		ins := liquidhandling.NewSuckInstruction(cti)
 		ret = append(ret, ins)
 	}
 
 	{
-		ins := liquidhandling.NewBlowInstruction(idGen, cti)
+		ins := liquidhandling.NewBlowInstruction(cti)
 		ret = append(ret, ins)
 	}
 
@@ -230,7 +230,6 @@ func TestRobotInstructionCheckLiquidClass(t *testing.T) {
 }
 
 func TestSmartMixPolicy(t *testing.T) {
-	idGen := id.NewIDGenerator(t.Name())
 	pft, err := wtype.GetLHPolicyForTest()
 
 	if err != nil {
@@ -241,10 +240,10 @@ func TestSmartMixPolicy(t *testing.T) {
 		What:    []string{"SmartMix"},
 		Volume:  []wunit.Volume{wunit.NewVolume(25.0, "ul")},
 		TVolume: []wunit.Volume{wunit.NewVolume(1000.0, "ul")},
-		Prms:    []*wtype.LHChannelParameter{getChannelForTest(idGen)},
+		Prms:    []*wtype.LHChannelParameter{getChannelForTest()},
 	}
 
-	ins1 := liquidhandling.NewBlowInstruction(idGen, cti)
+	ins1 := liquidhandling.NewBlowInstruction(cti)
 
 	p, err := liquidhandling.GetPolicyFor(pft, ins1)
 	if err != nil {
@@ -261,7 +260,7 @@ func TestSmartMixPolicy(t *testing.T) {
 	cti.Volume[0] = wunit.NewVolume(25, "ul")
 	cti.TVolume[0] = wunit.NewVolume(50, "ul")
 
-	ins2 := liquidhandling.NewBlowInstruction(idGen, cti)
+	ins2 := liquidhandling.NewBlowInstruction(cti)
 
 	p, err = liquidhandling.GetPolicyFor(pft, ins2)
 	if err != nil {

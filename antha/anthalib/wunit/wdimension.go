@@ -79,6 +79,35 @@ type Volume struct {
 	*ConcreteMeasurement
 }
 
+// VolumeInUnit return a new measurement in the new units
+func (v Volume) VolumeInUnit(p PrefixedUnit) (Volume, error) {
+	if r, err := v.ConcreteMeasurement.InUnit(p); err != nil {
+		return Volume{}, err
+	} else {
+		return Volume{ConcreteMeasurement: r.(*ConcreteMeasurement)}, nil
+	}
+}
+
+// VolumeInStringUnit return a new measurement in the new units
+func (v Volume) VolumeInStringUnit(symbol string) (Volume, error) {
+	if r, err := v.ConcreteMeasurement.InStringUnit(symbol); err != nil {
+		return Volume{}, err
+	} else {
+		return Volume{ConcreteMeasurement: r.(*ConcreteMeasurement)}, nil
+	}
+
+}
+
+// MustVolumeInUnit convert to the given unit, calls panic() if the units are not compatible
+func (v Volume) MustVolumeInUnit(p PrefixedUnit) Volume {
+	return Volume{ConcreteMeasurement: v.ConcreteMeasurement.MustInUnit(p).(*ConcreteMeasurement)}
+}
+
+// MustVolumeInStringUnit return a new measurement in the new units
+func (v Volume) MustVolumeInStringUnit(symbol string) Volume {
+	return Volume{ConcreteMeasurement: v.ConcreteMeasurement.MustInStringUnit(symbol).(*ConcreteMeasurement)}
+}
+
 // make a volume
 func NewVolume(v float64, unit string) Volume {
 	return Volume{NewTypedMeasurement("Volume", v, unit)}
@@ -496,6 +525,42 @@ type FlowRate struct {
 
 func NewFlowRate(v float64, unit string) FlowRate {
 	return FlowRate{NewTypedMeasurement("FlowRate", v, unit)}
+}
+
+// FlowRateInUnit return a new measurement in the new units
+func (v FlowRate) FlowRateInUnit(p PrefixedUnit) (FlowRate, error) {
+	if r, err := v.ConcreteMeasurement.InUnit(p); err != nil {
+		return FlowRate{}, err
+	} else {
+		return FlowRate{ConcreteMeasurement: r.(*ConcreteMeasurement)}, nil
+	}
+}
+
+// FlowRateInStringUnit return a new measurement in the new units
+func (v FlowRate) FlowRateInStringUnit(symbol string) (FlowRate, error) {
+	if r, err := v.ConcreteMeasurement.InStringUnit(symbol); err != nil {
+		return FlowRate{}, err
+	} else {
+		return FlowRate{ConcreteMeasurement: r.(*ConcreteMeasurement)}, nil
+	}
+
+}
+
+// MustFlowRateInUnit convert to the given unit, calls panic() if the units are not compatible
+func (v FlowRate) MustFlowRateInUnit(p PrefixedUnit) FlowRate {
+	return FlowRate{ConcreteMeasurement: v.ConcreteMeasurement.MustInUnit(p).(*ConcreteMeasurement)}
+}
+
+// MustFlowRateInStringUnit return a new measurement in the new units
+func (v FlowRate) MustFlowRateInStringUnit(symbol string) FlowRate {
+	return FlowRate{ConcreteMeasurement: v.ConcreteMeasurement.MustInStringUnit(symbol).(*ConcreteMeasurement)}
+}
+
+func CopyFlowRate(f FlowRate) FlowRate {
+	if isNil(f.ConcreteMeasurement) {
+		return NewFlowRate(0.0, "ul/s")
+	}
+	return NewFlowRate(f.RawValue(), f.Unit().PrefixedSymbol())
 }
 
 type Velocity struct {

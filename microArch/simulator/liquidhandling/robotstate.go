@@ -31,7 +31,6 @@ import (
 
 	"github.com/antha-lang/antha/antha/anthalib/wtype"
 	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/laboratory/effects/id"
 )
 
 // -------------------------------------------------------------------------------
@@ -221,13 +220,13 @@ type AdaptorState struct {
 	index        int
 }
 
-func NewAdaptorState(idGen *id.IDGenerator, name string, independent bool, channels int, channel_offset wtype.Coordinates3D, coneRadius float64, params *wtype.LHChannelParameter, tipBehaviour wtype.TipLoadingBehaviour) *AdaptorState {
+func NewAdaptorState(name string, independent bool, channels int, channel_offset wtype.Coordinates3D, coneRadius float64, params *wtype.LHChannelParameter, tipBehaviour wtype.TipLoadingBehaviour) *AdaptorState {
 	as := AdaptorState{
 		name,
 		make([]*ChannelState, 0, channels),
 		wtype.Coordinates3D{},
 		independent,
-		params.Dup(idGen),
+		params.Dup(),
 		nil,
 		tipBehaviour,
 		-1,
@@ -516,7 +515,7 @@ type AdaptorGroup struct {
 }
 
 // NewAdaptorGroup convert a HeadAssembly into an AdaptorGroup for simulation
-func NewAdaptorGroup(idGen *id.IDGenerator, assembly *wtype.LHHeadAssembly) *AdaptorGroup {
+func NewAdaptorGroup(assembly *wtype.LHHeadAssembly) *AdaptorGroup {
 
 	offsets := make([]wtype.Coordinates3D, len(assembly.Positions))
 	for i, pos := range assembly.Positions {
@@ -545,7 +544,7 @@ func NewAdaptorGroup(idGen *id.IDGenerator, assembly *wtype.LHHeadAssembly) *Ada
 		} else if p.Orientation == wtype.LHHChannel {
 			spacing.X = 9.
 		}
-		adaptor := NewAdaptorState(idGen, pos.Head.Adaptor.Name, p.Independent, p.Multi, spacing, coneRadius, p, pos.Head.TipLoading)
+		adaptor := NewAdaptorState(pos.Head.Adaptor.Name, p.Independent, p.Multi, spacing, coneRadius, p, pos.Head.TipLoading)
 		group.LoadAdaptor(i, adaptor)
 	}
 

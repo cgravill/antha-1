@@ -94,6 +94,7 @@ type Measurement interface {
 
 // structure implementing the Measurement interface
 type ConcreteMeasurement struct {
+
 	// the raw value
 	Mvalue float64
 	// the relevant units
@@ -144,7 +145,7 @@ func (cm *ConcreteMeasurement) SetValue(v float64) float64 {
 	return v
 }
 
-// ConvertTo return a new measurement in the new units
+// InUnit return a new measurement in the new units
 func (cm *ConcreteMeasurement) InUnit(p PrefixedUnit) (Measurement, error) {
 	if isNil(cm) {
 		return &ConcreteMeasurement{}, nil

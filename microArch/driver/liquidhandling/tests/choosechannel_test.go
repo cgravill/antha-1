@@ -70,10 +70,6 @@ func getMaxvols2() []wunit.Volume {
 	return ret
 }
 
-func defaultTipList() []wtype.TipType {
-	return []wtype.TipType{"Gilson20", "Gilson200"}
-}
-
 func TestDefaultChooser(t *testing.T) {
 	testlab.WithTestLab(t, "", &testlab.TestElementCallbacks{
 		Steps: func(lab *laboratory.Laboratory) error {

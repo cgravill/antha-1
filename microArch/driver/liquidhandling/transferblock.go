@@ -6,7 +6,6 @@ import (
 
 	"github.com/antha-lang/antha/antha/anthalib/wtype"
 	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/laboratory/effects/id"
 )
 
 type TransferBlockInstruction struct {
@@ -131,7 +130,7 @@ func (ti TransferBlockInstruction) Generate(labEffects *effects.LaboratoryEffect
 	}
 
 	//inss = append(inss, tfr...)
-	inss = fromTransfers(mergeTransfers(labEffects.IDGenerator, toTransfers(inss), policy))
+	inss = fromTransfers(mergeTransfers(toTransfers(inss), policy))
 
 	return inss, nil
 }
@@ -498,27 +497,27 @@ func (ti TransferBlockInstruction) GetParameter(name InstructionParameter) inter
 	return ti.BaseRobotInstruction.GetParameter(name)
 }
 
-func mergeTransfers(idGen *id.IDGenerator, tfrs []*TransferInstruction, policy *wtype.LHPolicyRuleSet) []*TransferInstruction {
+func mergeTransfers(tfrs []*TransferInstruction, policy *wtype.LHPolicyRuleSet) []*TransferInstruction {
 	ret := make([]*TransferInstruction, 0, len(tfrs))
 
 	for _, tf := range tfrs {
-		forMerge := findTransferForMerge(idGen, tf, ret, policy)
+		forMerge := findTransferForMerge(tf, ret, policy)
 
 		// true if ret is empty or nothing mergeable within
 		if forMerge == nil {
 			ret = append(ret, tf)
 		} else {
 			// forMerge is already in ret
-			forMerge.MergeWith(idGen, tf)
+			forMerge.MergeWith(tf)
 		}
 	}
 
 	return ret
 }
 
-func findTransferForMerge(idGen *id.IDGenerator, ins *TransferInstruction, arr []*TransferInstruction, policy *wtype.LHPolicyRuleSet) *TransferInstruction {
+func findTransferForMerge(ins *TransferInstruction, arr []*TransferInstruction, policy *wtype.LHPolicyRuleSet) *TransferInstruction {
 	for _, ins2 := range arr {
-		if canMerge(idGen, ins, ins2, policy) {
+		if canMerge(ins, ins2, policy) {
 			return ins2
 		}
 	}
@@ -530,11 +529,11 @@ func canMulti(policy wtype.LHPolicy) bool {
 	return policy["CAN_MULTI"].(bool)
 }
 
-func canMerge(idGen *id.IDGenerator, ins, ins2 *TransferInstruction, policy *wtype.LHPolicyRuleSet) bool {
+func canMerge(ins, ins2 *TransferInstruction, policy *wtype.LHPolicyRuleSet) bool {
 	// merge only if the merge doesn't break either
 
-	ins3 := ins.Dup(idGen)
-	ins3.MergeWith(idGen, ins2)
+	ins3 := ins.Dup()
+	ins3.MergeWith(ins2)
 
 	pol1, _ := GetPolicyFor(policy, ins)
 	pol2, _ := GetPolicyFor(policy, ins2)

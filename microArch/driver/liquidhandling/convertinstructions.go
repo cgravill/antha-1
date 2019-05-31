@@ -59,7 +59,7 @@ func ConvertInstructions(labEffects *effects.LaboratoryEffects, inssIn LHIVector
 
 func hasMultiChannelBlock(labEffects *effects.LaboratoryEffects, tfrs []*TransferInstruction, rbt *LHProperties, policy *wtype.LHPolicyRuleSet) (bool, error) {
 	for _, tfr := range tfrs {
-		instrx, err := tfr.Dup(labEffects.IDGenerator).Generate(labEffects, policy, rbt)
+		instrx, err := tfr.Dup().Generate(labEffects, policy, rbt)
 
 		if err != nil {
 			return false, err

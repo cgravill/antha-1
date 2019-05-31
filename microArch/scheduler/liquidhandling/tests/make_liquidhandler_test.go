@@ -9,7 +9,6 @@ import (
 	"github.com/antha-lang/antha/antha/anthalib/wtype"
 	"github.com/antha-lang/antha/antha/anthalib/wunit"
 	"github.com/antha-lang/antha/laboratory"
-	"github.com/antha-lang/antha/laboratory/effects/id"
 	"github.com/antha-lang/antha/microArch/driver/liquidhandling"
 	"github.com/antha-lang/antha/workflow"
 )
@@ -40,31 +39,31 @@ const (
 	LVMaxRate = 3.75
 )
 
-func getIndependentConfig(idGen *id.IDGenerator) *wtype.LHChannelParameter {
+func getIndependentConfig() *wtype.LHChannelParameter {
 	minvol := wunit.NewVolume(0.5, "ul")
 	maxvol := wunit.NewVolume(250, "ul")
 	minspd := wunit.NewFlowRate(LVMinRate, "ml/min")
 	maxspd := wunit.NewFlowRate(HVMaxRate, "ml/min")
 
-	return wtype.NewLHChannelParameter(idGen, "config", "GilsonPipetmax", minvol, maxvol, minspd, maxspd, 8, true, wtype.LHVChannel, 0)
+	return wtype.NewLHChannelParameter("config", "GilsonPipetmax", minvol, maxvol, minspd, maxspd, 8, true, wtype.LHVChannel, 0)
 }
 
-func getHVConfig(idGen *id.IDGenerator) *wtype.LHChannelParameter {
+func getHVConfig() *wtype.LHChannelParameter {
 	minvol := wunit.NewVolume(10, "ul")
 	maxvol := wunit.NewVolume(250, "ul")
 	minspd := wunit.NewFlowRate(HVMinRate, "ml/min")
 	maxspd := wunit.NewFlowRate(HVMaxRate, "ml/min")
 
-	return wtype.NewLHChannelParameter(idGen, "HVconfig", "GilsonPipetmax", minvol, maxvol, minspd, maxspd, 8, false, wtype.LHVChannel, 0)
+	return wtype.NewLHChannelParameter("HVconfig", "GilsonPipetmax", minvol, maxvol, minspd, maxspd, 8, false, wtype.LHVChannel, 0)
 }
 
-func getLVConfig(idGen *id.IDGenerator) *wtype.LHChannelParameter {
+func getLVConfig() *wtype.LHChannelParameter {
 	newminvol := wunit.NewVolume(0.5, "ul")
 	newmaxvol := wunit.NewVolume(20, "ul")
 	newminspd := wunit.NewFlowRate(LVMinRate, "ml/min")
 	newmaxspd := wunit.NewFlowRate(LVMaxRate, "ml/min")
 
-	return wtype.NewLHChannelParameter(idGen, "LVconfig", "GilsonPipetmax", newminvol, newmaxvol, newminspd, newmaxspd, 8, false, wtype.LHVChannel, 1)
+	return wtype.NewLHChannelParameter("LVconfig", "GilsonPipetmax", newminvol, newmaxvol, newminspd, newmaxspd, 8, false, wtype.LHVChannel, 1)
 }
 
 func makeLayout(lab *laboratory.Laboratory) *liquidhandling.LHProperties {
@@ -112,7 +111,7 @@ func makeIndependentLH(lab *laboratory.Laboratory) *liquidhandling.LHProperties 
 	lhp.Mnfr = "Hamilton"
 
 	// test independent liquidhandler has only one head to avoid multi-head instruction issues
-	config := getIndependentConfig(lab.IDGenerator)
+	config := getIndependentConfig()
 	adaptor := wtype.NewLHAdaptor(lab.IDGenerator, "DummyAdaptor", "Gilson", config)
 	head := wtype.NewLHHead(lab.IDGenerator, "Head", "Gilson", config)
 	head.Adaptor = adaptor
@@ -132,12 +131,12 @@ func makeIndependentLH(lab *laboratory.Laboratory) *liquidhandling.LHProperties 
 func makeGilson(lab *laboratory.Laboratory) *liquidhandling.LHProperties {
 	lhp := makeLayout(lab)
 
-	hvconfig := getHVConfig(lab.IDGenerator)
+	hvconfig := getHVConfig()
 	hvadaptor := wtype.NewLHAdaptor(lab.IDGenerator, "DummyAdaptor", "Gilson", hvconfig)
 	hvhead := wtype.NewLHHead(lab.IDGenerator, "HVHead", "Gilson", hvconfig)
 	hvhead.Adaptor = hvadaptor
 
-	lvconfig := getLVConfig(lab.IDGenerator)
+	lvconfig := getLVConfig()
 	lvadaptor := wtype.NewLHAdaptor(lab.IDGenerator, "DummyAdaptor", "Gilson", lvconfig)
 	lvhead := wtype.NewLHHead(lab.IDGenerator, "LVHead", "Gilson", lvconfig)
 	lvhead.Adaptor = lvadaptor
