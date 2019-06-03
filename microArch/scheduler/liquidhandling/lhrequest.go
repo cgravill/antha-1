@@ -25,6 +25,7 @@ package liquidhandling
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -48,10 +49,10 @@ type LHRequest struct {
 	InstructionTree       *liquidhandling.ITree
 	Instructions          []liquidhandling.TerminalRobotInstruction
 	InstructionText       string
-	InputAssignments      map[string][]string
-	OutputAssignments     map[string][]string
-	InputPlates           map[string]*wtype.Plate
-	OutputPlates          map[string]*wtype.Plate
+	InputAssignments      ComponentPositions
+	OutputAssignments     ComponentPositions
+	InputPlates           PlateLocations
+	OutputPlates          PlateLocations
 	InputPlatetypes       []*wtype.Plate
 	InputPlateOrder       []string
 	InputSetupWeights     map[string]float64
@@ -71,6 +72,13 @@ type LHRequest struct {
 	TipsUsed              []wtype.TipEstimate
 	InputSolutions        *InputSolutions //store properties related to the Liquids for the request
 }
+
+// ComponentPositions maps component name to positions (plate:row:col) where that component is found. For
+// example: {tea: [plate1:A:1, plate1:A:2...] }
+type ComponentPositions map[string][]string
+
+// PlateLocations maps location to a plate which occupies given location
+type PlateLocations map[string]*wtype.Plate
 
 func (req *LHRequest) GetPlate(id string) (*wtype.Plate, bool) {
 	p, ok := req.Plates[id]
@@ -516,4 +524,24 @@ func (request *LHRequest) Validate() error {
 		}
 	}
 	return nil
+}
+
+// SortedKeys returns a slice with sorted map keys
+func (m PlateLocations) SortedKeys() []string {
+	r := make([]string, 0, len(m))
+	for k := range m {
+		r = append(r, k)
+	}
+	sort.Strings(r)
+	return r
+}
+
+// SortedKeys returns a slice with sorted map keys
+func (m ComponentPositions) SortedKeys() []string {
+	r := make([]string, 0, len(m))
+	for k := range m {
+		r = append(r, k)
+	}
+	sort.Strings(r)
+	return r
 }

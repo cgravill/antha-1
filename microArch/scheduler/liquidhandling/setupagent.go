@@ -72,7 +72,8 @@ func BasicSetupAgent(labEffects *effects.LaboratoryEffects, request *LHRequest, 
 			sort.Strings(input_plate_order)
 		*/
 
-		for _, ass := range request.InputAssignments {
+		for _, key := range request.InputAssignments.SortedKeys() {
+			ass := request.InputAssignments[key]
 			for _, a := range ass {
 				tx := strings.Split(a, ":")
 				if !isInStrArr(tx[0], input_plate_order) {
@@ -82,7 +83,7 @@ func BasicSetupAgent(labEffects *effects.LaboratoryEffects, request *LHRequest, 
 		}
 
 		if len(input_plate_order) < len(input_plates) {
-			for id := range input_plates {
+			for _, id := range input_plates.SortedKeys() {
 				if !isInStrArr(id, input_plate_order) {
 					input_plate_order = append(input_plate_order, id)
 				}
