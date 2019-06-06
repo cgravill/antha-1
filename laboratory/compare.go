@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"path/filepath"
+	"time"
 
 	"github.com/antha-lang/antha/laboratory/compare"
 	"github.com/antha-lang/antha/target"
@@ -13,6 +14,10 @@ import (
 
 // Compare compares output generated with any supplied test data in the workflow
 func (labBuild *LaboratoryBuilder) Compare() {
+	generatedFile := filepath.Join(labBuild.outDir, "comparisons.generated.json")
+	if err := labBuild.writeGenerated(generatedFile); err != nil {
+		labBuild.RecordError(fmt.Errorf("could not write generated results to file %s : %v", generatedFile, err), true)
+	}
 
 	if len(labBuild.Workflow.Testing.MixTaskChecks) == 0 {
 		return
@@ -39,10 +44,26 @@ func (labBuild *LaboratoryBuilder) Compare() {
 	if err := errs.WriteToFile(filename); err != nil {
 		labBuild.RecordError(fmt.Errorf("errors writing comparison results to file %s: %v", filename, err), true)
 	} else if errs.Pack() != nil {
-		labBuild.RecordError(fmt.Errorf("errors in comparison tests, details in %s", filename), true)
+		labBuild.RecordError(fmt.Errorf("errors in comparison tests, details in %s, generated results in %s", filename, generatedFile), true)
 	} else {
 		labBuild.Logger.Log("msg", "Comparison test data passed.")
 	}
+}
+
+func (labBuild *LaboratoryBuilder) writeGenerated(f string) error {
+	generated := workflow.Testing{}
+	generated.MixTaskChecks = make([]workflow.MixTaskCheck, 0, len(labBuild.instrs))
+	for _, instr := range labBuild.instrs {
+		if t, ok := instr.(*target.Mix); ok {
+			generated.MixTaskChecks = append(generated.MixTaskChecks, workflow.MixTaskCheck{
+				TimeEstimate: time.Duration(time.Duration(t.GetTimeEstimate()) * time.Second),
+				Outputs:      t.FinalProperties.Plates,
+				Instructions: []byte("{}"),
+			})
+		}
+	}
+
+	return generated.WriteToFile(f)
 }
 
 func expectedMix(w *workflow.Workflow, idx int) (*workflow.MixTaskCheck, error) {
