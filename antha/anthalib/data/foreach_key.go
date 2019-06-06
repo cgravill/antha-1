@@ -39,7 +39,7 @@ func (fks *ForeachKeySelection) By(fn func(key Row, partition *Table)) error {
 		if index == 0 {
 			partitionStart = 0
 			partitionKey = key
-		} else if !reflect.DeepEqual(key.values, partitionKey) {
+		} else if !reflect.DeepEqual(key.values, partitionKey.values) {
 			fn(partitionKey, sliceNativeTable(partitionsTable, partitionStart, index))
 			partitionStart = index
 			partitionKey = key
