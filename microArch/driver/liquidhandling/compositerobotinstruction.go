@@ -210,6 +210,11 @@ func (ins *ChannelBlockInstruction) Generate(labEffects *effects.LaboratoryEffec
 	var channels []*wtype.LHChannelParameter
 	var tiptypes []wtype.TipType
 
+	tipByType := make(map[wtype.TipType]*wtype.LHTip, len(prms.Tips))
+	for _, t := range prms.Tips {
+		tipByType[t.Type] = t
+	}
+
 	for t := 0; t < len(ins.Volume); t++ {
 		if len(ins.What[t]) == 0 {
 			continue
@@ -225,9 +230,16 @@ func (ins *ChannelBlockInstruction) Generate(labEffects *effects.LaboratoryEffec
 		}
 
 		// choose which tips should be used for this transfer
-		newchannels, newtips, newtiptypes, err := ChooseChannels(labEffects.IDGenerator, ins.Volume[t], prms)
+		newchannels, newtiptypes, err := ChooseChannels(ins.Volume[t], prms)
 		if err != nil {
 			return ret, err
+		}
+
+		newtips := make([]*wtype.LHTip, len(newtiptypes))
+		for i, ttype := range newtiptypes {
+			if !ttype.IsNil() {
+				newtips[i] = tipByType[ttype].Dup(labEffects.IDGenerator)
+			}
 		}
 
 		// split the transfer up
