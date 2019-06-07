@@ -8,13 +8,13 @@ import (
 
 	"github.com/Synthace/antha-runner/aconv"
 	"github.com/Synthace/antha-runner/protobuf"
-	inventorypb "github.com/Synthace/microservice/cmd/inventory/protobuf"
 	"github.com/Synthace/antha/antha/anthalib/wtype"
 	"github.com/Synthace/antha/antha/anthalib/wtype/liquidtype"
 	"github.com/Synthace/antha/laboratory/effects"
 	"github.com/Synthace/antha/logger"
 	"github.com/Synthace/antha/workflow"
 	"github.com/Synthace/antha/workflow/migrate"
+	inventorypb "github.com/Synthace/microservice/cmd/inventory/protobuf"
 	"github.com/golang/protobuf/proto"
 )
 
