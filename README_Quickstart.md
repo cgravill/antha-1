@@ -194,7 +194,7 @@ Let's create our `json` with repository information. Create a file `local-reposi
 {
     "SchemaVersion": "2.0",
     "Repositories": {
-        "repos.antha.com/antha-ninja/elements-westeros": {
+        "Synthace": {
             "Directory": "/Users/tutor/antha/elements-westeros"
         }
     }
@@ -513,7 +513,7 @@ The most direct method is simply remove the `Repositories` element from the work
 
 ```json
         "Repositories": {
-                "repos.antha.com/antha-ninja/elements-westeros": {
+                "Synthace": {
                         "Directory": "/Users/matthewgregg/antha/elements-westeros"
                 }
         },
