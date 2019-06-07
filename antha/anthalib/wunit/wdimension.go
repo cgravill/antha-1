@@ -168,18 +168,38 @@ func DivideVolume(v Volume, factor float64) (newvolume Volume) {
 
 }
 
+// Divide divides num by den, correcting for units.
+// An error is returned if the measurement is infinity or the units are not compatible
+func Divide(num, den *ConcreteMeasurement) (float64, error) {
+	if num.Unit().BaseSISymbol() != den.Unit().BaseSISymbol() {
+		return 0, errors.Errorf("cannot divide measurements with incompatible units %v and %v", num.Unit(), den.Unit())
+	}
+
+	if den.IsZero() {
+		return 0, errors.Errorf("while dividing %s by %s: cannot divide by zero", num, den)
+	}
+
+	return num.SIValue() / den.SIValue(), nil
+}
+
+// MustDivide divide the two measurements, asserting that the units are compatible and vol2 is not zero
+func MustDivide(num, den *ConcreteMeasurement) float64 {
+	if r, err := Divide(num, den); err != nil {
+		panic(err)
+	} else {
+		return r
+	}
+}
+
 // DivideVolumes divides the SI Value of vol1 by vol2 to return a factor.
 // An error is returned if the volume is infinity or not a number.
 func DivideVolumes(vol1, vol2 Volume) (float64, error) {
-	if vol1.Unit().BaseSISymbol() != vol2.Unit().BaseSISymbol() {
-		return 0, errors.Errorf("cannot divide volumes with incompatible units %v and %v", vol1.Unit(), vol2.Unit())
-	}
+	return Divide(vol1.ConcreteMeasurement, vol2.ConcreteMeasurement)
+}
 
-	if vol2.IsZero() {
-		return 0, errors.Errorf("while dividing volume %s by %s: cannot divide by zero", vol1, vol2)
-	}
-
-	return vol1.SIValue() / vol2.SIValue(), nil
+// MustDivideVolumes divide the two volumes, asserting that the units are compatible and vol2 is not zero
+func MustDivideVolumes(vol1, vol2 Volume) float64 {
+	return MustDivide(vol1.ConcreteMeasurement, vol2.ConcreteMeasurement)
 }
 
 // Dup deprecated, please use CopyConcentration

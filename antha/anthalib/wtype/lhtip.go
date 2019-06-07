@@ -68,6 +68,15 @@ type LHTip struct {
 	Filtered        bool
 }
 
+// String return a single line summary of the tip
+func (tip *LHTip) String() string {
+	f := "unfiltered"
+	if tip.Filtered {
+		f = "filtered"
+	}
+	return fmt.Sprintf("%s [%s - %s] %s", tip.Type, tip.MinVol.ToString(), tip.MaxVol.ToString(), f)
+}
+
 //@implement Named
 func (self *LHTip) GetName() string {
 	if self == nil {
@@ -175,7 +184,7 @@ func (tip *LHTip) GetParams() *LHChannelParameter {
 		return nil
 	}
 
-	lhcp := LHChannelParameter{Name: string(tip.Type) + "Params", Minvol: tip.MinVol, Maxvol: tip.MaxVol, Multi: 1, Independent: false, Orientation: LHVChannel}
+	lhcp := LHChannelParameter{Name: string(tip.Type) + "Params", Minvol: tip.MinVol, Maxvol: tip.MaxVol, Multi: 1, Independent: true, Orientation: LHVChannel}
 	return &lhcp
 }
 

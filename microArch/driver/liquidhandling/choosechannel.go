@@ -1,144 +1,31 @@
 package liquidhandling
 
 import (
+	"fmt"
 	"math"
+	"strings"
 
 	"github.com/antha-lang/antha/antha/anthalib/wtype"
 	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/laboratory/effects/id"
 )
 
-func TipChosenError(v wunit.Volume, prms *LHProperties) error {
-	return wtype.LHErrorf(wtype.LH_ERR_VOL, "No tip chosen: Volume %s is too low to be accurately moved by the liquid handler (configured minimum %s). Low volume tips may not be available and / or the robot may need to be configured differently", v.ToString(), prms.MinPossibleVolume().ToString())
-}
-
-// it would probably make more sense for this to be a method of the robot
-// in general the instruction generator might well be moved there wholesale
-// so that drivers can have specific versions of it... this could lead to some
-// very interesting situations though
-
-type ChannelScore float64
-
-type ChannelScoreFunc interface {
-	ScoreCombinedChannel(wunit.Volume, *wtype.LHHead, *wtype.LHAdaptor, *wtype.LHTip) ChannelScore
-}
-
-type DefaultChannelScoreFunc struct {
-}
-
-func (sc DefaultChannelScoreFunc) ScoreCombinedChannel(vol wunit.Volume, head *wtype.LHHead, adaptor *wtype.LHAdaptor, tip *wtype.LHTip) ChannelScore {
-	// something pretty simple
-	// higher is better
-	// 0 == don't bother
-
-	/// NOT USING ADAPTOR??? XXX XXX XXX
-
-	// first we merge the parameters together and see if we can do this at all
-
-	lhcp := head.Params.MergeWithTip(tip)
-
-	// we should always make sure we do not send a volume which is too low
-
-	if lhcp.Minvol.GreaterThanRounded(vol, 1) {
-		return 0
+// ScoreChannel score the channels in terms of its suitability to transfer a volume vol, where lower is better
+// Properties of the score function are:
+//   - score is undefined for channels which cannot transfer vol and false is returned
+//   - channels which can transfer vol in fewer transfers score better than those which take more
+//   - for the same number of transfers, the channel which transfers vol while being proportionally closest to its maximum scores better
+func ScoreChannel(vol wunit.Volume, lhcp *wtype.LHChannelParameter) (float64, bool) {
+	if vol.LessThan(lhcp.Minvol.MinusEpsilon()) {
+		return 0.0, false
 	}
 
-	// clearly now vol >= MinVol
+	nTransfers := math.Ceil(wunit.MustDivideVolumes(vol, lhcp.Maxvol))
 
-	// the main idea is to estimate the error from each source: head, adaptor, tip
-	// and make the choice on that basis
+	// assume that the volume will be divided evenly between each transfer
+	volPerTransfer := wunit.CopyVolume(vol)
+	volPerTransfer.DivideBy(float64(nTransfers))
 
-	// a big head with a tiny tip will make pretty big errors... a big tip on a tiny
-	// head likewise
-
-	// we therefore make our choice as Min(1/tip_error, 1/adaptor_error, 1/head_error)
-
-	err := 999999999.0
-
-	chans := []*wtype.LHChannelParameter{head.GetParams(), tip.GetParams()}
-
-	for _, ch := range chans {
-		myerr := sc.ScoreChannel(vol, ch)
-		if myerr < err {
-			err = myerr
-		}
-	}
-
-	return ChannelScore(err)
-}
-
-func (sc DefaultChannelScoreFunc) ScoreChannel(vol wunit.Volume, lhcp *wtype.LHChannelParameter) float64 {
-	// cannot have 0 error
-	extra := 1.0
-
-	if mx, err := lhcp.Maxvol.InUnit(vol.Unit()); err != nil {
-		panic(err) // this is unlikely to ever be an issue for volumes since all units are compatible
-	} else if mn, err := lhcp.Minvol.InUnit(vol.Unit()); err != nil {
-		panic(err)
-	} else {
-
-		// we try to estimate the error of using a channel outside its limits
-		// first of all how many movements do we need?
-		n := int(math.Ceil(vol.RawValue() / mx.RawValue()))
-
-		// we assume errors scale linearly
-		// and that the error is generally greatest at the lowest levels
-
-		tv := vol.RawValue()
-		if n > 1 {
-			tv = mx.RawValue()
-		}
-
-		err := (mx.RawValue()-tv)/(mx.RawValue()-mn.RawValue()) + extra
-
-		if n > 1 {
-			err *= float64(n + 1)
-		}
-
-		return 1.0 / err
-	}
-}
-
-func ChooseChannel(vol wunit.Volume, prms *LHProperties) (*wtype.LHChannelParameter, *wtype.LHTip, error) {
-	if mpv := prms.MinPossibleVolume(); vol.LessThan(mpv) {
-		//accept values within rounding error
-		if delta := wunit.SubtractVolumes(mpv, vol); !delta.IsZero() {
-			return nil, nil, TipChosenError(vol, prms)
-		}
-	}
-	var headchosen *wtype.LHHead = nil
-	var tipchosen *wtype.LHTip = nil
-	var bestscore ChannelScore = ChannelScore(0.0)
-
-	scorer := prms.GetChannelScoreFunc()
-
-	// just choose the best... need to iterate on this sometime though
-	// we don't consider head or adaptor changes now
-
-	// fmt.Println("There are ", prms.CountHeadsLoaded(), " heads loaded and ", len(prms.Tips), " Tip types available ")
-
-	for _, head := range prms.GetLoadedHeads() {
-		for _, tip := range prms.Tips {
-			if tipHeadCompatible(tip, head) {
-				sc := scorer.ScoreCombinedChannel(vol, head, head.Adaptor, tip)
-				if sc > bestscore {
-					headchosen = head
-					tipchosen = tip
-					bestscore = sc
-				}
-			}
-		}
-
-	}
-
-	if headchosen == nil {
-		return nil, nil, TipChosenError(vol, prms)
-	}
-
-	// shouldn't we also return the adaptor?
-	// and probably the whole head rather than just its channel parameters
-
-	return headchosen.GetParams(), tipchosen, nil
+	return nTransfers - wunit.MustDivideVolumes(volPerTransfer, lhcp.Maxvol), true
 }
 
 func tipHeadCompatible(tip *wtype.LHTip, head *wtype.LHHead) bool {
@@ -147,25 +34,99 @@ func tipHeadCompatible(tip *wtype.LHTip, head *wtype.LHHead) bool {
 	return !(tip.MinVol.LessThan(head.Params.Minvol) || tip.MaxVol.GreaterThan(head.Params.Maxvol))
 }
 
-func ChooseChannels(idGen *id.IDGenerator, vols []wunit.Volume, prms *LHProperties) ([]*wtype.LHChannelParameter, []*wtype.LHTip, []wtype.TipType, error) {
-	prmA := make([]*wtype.LHChannelParameter, len(vols))
-	tipA := make([]*wtype.LHTip, len(vols))
-	tipTypeA := make([]wtype.TipType, len(vols))
+// ChooseChannels decide which combination of head/adaptor/tiptype should be used to transfer the given set of
+// volumes. Currently the same combination will be returned for each channel, except for channels where
+// vol[index] is zero, which are left empty
+// len(vols) should be <= the number of channels of at least one available head.
+func ChooseChannels(vols []wunit.Volume, prms *LHProperties) ([]*wtype.LHChannelParameter, []wtype.TipType, error) {
 
-	// we choose individually
+	// limitation: we can't distinguish between tips with the same maximum volume,
+	// so we forbid configurations which have that
 
-	for i := 0; i < len(vols); i++ {
-		if vols[i].IsZero() {
-			continue
+	// hash tips together by maximum volume
+	maxVols := make(map[float64][]*wtype.LHTip, len(prms.Tips))
+	for _, tip := range prms.Tips {
+		max := tip.MaxVol.MustInStringUnit("ul").RawValue()
+		maxVols[max] = append(maxVols[max], tip)
+	}
+	// check if any hashed to the same thing
+	collidingTips := make([]*wtype.LHTip, 0, len(prms.Tips))
+	for _, tips := range maxVols {
+		if len(tips) > 1 {
+			collidingTips = append(collidingTips, tips...)
 		}
-		prm, tip, err := ChooseChannel(vols[i], prms)
-		if err != nil {
-			return prmA, tipA, tipTypeA, err
+	}
+	if len(collidingTips) > 0 {
+		tipNames := make([]string, len(collidingTips))
+		for i, tip := range collidingTips {
+			tipNames[i] = tip.GetName()
 		}
-		prmA[i] = prm
-		tipA[i] = tip.Dup(idGen)
-		tipTypeA[i] = tip.Type
+		return nil, nil, fmt.Errorf("cannot handle multiple tip types with the same maximum volume: %s", strings.Join(tipNames, ", "))
 	}
 
-	return prmA, tipA, tipTypeA, nil
+	var bestChannel *wtype.LHChannelParameter
+	var bestTipType wtype.TipType
+	bestScore := math.MaxFloat64
+
+	for _, head := range prms.GetLoadedHeads() {
+		if len(vols) > head.Params.Multi {
+			continue
+		}
+	TIP:
+		for _, tip := range prms.Tips {
+			if !tipHeadCompatible(tip, head) {
+				continue
+			}
+			score := 0.0
+			for _, vol := range vols {
+				if vol.IsZero() {
+					continue
+				}
+				if s, ok := ScoreChannel(vol, head.Params.MergeWithTip(tip)); !ok {
+					// this volume can't be handled by the tip, so move on to the next
+					continue TIP
+				} else {
+					score += s
+				}
+			}
+
+			if score < bestScore {
+				bestScore = score
+				bestChannel = head.Params
+				bestTipType = tip.Type
+			}
+		}
+	}
+
+	if bestChannel == nil {
+		var config []string
+		heads := prms.GetLoadedHeads()
+		for _, head := range heads {
+			config = append(config, head.String())
+			for _, tip := range prms.Tips {
+				if tipHeadCompatible(tip, head) {
+					config = append(config, "\t"+tip.String())
+				}
+			}
+		}
+		return nil, nil, wtype.LHErrorf(wtype.LH_ERR_VOL, "no tip chosen: volumes %v could not be moved by the liquid handler in this configuration\n\t%s", vols, strings.Join(config, "\n\t"))
+	}
+
+	props := make([]*wtype.LHChannelParameter, len(vols))
+	tipTypes := make([]wtype.TipType, len(vols))
+	for i, vol := range vols {
+		if !vol.IsZero() {
+			props[i] = bestChannel
+			tipTypes[i] = bestTipType
+		}
+	}
+
+	propNames := make([]string, len(props))
+	for i, prop := range props {
+		if prop != nil {
+			propNames[i] = prop.Name
+		}
+	}
+
+	return props, tipTypes, nil
 }

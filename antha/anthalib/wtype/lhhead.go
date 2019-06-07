@@ -1,6 +1,10 @@
 package wtype
 
-import "github.com/antha-lang/antha/laboratory/effects/id"
+import (
+	"fmt"
+
+	"github.com/antha-lang/antha/laboratory/effects/id"
+)
 
 // head
 type LHHead struct {
@@ -20,6 +24,11 @@ func NewLHHead(idGen *id.IDGenerator, name, mf string, params *LHChannelParamete
 		ID:           idGen.NextID(),
 		Params:       params,
 	}
+}
+
+// String get a single line summary of the head capabilities
+func (head *LHHead) String() string {
+	return fmt.Sprintf("%s: %s", head.Name, head.Params)
 }
 
 //Dup duplicate the head and adaptor, changing the IDs
