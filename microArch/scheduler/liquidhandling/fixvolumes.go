@@ -3,8 +3,8 @@ package liquidhandling
 import (
 	"strings"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
 )
 
 // FixVolumes adjusts volumes of components in instructions in order to ensure

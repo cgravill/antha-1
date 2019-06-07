@@ -8,7 +8,7 @@ import (
 	//"time"
 	"unicode"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 )
 
 func DefaultParameters() AssemblyOptimizerParameters {

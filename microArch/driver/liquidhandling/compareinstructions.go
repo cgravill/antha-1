@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/utils"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/laboratory/effects"
+	"github.com/Synthace/antha/utils"
 )
 
 func MergeMovs(ris []RobotInstruction) []RobotInstruction {

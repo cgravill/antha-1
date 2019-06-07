@@ -1,9 +1,9 @@
 package mixer
 
 import (
-	"github.com/antha-lang/antha/inventory"
-	"github.com/antha-lang/antha/microArch/scheduler/liquidhandling"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/inventory"
+	"github.com/Synthace/antha/microArch/scheduler/liquidhandling"
+	"github.com/Synthace/antha/workflow"
 )
 
 type GlobalMixerConfig struct {

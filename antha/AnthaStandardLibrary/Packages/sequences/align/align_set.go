@@ -1,7 +1,7 @@
 package align
 
 import (
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 	"sort"
 )
 

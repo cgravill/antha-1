@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/laboratory/effects/id"
-	"github.com/antha-lang/antha/laboratory/testlab"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/laboratory/testlab"
 )
 
 const plateType = "pcrplate"

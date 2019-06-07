@@ -11,15 +11,15 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/antha-lang/antha/antha/anthalib/mixer"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/laboratory"
-	"github.com/antha-lang/antha/laboratory/effects/id"
-	"github.com/antha-lang/antha/laboratory/testlab"
-	"github.com/antha-lang/antha/microArch/driver/liquidhandling"
-	lh "github.com/antha-lang/antha/microArch/scheduler/liquidhandling"
-	"github.com/antha-lang/antha/utils"
+	"github.com/Synthace/antha/antha/anthalib/mixer"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/laboratory"
+	"github.com/Synthace/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/laboratory/testlab"
+	"github.com/Synthace/antha/microArch/driver/liquidhandling"
+	lh "github.com/Synthace/antha/microArch/scheduler/liquidhandling"
+	"github.com/Synthace/antha/utils"
 )
 
 type PlanningTest struct {

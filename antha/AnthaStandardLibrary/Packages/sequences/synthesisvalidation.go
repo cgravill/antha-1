@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/search"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/search"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 )
 
 // This simulates the sequence assembly reaction to validate if parts will synthesise with intended manufacturer.

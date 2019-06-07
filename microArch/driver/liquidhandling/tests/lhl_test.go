@@ -3,10 +3,10 @@ package tests
 import (
 	"testing"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/laboratory"
-	"github.com/antha-lang/antha/microArch/driver/liquidhandling"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/laboratory"
+	"github.com/Synthace/antha/microArch/driver/liquidhandling"
 )
 
 func getTestBlow(ch *wtype.LHChannelParameter, multi int, tipType wtype.TipType) liquidhandling.RobotInstruction {

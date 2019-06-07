@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/compile"
-	"github.com/antha-lang/antha/antha/parser"
-	"github.com/antha-lang/antha/antha/token"
-	"github.com/antha-lang/antha/utils"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/antha/compile"
+	"github.com/Synthace/antha/antha/parser"
+	"github.com/Synthace/antha/antha/token"
+	"github.com/Synthace/antha/utils"
+	"github.com/Synthace/antha/workflow"
 )
 
 type TranspilableElementType struct {

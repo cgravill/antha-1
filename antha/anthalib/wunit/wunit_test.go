@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/antha-lang/antha/antha/anthalib/wutil"
+	"github.com/Synthace/antha/antha/anthalib/wutil"
 )
 
 type VolumeArithmetic struct {

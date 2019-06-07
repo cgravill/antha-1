@@ -3,7 +3,7 @@
 For a quick guide walking through a installation and basic tasks, look at the [quickstart guide](README_Quickstart.md).
 This document contains more detailed information, and discussion of further options for installation and use.
 
-[![Coverage Status](https://coveralls.io/repos/github/antha-lang/antha/badge.svg?branch=feature/future_sanity)](https://coveralls.io/github/antha-lang/antha?branch=feature/future_sanity)
+[![Coverage Status](https://coveralls.io/repos/github/Synthace/antha/badge.svg?branch=feature/future_sanity)](https://coveralls.io/github/Synthace/antha?branch=feature/future_sanity)
 
 ## Getting Started
 
@@ -38,10 +38,10 @@ This allows installation of the Antha commands without needing to explicitly dow
 2. From within this directory, initialise the project:
   `go mod init Antha`
 3. Add a dependency to the project:
-  `go mod edit "-require=github.com/antha-lang/antha@feature/future_sanity"`
+  `go mod edit "-require=github.com/Synthace/antha@feature/future_sanity"`
   NOTE: **feature/future_sanity** may be edited to refer to any branch, or commit SHA if a particular version of Antha is desired.
 4. Install the Antha commands:
-  `go install github.com/antha-lang/antha/cmd/...`
+  `go install github.com/Synthace/antha/cmd/...`
 
 This has now installed the [antha commands](#antha-commands) ready for use.
 
@@ -50,18 +50,18 @@ This has now installed the [antha commands](#antha-commands) ready for use.
 All operations should be run from the install directory created when installing.
 
 1. Tidy the current installation : `go mod tidy`
-2. Get the required version of antha-lang using `go get`
-    e.g. Latest master : `go get github.com/antha-lang/antha@master`
-    e.g. Latest version of a branch : `go get github.com/antha-lang/antha@my/branch-name` (for branch _my/branch-name_)
-    e.g. A particular commit : `go get github.com/antha-lang/antha@f5472259fc2eec9f7443f4d5f56c6739a1d9e4db`  (Where `f5472259fc2eec9f7443f4d5f56c6739a1d9e4db` is the SHA for a particular commit)
+2. Get the required version of Synthace using `go get`
+    e.g. Latest master : `go get github.com/Synthace/antha@master`
+    e.g. Latest version of a branch : `go get github.com/Synthace/antha@my/branch-name` (for branch _my/branch-name_)
+    e.g. A particular commit : `go get github.com/Synthace/antha@f5472259fc2eec9f7443f4d5f56c6739a1d9e4db`  (Where `f5472259fc2eec9f7443f4d5f56c6739a1d9e4db` is the SHA for a particular commit)
 3. Re-install the tool set:
-  `go install github.com/antha-lang/antha/cmd/...`
+  `go install github.com/Synthace/antha/cmd/...`
 
 #### Uninstalling
 
 Installing Antha adds various commands to your system. You list them by running the following command from the install directory created when installing:
 
-  1. `go list -f '{{ .Target }}'  github.com/antha-lang/antha/cmd/...`
+  1. `go list -f '{{ .Target }}'  github.com/Synthace/antha/cmd/...`
   2. Each line from the above command gives the location of a command installed by Antha on your system. You can delete these if they exist.
 
 ### Install Antha with source code
@@ -70,7 +70,7 @@ This is the recommended installation if source code is required, for development
 
 The following projects need to be cloned into the same directory:
 
-  - `git clone -b feature/future_sanity git@github.com:antha-lang/antha.git`
+  - `git clone -b feature/future_sanity git@github.com:Synthace/antha.git`
   - `git clone -b feature/future_sanity git@github.com:Synthace/antha-runner.git`
   - `git clone -b feature/future_sanity git@github.com:Synthace/instruction-plugins.git`
 
@@ -91,10 +91,10 @@ Once done, usual Go compilation is possible:
 
 Installing Antha adds a number of commands to your system. Source code for each may be found within the `cmd/` directory, and associated documentation in a `doc.go` file. This is in standard Go documentation format.
 
-`go doc` files may be viewed from the command line using the command `go doc -all package/name` (e.g. `go doc -all github.com/antha-lang/antha/cmd/composer`)
+`go doc` files may be viewed from the command line using the command `go doc -all package/name` (e.g. `go doc -all github.com/Synthace/antha/cmd/composer`)
 
-Besides viewing help for the Antha commands, information on antha-lang code may also be inspected.
-e.g. for information on the representation of workflows: `go doc -all github.com/antha-lang/antha/workflow`
+Besides viewing help for the Antha commands, information on antha code may also be inspected.
+e.g. for information on the representation of workflows: `go doc -all github.com/Synthace/antha/workflow`
 
 ### General Usage
 
@@ -113,7 +113,7 @@ Antha commands generally allow for workflow files to be composed. This is useful
 
 Workflow json now contains detailed repository information to be used when accessing elements. This detail allows for reproducible workflows (the same version of elements will always be pulled), for targeting specific versions of a file, or even mixing repositories from multiple locations.
 
-See `go doc` documentation with `go doc -all github.com/antha-lang/antha/workflow.Repository`
+See `go doc` documentation with `go doc -all github.com/Synthace/antha/workflow.Repository`
 
 See [example here](cmd/composer/repositories.json.sample).
 
@@ -127,17 +127,17 @@ See [example here](cmd/composer/gilsonOnly.json.sample).
 
 More detailed information may be found by either:
   * `go doc comments`
-    * `go doc github.com/antha-lang/antha/workflow.Configuration` for general configuration.
+    * `go doc github.com/Synthace/antha/workflow.Configuration` for general configuration.
     * Other recognized configuration may further be explored with `go doc` by following the relevant types, for example
-      `go doc github.com/antha-lang/antha/workflow.GilsonPipetMaxInstanceConfig` for the configuration specific to
-      gilson instances, or `go doc github.com/antha-lang/antha/workflow.CommonMixerInstanceConfig` for generic device
+      `go doc github.com/Synthace/antha/workflow.GilsonPipetMaxInstanceConfig` for the configuration specific to
+      gilson instances, or `go doc github.com/Synthace/antha/workflow.CommonMixerInstanceConfig` for generic device
       configuration.
 
   * The [JSON schema for the workflow](workflow/schemas/workflow.schema.json)
 
 #### Using the `composer` command
 
-See `go doc github.com/antha-lang/antha/cmd/composer` for detailed documentation.
+See `go doc github.com/Synthace/antha/cmd/composer` for detailed documentation.
 
 The `composer` command composes together workflows, and optionally executes them. Flags are available to control exact behaviour (for example skip executing a workflow, retain transpiled element sources,...). At a very high level, the composer will:
 
@@ -160,7 +160,7 @@ Note that there are currently multiple options for communicating with instructio
 
 #### Using the `elements` command
 
-See `go doc github.com/antha-lang/antha/cmd/elements` for detailed documentation.
+See `go doc github.com/Synthace/antha/cmd/elements` for detailed documentation.
 
 The `elements` command allows for inspection and manipulation of elements within a repository. For example:
 
@@ -175,7 +175,7 @@ Workflows in previous formats must be upgraded before they can be used with the 
 
 #### Using migrate
 
-The safest migration method is to use the tool `migrate`. For detailed documentation see `go doc github.com/antha-lang/antha/cmd/migrate`.
+The safest migration method is to use the tool `migrate`. For detailed documentation see `go doc github.com/Synthace/antha/cmd/migrate`.
 This will migrate a workflow:
 
   * A json snippet including repository information must be supplied, as this information is not available in older files.
@@ -195,7 +195,7 @@ This is the standard method of running Go unit tests.
     * `go test ./...` from within the installed `antha` directory.
 
 * For [sourceless installations](#install-antha-without-source-code):
-    * `go test github.com/antha-lang/antha/...`
+    * `go test github.com/Synthace/antha/...`
 
 #### Running element tests
 
@@ -205,7 +205,7 @@ Given an element repository, this may be tested using the standard Go testing fr
   * Find any worflows within the repository, and run them.
   * For any test workflows containing comparison data, check that the restult of running the workflow matches the comparison data.
 
-Element tests are called via running `go test` on the `elements` command, supplying a repository description to run tests on. (See also `go doc github.com/antha-lang/antha/cmd/elements`)
+Element tests are called via running `go test` on the `elements` command, supplying a repository description to run tests on. (See also `go doc github.com/Synthace/antha/cmd/elements`)
 For installations including source code, the following may be run from the `antha/cmd/elements` directory:
 
     `go test -v -args -keep -outdir=/tmp/foobar ../composer/repositories.json`
@@ -216,7 +216,7 @@ Which indicates test output to be written to `/tmp/foobar` and repositories to b
 
 If the installation is [sourceless](#install-antha-without-source-code) then the elements package should be specified on the command line:
 
-    `rm -rf /tmp/foobar && go test github.com/antha-lang/antha/cmd/elements -v -args -keep -outdir=/tmp/foobar ../composer/repositories.json 2>&1 | tee /tmp/log`
+    `rm -rf /tmp/foobar && go test github.com/Synthace/antha/cmd/elements -v -args -keep -outdir=/tmp/foobar ../composer/repositories.json 2>&1 | tee /tmp/log`
 
 ## Updating dependencies
 

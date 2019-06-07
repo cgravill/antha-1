@@ -3,7 +3,7 @@ package workflow
 import (
 	"encoding/json"
 
-	"github.com/antha-lang/antha/utils"
+	"github.com/Synthace/antha/utils"
 )
 
 func EmptySimulation() *Simulation {

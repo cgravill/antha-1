@@ -10,17 +10,17 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/logger"
-	"github.com/antha-lang/antha/utils"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/logger"
+	"github.com/Synthace/antha/utils"
+	"github.com/Synthace/antha/workflow"
 )
 
 func main() {
 	flag.Usage = workflow.NewFlagUsage(nil,
 		"Export files created by a simulation",
 		"[flags] [workflow-snippet.json...]",
-		"github.com/antha-lang/antha/cmd/simulationfiles")
+		"github.com/Synthace/antha/cmd/simulationfiles")
 
 	var inDir, outDir string
 	flag.StringVar(&inDir, "indir", "", "Directory from which to read files (optional)")
@@ -85,11 +85,11 @@ func extractFields(l *logger.Logger, sim *workflow.Simulation, outDir string, fi
 	for paramName, paramType := range fields {
 		paramLogger := l.With("id", id, "type", inst.TypeName, "name", inst.Name, fieldGroup, paramName)
 		dir := filepath.Join(outDir, string(paramName))
-		if paramType == "*github.com/antha-lang/antha/antha/anthalib/wtype.File" {
+		if paramType == "*github.com/Synthace/antha/antha/anthalib/wtype.File" {
 			if err := writeFile(paramLogger, sim, dir, inst.Files[paramName], ""); err != nil {
 				return err
 			}
-		} else if paramType == "[]*github.com/antha-lang/antha/antha/anthalib/wtype.File" {
+		} else if paramType == "[]*github.com/Synthace/antha/antha/anthalib/wtype.File" {
 			if err := writeFiles(paramLogger, sim, dir, inst.Files[paramName]); err != nil {
 				return err
 			}

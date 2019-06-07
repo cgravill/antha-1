@@ -30,8 +30,8 @@ package search
 import (
 	"testing"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/text"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/text"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 	"github.com/go-test/deep"
 )
 

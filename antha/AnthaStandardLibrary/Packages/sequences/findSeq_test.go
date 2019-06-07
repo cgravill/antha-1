@@ -27,8 +27,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wutil/text"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wutil/text"
 )
 
 type regionTest struct {

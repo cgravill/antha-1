@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	lh "github.com/antha-lang/antha/microArch/scheduler/liquidhandling"
+	lh "github.com/Synthace/antha/microArch/scheduler/liquidhandling"
 	"github.com/go-test/deep"
 	"github.com/pkg/errors"
 )

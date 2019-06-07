@@ -25,9 +25,9 @@ package plasmid
 import (
 	"strings"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/fasta"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/fasta"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 )
 
 // Based on Plasmapper annotation system

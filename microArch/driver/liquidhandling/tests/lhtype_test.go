@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/antha-lang/antha/microArch/driver/liquidhandling"
+	"github.com/Synthace/antha/microArch/driver/liquidhandling"
 )
 
 func TestIsValidLiquidHandlerType(t *testing.T) {

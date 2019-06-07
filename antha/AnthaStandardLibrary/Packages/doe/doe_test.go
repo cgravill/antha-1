@@ -7,7 +7,7 @@ import (
 	"runtime/debug"
 	"testing"
 
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
 	"github.com/go-test/deep"
 )
 

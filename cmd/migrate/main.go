@@ -8,12 +8,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/logger"
-	"github.com/antha-lang/antha/workflow"
-	"github.com/antha-lang/antha/workflow/migrate"
-	"github.com/antha-lang/antha/workflow/simulaterequestpb"
-	"github.com/antha-lang/antha/workflow/v1_2"
+	"github.com/Synthace/antha/laboratory/effects"
+	"github.com/Synthace/antha/logger"
+	"github.com/Synthace/antha/workflow"
+	"github.com/Synthace/antha/workflow/migrate"
+	"github.com/Synthace/antha/workflow/simulaterequestpb"
+	"github.com/Synthace/antha/workflow/v1_2"
 )
 
 const (
@@ -27,7 +27,7 @@ func main() {
 	flag.Usage = workflow.NewFlagUsage(nil,
 		"Migrate workflow to latest schema version",
 		"[flags] workflow-snippet.json...",
-		"github.com/antha-lang/antha/cmd/migrate")
+		"github.com/Synthace/antha/cmd/migrate")
 
 	var fromFile, outDir, gilsonDevice, fromFormat string
 	var validate bool

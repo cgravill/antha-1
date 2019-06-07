@@ -2,8 +2,8 @@ package codegen
 
 import (
 	"fmt"
-	"github.com/antha-lang/antha/graph"
-	"github.com/antha-lang/antha/instructions"
+	"github.com/Synthace/antha/graph"
+	"github.com/Synthace/antha/instructions"
 )
 
 // Build rooted graph

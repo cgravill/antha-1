@@ -30,11 +30,11 @@ import (
 
 	"reflect"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/antha/anthalib/wutil/text"
-	"github.com/antha-lang/antha/laboratory/effects"
-	anthadriver "github.com/antha-lang/antha/microArch/driver"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/anthalib/wutil/text"
+	"github.com/Synthace/antha/laboratory/effects"
+	anthadriver "github.com/Synthace/antha/microArch/driver"
 )
 
 // Valid parameter fields for robot instructions

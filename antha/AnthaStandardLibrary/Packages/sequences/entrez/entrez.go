@@ -30,8 +30,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/genbank"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/genbank"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 	biogo "github.com/biogo/ncbi/entrez"
 )
 

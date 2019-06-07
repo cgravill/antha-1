@@ -1,6 +1,6 @@
 package wtype
 
-import "github.com/antha-lang/antha/antha/anthalib/wunit"
+import "github.com/Synthace/antha/antha/anthalib/wunit"
 
 // PolicyName represents the name of a liquid handling policy
 // used to look up the details of that policy.

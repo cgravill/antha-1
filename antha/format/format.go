@@ -33,10 +33,10 @@ import (
 	"io"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/ast"
-	"github.com/antha-lang/antha/antha/parser"
-	"github.com/antha-lang/antha/antha/printer"
-	"github.com/antha-lang/antha/antha/token"
+	"github.com/Synthace/antha/antha/ast"
+	"github.com/Synthace/antha/antha/parser"
+	"github.com/Synthace/antha/antha/printer"
+	"github.com/Synthace/antha/antha/token"
 )
 
 var config = printer.Config{Mode: printer.UseSpaces | printer.TabIndent, Tabwidth: 8}

@@ -34,8 +34,8 @@ import (
 	"bytes"
 	"unicode/utf8"
 
-	"github.com/antha-lang/antha/antha/ast"
-	"github.com/antha-lang/antha/antha/token"
+	"github.com/Synthace/antha/antha/ast"
+	"github.com/Synthace/antha/antha/token"
 )
 
 // Formatting issues:

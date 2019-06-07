@@ -28,9 +28,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/platereader"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/search"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/platereader"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/search"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 	"github.com/montanaflynn/stats"
 	"github.com/pkg/errors"
 )

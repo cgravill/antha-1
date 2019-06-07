@@ -28,8 +28,8 @@ package scanner_test
 
 import (
 	"fmt"
-	"github.com/antha-lang/antha/antha/scanner"
-	"github.com/antha-lang/antha/antha/token"
+	"github.com/Synthace/antha/antha/scanner"
+	"github.com/Synthace/antha/antha/token"
 )
 
 func ExampleScanner_Scan() {

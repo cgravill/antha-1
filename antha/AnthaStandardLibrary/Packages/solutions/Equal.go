@@ -26,9 +26,9 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/search"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/search"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
 )
 
 // Equal evaluates whether two components are equal.

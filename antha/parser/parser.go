@@ -37,9 +37,9 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/antha-lang/antha/antha/ast"
-	"github.com/antha-lang/antha/antha/scanner"
-	"github.com/antha-lang/antha/antha/token"
+	"github.com/Synthace/antha/antha/ast"
+	"github.com/Synthace/antha/antha/scanner"
+	"github.com/Synthace/antha/antha/token"
 )
 
 // The parseLHSList structure holds the parseLHSList's internal state.

@@ -27,8 +27,8 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
 )
 
 func ReadAbsorbance(plate *wtype.Plate, solution *wtype.Liquid, wavelength float64) (abs wtype.Absorbance) {

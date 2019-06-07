@@ -29,7 +29,7 @@ package ast
 import (
 	"sort"
 
-	"github.com/antha-lang/antha/antha/token"
+	"github.com/Synthace/antha/antha/token"
 )
 
 // ----------------------------------------------------------------------------

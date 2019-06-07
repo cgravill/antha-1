@@ -14,19 +14,19 @@ import (
 	"time"
 
 	runner "github.com/Synthace/antha-runner/export"
-	"github.com/antha-lang/antha/codegen"
-	"github.com/antha-lang/antha/composer"
-	"github.com/antha-lang/antha/instructions"
-	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/logger"
-	"github.com/antha-lang/antha/target"
-	"github.com/antha-lang/antha/target/human"
-	"github.com/antha-lang/antha/target/mixer"
-	"github.com/antha-lang/antha/target/qpcrdevice"
-	"github.com/antha-lang/antha/target/shakerincubator"
-	"github.com/antha-lang/antha/target/woplatereader"
-	"github.com/antha-lang/antha/utils"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/codegen"
+	"github.com/Synthace/antha/composer"
+	"github.com/Synthace/antha/instructions"
+	"github.com/Synthace/antha/laboratory/effects"
+	"github.com/Synthace/antha/logger"
+	"github.com/Synthace/antha/target"
+	"github.com/Synthace/antha/target/human"
+	"github.com/Synthace/antha/target/mixer"
+	"github.com/Synthace/antha/target/qpcrdevice"
+	"github.com/Synthace/antha/target/shakerincubator"
+	"github.com/Synthace/antha/target/woplatereader"
+	"github.com/Synthace/antha/utils"
+	"github.com/Synthace/antha/workflow"
 )
 
 type Element interface {
@@ -220,14 +220,14 @@ func (labBuild *LaboratoryBuilder) Decommission() error {
 		// temporary solution for exposing files: temporary until we have a proper elements service
 		files := make(map[workflow.ElementParameterName]json.RawMessage)
 		for fieldName, typ := range typeMeta.DataFieldTypes {
-			if strings.HasSuffix(typ, "github.com/antha-lang/antha/antha/anthalib/wtype.File") {
+			if strings.HasSuffix(typ, "github.com/Synthace/antha/antha/anthalib/wtype.File") {
 				if bs, found := lab.serializedElement.Data[fieldName]; found && bs != nil {
 					files[fieldName] = bs
 				}
 			}
 		}
 		for fieldName, typ := range typeMeta.OutputsFieldTypes {
-			if strings.HasSuffix(typ, "github.com/antha-lang/antha/antha/anthalib/wtype.File") {
+			if strings.HasSuffix(typ, "github.com/Synthace/antha/antha/anthalib/wtype.File") {
 				if bs, found := lab.serializedElement.Outputs[fieldName]; found && bs != nil {
 					files[fieldName] = bs
 				}

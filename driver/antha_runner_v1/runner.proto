@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "github.com/antha-lang/antha/driver/antha_driver_v1/driver.proto";
+import "github.com/Synthace/antha/driver/antha_driver_v1/driver.proto";
 
 package antha.runner.v1;
 

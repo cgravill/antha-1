@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/antha-lang/antha/laboratory/compare"
-	"github.com/antha-lang/antha/target"
-	"github.com/antha-lang/antha/utils"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/laboratory/compare"
+	"github.com/Synthace/antha/target"
+	"github.com/Synthace/antha/utils"
+	"github.com/Synthace/antha/workflow"
 )
 
 // Compare compares output generated with any supplied test data in the workflow

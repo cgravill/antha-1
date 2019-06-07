@@ -28,10 +28,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/doe"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/search"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/doe"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/search"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
 )
 
 // BASEPolicy is the policy to use as a starting point to produce custom LHPolicies

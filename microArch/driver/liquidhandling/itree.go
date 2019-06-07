@@ -25,8 +25,8 @@ package liquidhandling
 import (
 	"fmt"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/laboratory/effects"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/laboratory/effects"
 )
 
 // ITree the Instruction Tree - takes a high level liquid handling instruction

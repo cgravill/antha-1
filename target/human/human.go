@@ -3,13 +3,13 @@ package human
 import (
 	"fmt"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/instructions"
-	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/laboratory/effects/id"
-	"github.com/antha-lang/antha/target"
-	"github.com/antha-lang/antha/target/handler"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/instructions"
+	"github.com/Synthace/antha/laboratory/effects"
+	"github.com/Synthace/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/target"
+	"github.com/Synthace/antha/target/handler"
+	"github.com/Synthace/antha/workflow"
 )
 
 var (

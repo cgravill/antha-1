@@ -2,7 +2,7 @@ package data
 
 //go:generate python gen.py
 import (
-	"github.com/antha-lang/antha/utils"
+	"github.com/Synthace/antha/utils"
 	"math"
 	"reflect"
 

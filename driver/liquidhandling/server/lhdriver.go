@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	drv "github.com/antha-lang/antha/driver/antha_driver_v1"
-	"github.com/antha-lang/antha/driver/liquidhandling/pb"
-	"github.com/antha-lang/antha/microArch/driver"
-	"github.com/antha-lang/antha/microArch/driver/liquidhandling"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	drv "github.com/Synthace/antha/driver/antha_driver_v1"
+	"github.com/Synthace/antha/driver/liquidhandling/pb"
+	"github.com/Synthace/antha/microArch/driver"
+	"github.com/Synthace/antha/microArch/driver/liquidhandling"
+	"github.com/Synthace/antha/workflow"
 )
 
 func makeCommandReply(cs driver.CommandStatus) *pb.CommandReply {

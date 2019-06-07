@@ -32,8 +32,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/antha-lang/antha/antha/parser"
-	"github.com/antha-lang/antha/antha/token"
+	"github.com/Synthace/antha/antha/parser"
+	"github.com/Synthace/antha/antha/token"
 )
 
 const testfile = "format_test.go"

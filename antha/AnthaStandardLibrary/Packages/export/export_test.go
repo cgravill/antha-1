@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/genbank"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/laboratory"
-	"github.com/antha-lang/antha/laboratory/testlab"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/genbank"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/laboratory"
+	"github.com/Synthace/antha/laboratory/testlab"
 )
 
 func TestGenbankSerial(t *testing.T) {
@@ -73,7 +73,7 @@ func TestGenbankSerial(t *testing.T) {
 			// ** Reparse test **
 
 			// Genbank parser throws error on features with join locations
-			// https://github.com/antha-lang/antha/blob/master/antha/AnthaStandardLibrary/Packages/sequences/parse/genbank/genbank_parser.go#L228
+			// https://github.com/Synthace/antha/blob/master/antha/AnthaStandardLibrary/Packages/sequences/parse/genbank/genbank_parser.go#L228
 			// so remove these and re-generate
 
 			newFeatures := []wtype.Feature{}

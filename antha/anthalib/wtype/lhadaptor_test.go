@@ -3,7 +3,7 @@ package wtype
 import (
 	"testing"
 
-	"github.com/antha-lang/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/laboratory/effects/id"
 )
 
 func assertIDsEqual(t *testing.T, a, b *LHAdaptor) {

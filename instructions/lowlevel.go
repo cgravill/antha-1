@@ -1,7 +1,7 @@
 package instructions
 
 import (
-	"github.com/antha-lang/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/laboratory/effects/id"
 )
 
 // An Inst is a instruction. These are "low-level" - i.e. the results

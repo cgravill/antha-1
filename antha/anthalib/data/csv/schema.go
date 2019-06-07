@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/antha-lang/antha/antha/anthalib/data"
+	"github.com/Synthace/antha/antha/anthalib/data"
 	"github.com/pkg/errors"
 )
 

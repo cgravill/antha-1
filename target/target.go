@@ -5,9 +5,9 @@ package target
 import (
 	"fmt"
 
-	"github.com/antha-lang/antha/instructions"
-	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/instructions"
+	"github.com/Synthace/antha/laboratory/effects"
+	"github.com/Synthace/antha/workflow"
 )
 
 const (

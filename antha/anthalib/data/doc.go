@@ -13,7 +13,7 @@ and write the combined  output to a new file.
 Tables
 
 The main data type is Table.  Typically we will start by reading from a data source such as a Parquet file:
-	import 	"github.com/antha-lang/antha/antha/anthalib/data/parquet"
+	import 	"github.com/Synthace/antha/antha/anthalib/data/parquet"
 	table, err := parquet.TableFromBytes(myBuffer)
 
 Tables are lazy and will not typically load all data until requested to.

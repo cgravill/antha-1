@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/antha-lang/antha/antha/anthalib/data"
+	"github.com/Synthace/antha/antha/anthalib/data"
 )
 
 func TestCSV(t *testing.T) {

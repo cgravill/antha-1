@@ -27,7 +27,7 @@
 package scanner
 
 import (
-	"github.com/antha-lang/antha/antha/token"
+	"github.com/Synthace/antha/antha/token"
 	"io/ioutil"
 	"os"
 	"path/filepath"

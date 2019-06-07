@@ -29,9 +29,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wutil"
-	"github.com/antha-lang/antha/laboratory"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wutil"
+	"github.com/Synthace/antha/laboratory"
 	"github.com/tealeg/xlsx"
 )
 

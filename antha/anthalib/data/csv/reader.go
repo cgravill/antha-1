@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/anthalib/data"
+	"github.com/Synthace/antha/antha/anthalib/data"
 	"github.com/pkg/errors"
 )
 

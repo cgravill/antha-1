@@ -31,7 +31,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 )
 
 func recognitionSeqHandler(RecognitionSeq string) (RecognitionSequence string, EndLength int, Topstrand3primedistancefromend int, Bottomstrand5primedistancefromend int, Class string) {

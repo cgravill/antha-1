@@ -6,15 +6,15 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/antha/anthalib/wutil"
-	"github.com/antha-lang/antha/inventory/components"
-	"github.com/antha-lang/antha/laboratory"
-	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/laboratory/testlab"
-	"github.com/antha-lang/antha/microArch/driver/liquidhandling"
-	"github.com/antha-lang/antha/utils"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/anthalib/wutil"
+	"github.com/Synthace/antha/inventory/components"
+	"github.com/Synthace/antha/laboratory"
+	"github.com/Synthace/antha/laboratory/effects"
+	"github.com/Synthace/antha/laboratory/testlab"
+	"github.com/Synthace/antha/microArch/driver/liquidhandling"
+	"github.com/Synthace/antha/utils"
 )
 
 func getComponent(lab *laboratory.Laboratory, name string, volume float64) (*wtype.Liquid, error) {

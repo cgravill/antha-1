@@ -38,7 +38,7 @@ You can pick any directory you like, **BUT** it should not be withing your `GOPA
 We've got a nice clean working area, let's get the code that we need!
 
 ```bash
-git clone -b feature/future_sanity https://github.com/antha-lang/antha.git
+git clone -b feature/future_sanity https://github.com/Synthace/antha.git
 git clone -b feature/future_sanity https://github.com/Synthace/antha-runner.git
 git clone -b feature/future_sanity https://github.com/Synthace/instruction-plugins.git
 ```
@@ -62,7 +62,7 @@ elements-westeros
 
  * I can't clone the repositories!
    * It's likely to be a permissions problem. Check that you can access these repositories in a web browser:
-   * https://github.com/antha-lang/antha
+   * https://github.com/Synthace/antha
    * https://github.com/Synthace/antha-runner
    * https://github.com/Synthace/instruction-plugins
    * https://repos.antha.com/antha-ninja/elements-westeros

@@ -30,12 +30,12 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/laboratory/effects/id"
-	"github.com/antha-lang/antha/microArch/driver/liquidhandling"
-	"github.com/antha-lang/antha/utils"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/laboratory/effects"
+	"github.com/Synthace/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/microArch/driver/liquidhandling"
+	"github.com/Synthace/antha/utils"
 )
 
 // structure for defining a request to the liquid handler

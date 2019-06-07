@@ -8,9 +8,9 @@ import (
 
 	grpc "google.golang.org/grpc"
 
-	drv "github.com/antha-lang/antha/driver/antha_driver_v1"
-	"github.com/antha-lang/antha/driver/liquidhandling/pb"
-	"github.com/antha-lang/antha/microArch/driver/liquidhandling"
+	drv "github.com/Synthace/antha/driver/antha_driver_v1"
+	"github.com/Synthace/antha/driver/liquidhandling/pb"
+	"github.com/Synthace/antha/microArch/driver/liquidhandling"
 )
 
 func toInt(s []int32) []int {

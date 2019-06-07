@@ -31,7 +31,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 )
 
 func trimmedEqual(a, b string) bool {
@@ -53,7 +53,7 @@ func trimmedEqual(a, b string) bool {
 // (A) a reverse complement
 // (B) is a plasmid sequence which has been rotated.
 // To handle these cases please use sequences.EqualFold and sequences.InSet:
-// github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences/findSeq.go
+// github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences/findSeq.go
 func InSequences(seqs []wtype.DNASequence, seq wtype.DNASequence, options ...Option) (bool, []int) {
 
 	var positionsFound []int

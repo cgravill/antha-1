@@ -1,7 +1,7 @@
 package migrate
 
 import (
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/workflow"
 )
 
 // WorkflowProvider defines the interface for types capable of supplying the

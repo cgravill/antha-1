@@ -26,7 +26,7 @@ package solutions
 import (
 	"fmt"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 )
 
 // FindComponentByName is a utility function which looks for a component matching on name only.

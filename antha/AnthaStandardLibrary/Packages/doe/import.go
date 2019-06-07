@@ -27,8 +27,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/search"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/spreadsheet"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/search"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/spreadsheet"
 	"github.com/tealeg/xlsx"
 )
 

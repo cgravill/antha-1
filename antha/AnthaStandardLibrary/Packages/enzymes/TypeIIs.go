@@ -22,7 +22,7 @@
 
 package enzymes
 
-import "github.com/antha-lang/antha/antha/anthalib/wtype"
+import "github.com/Synthace/antha/antha/anthalib/wtype"
 
 var sapI = wtype.RestrictionEnzyme{
 	Enzyme: wtype.Enzyme{

@@ -2,9 +2,9 @@ package wtype
 
 import (
 	"fmt"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/laboratory/effects/id"
-	"github.com/antha-lang/antha/utils"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/utils"
 	"strings"
 	"time"
 )

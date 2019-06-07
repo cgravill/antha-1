@@ -25,9 +25,9 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wutil"
-	"github.com/antha-lang/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wutil"
+	"github.com/Synthace/antha/laboratory/effects/id"
 )
 
 // The height below which an error will be generated

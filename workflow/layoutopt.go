@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/antha-lang/antha/utils"
+	"github.com/Synthace/antha/utils"
 	"github.com/pkg/errors"
 )
 

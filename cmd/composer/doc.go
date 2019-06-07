@@ -60,7 +60,7 @@
 //    is created. If this option is provided, the indicated directory
 //    must either not exist, or must be empty.
 //
-//    The layout of this directory is documented in github.com/antha-lang/antha/composer
+//    The layout of this directory is documented in github.com/Synthace/antha/composer
 //
 //  -indir path/to/directory (optional)
 //    An optional path to a directory. This is used for two purposes:

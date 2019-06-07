@@ -1,6 +1,6 @@
 package laboratory
 
-import "github.com/antha-lang/antha/workflow"
+import "github.com/Synthace/antha/workflow"
 
 type ElementTypeMeta struct {
 	Name                 workflow.ElementTypeName

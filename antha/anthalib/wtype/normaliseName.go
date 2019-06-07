@@ -26,8 +26,8 @@ package wtype
 import (
 	"strings"
 
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/antha/anthalib/wutil"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/anthalib/wutil"
 )
 
 // NormaliseName evaluates whether a string contains a concentration and attempts to normalise the name in a standardised format.

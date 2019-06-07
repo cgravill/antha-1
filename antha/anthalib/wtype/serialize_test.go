@@ -29,7 +29,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/antha-lang/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/laboratory/effects/id"
 	"github.com/go-test/deep"
 )
 

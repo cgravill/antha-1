@@ -26,7 +26,7 @@ package sequences
 import (
 	"fmt"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 )
 
 // RevCodonTable describes the mapping between an amino acid in single letter format and the codons which encode it.

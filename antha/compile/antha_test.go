@@ -27,9 +27,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/antha-lang/antha/antha/ast"
-	"github.com/antha-lang/antha/antha/parser"
-	"github.com/antha-lang/antha/antha/token"
+	"github.com/Synthace/antha/antha/ast"
+	"github.com/Synthace/antha/antha/parser"
+	"github.com/Synthace/antha/antha/token"
 )
 
 func processExpr(antha *Antha, expr string) (string, error) {

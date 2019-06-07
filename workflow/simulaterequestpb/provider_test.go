@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/logger"
-	"github.com/antha-lang/antha/workflow"
-	"github.com/antha-lang/antha/workflow/migrate"
-	"github.com/antha-lang/antha/workflow/simulaterequestpb"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/laboratory/effects"
+	"github.com/Synthace/antha/logger"
+	"github.com/Synthace/antha/workflow"
+	"github.com/Synthace/antha/workflow/migrate"
+	"github.com/Synthace/antha/workflow/simulaterequestpb"
 )
 
 func getTestProvider(dir string, pbFileName string, elementTypeNames ...workflow.ElementTypeName) (migrate.WorkflowProvider, error) {

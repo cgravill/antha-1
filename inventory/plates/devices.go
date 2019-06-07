@@ -1,8 +1,8 @@
 package plates
 
 import (
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/devices"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/devices"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 )
 
 // heights in mm

@@ -27,7 +27,7 @@
 package ast
 
 import (
-	"github.com/antha-lang/antha/antha/token"
+	"github.com/Synthace/antha/antha/token"
 	"sort"
 	"strconv"
 )

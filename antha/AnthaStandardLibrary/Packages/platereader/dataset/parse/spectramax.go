@@ -29,7 +29,7 @@ import (
 	"unicode/utf16"
 	"unicode/utf8"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/platereader/dataset"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/platereader/dataset"
 )
 
 // ParseSpectraMaxData parses spectra data from an XML file

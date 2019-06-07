@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"testing"
 
-	. "github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/solutions"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/laboratory"
-	"github.com/antha-lang/antha/laboratory/testlab"
+	. "github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/solutions"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/laboratory"
+	"github.com/Synthace/antha/laboratory/testlab"
 )
 
 type mixComponentlistTest struct {

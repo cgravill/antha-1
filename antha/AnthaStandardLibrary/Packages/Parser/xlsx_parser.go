@@ -29,10 +29,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/enzymes"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/laboratory"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/enzymes"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/laboratory"
 	"github.com/tealeg/xlsx"
 )
 

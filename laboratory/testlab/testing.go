@@ -19,10 +19,10 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/antha-lang/antha/laboratory"
-	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/utils"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/laboratory"
+	"github.com/Synthace/antha/laboratory/effects"
+	"github.com/Synthace/antha/utils"
+	"github.com/Synthace/antha/workflow"
 )
 
 // Used by generated code build by the composer machinery when processing element test workflows.

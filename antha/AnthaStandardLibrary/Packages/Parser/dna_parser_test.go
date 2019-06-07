@@ -25,9 +25,9 @@ package parser
 import (
 	//"fmt"
 
-	//	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences"
-	//	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	//"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/text"
+	//	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences"
+	//	"github.com/Synthace/antha/antha/anthalib/wtype"
+	//"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/text"
 	//"io/ioutil"
 	//	"bufio"
 	//	"log"

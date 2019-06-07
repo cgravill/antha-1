@@ -32,8 +32,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/antha-lang/antha/antha/ast"
-	"github.com/antha-lang/antha/antha/token"
+	"github.com/Synthace/antha/antha/ast"
+	"github.com/Synthace/antha/antha/token"
 )
 
 var fset = token.NewFileSet()

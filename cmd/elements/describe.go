@@ -16,15 +16,15 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"github.com/antha-lang/antha/protobuf"
+	"github.com/Synthace/antha/protobuf"
 
 	element "github.com/Synthace/microservice/cmd/element/protobuf"
 
-	"github.com/antha-lang/antha/antha/compile"
-	"github.com/antha-lang/antha/antha/token"
-	"github.com/antha-lang/antha/composer"
-	"github.com/antha-lang/antha/logger"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/antha/compile"
+	"github.com/Synthace/antha/antha/token"
+	"github.com/Synthace/antha/composer"
+	"github.com/Synthace/antha/logger"
+	"github.com/Synthace/antha/workflow"
 )
 
 type elementWithMeta struct {
@@ -46,7 +46,7 @@ func describe(l *logger.Logger, args []string) error {
 	flagSet.Usage = workflow.NewFlagUsage(flagSet,
 		"Show descriptions of elements",
 		"[flags] [workflow-snippet.json...]",
-		"github.com/antha-lang/antha/cmd/elements")
+		"github.com/Synthace/antha/cmd/elements")
 
 	validOutputFormats := []string{
 		outputFormatHuman,

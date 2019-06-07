@@ -3,8 +3,8 @@ package wtype
 import (
 	"testing"
 
-	"github.com/antha-lang/antha/antha/anthalib/wutil"
-	"github.com/antha-lang/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/antha/anthalib/wutil"
+	"github.com/Synthace/antha/laboratory/effects/id"
 )
 
 // tests on ID arithmetic

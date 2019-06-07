@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/antha-lang/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/laboratory/effects/id"
 )
 
 // tip waste

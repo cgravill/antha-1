@@ -30,7 +30,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/antha-lang/antha/antha/token"
+	"github.com/Synthace/antha/antha/token"
 )
 
 func readFile(filename string) []byte {

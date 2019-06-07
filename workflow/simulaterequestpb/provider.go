@@ -9,12 +9,12 @@ import (
 	"github.com/Synthace/antha-runner/aconv"
 	"github.com/Synthace/antha-runner/protobuf"
 	inventorypb "github.com/Synthace/microservice/cmd/inventory/protobuf"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wtype/liquidtype"
-	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/logger"
-	"github.com/antha-lang/antha/workflow"
-	"github.com/antha-lang/antha/workflow/migrate"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wtype/liquidtype"
+	"github.com/Synthace/antha/laboratory/effects"
+	"github.com/Synthace/antha/logger"
+	"github.com/Synthace/antha/workflow"
+	"github.com/Synthace/antha/workflow/migrate"
 	"github.com/golang/protobuf/proto"
 )
 
@@ -94,7 +94,7 @@ func (p *Provider) migrateElementParameters(fm *effects.FileManager, process *pr
 		} else {
 			// It _could_ be a reference (param.GetReference() could be
 			// non-empty), but we're pretty sure the reference stuff isn't used
-			// (https://github.com/antha-lang/antha/pull/1068#discussion_r281625589),
+			// (https://github.com/Synthace/antha/pull/1068#discussion_r281625589),
 			// so if there isn't a raw value, we return an error.
 			return pset, fmt.Errorf("Param %v has no data", param.GetName())
 		}

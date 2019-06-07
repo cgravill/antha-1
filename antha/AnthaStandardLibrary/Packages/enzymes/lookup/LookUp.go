@@ -28,9 +28,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/asset"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/rebase"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/asset"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/rebase"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 )
 
 // TypeIIs looks up a TypeIIs enzyme and returns the result as a TypeIIs enzyme object.

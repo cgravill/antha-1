@@ -27,11 +27,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/enzymes/lookup"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/search"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences/plasmid"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/enzymes/lookup"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/search"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences/plasmid"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 )
 
 // fragmentsFormPlasmid checks if the two fragments can join both ends to forma plasmid

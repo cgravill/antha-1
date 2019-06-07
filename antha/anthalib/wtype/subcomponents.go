@@ -27,9 +27,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/pubchem"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/antha/anthalib/wutil"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/pubchem"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/anthalib/wutil"
 )
 
 // ComponentListSample is a sample of a Component list at a specified volume

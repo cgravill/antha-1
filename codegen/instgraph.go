@@ -1,9 +1,9 @@
 package codegen
 
 import (
-	"github.com/antha-lang/antha/graph"
-	"github.com/antha-lang/antha/instructions"
-	"github.com/antha-lang/antha/target"
+	"github.com/Synthace/antha/graph"
+	"github.com/Synthace/antha/instructions"
+	"github.com/Synthace/antha/target"
 )
 
 // instGraph is a graph to that models dependencies between target instructions

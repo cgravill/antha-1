@@ -27,8 +27,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/antha/anthalib/wutil"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/anthalib/wutil"
 )
 
 const (

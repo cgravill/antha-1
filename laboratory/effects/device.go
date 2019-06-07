@@ -1,8 +1,8 @@
 package effects
 
 import (
-	"github.com/antha-lang/antha/instructions"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/instructions"
+	"github.com/Synthace/antha/workflow"
 )
 
 type Device interface {

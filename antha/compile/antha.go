@@ -35,9 +35,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/antha-lang/antha/antha/ast"
-	"github.com/antha-lang/antha/antha/parser"
-	"github.com/antha-lang/antha/antha/token"
+	"github.com/Synthace/antha/antha/ast"
+	"github.com/Synthace/antha/antha/parser"
+	"github.com/Synthace/antha/antha/token"
 )
 
 const (
@@ -320,25 +320,25 @@ func NewAntha(fileSet *token.FileSet, src *ast.File, metaBs []byte) (*Antha, err
 		Path: "github.com/ugorji/go/codec",
 	})
 	p.addImportReq(&ImportReq{
-		Path: "github.com/antha-lang/antha/laboratory",
+		Path: "github.com/Synthace/antha/laboratory",
 	})
 	p.addImportReq(&ImportReq{
-		Path: "github.com/antha-lang/antha/workflow",
+		Path: "github.com/Synthace/antha/workflow",
 	})
 	p.addImportReq(&ImportReq{
-		Path:    "github.com/antha-lang/antha/antha/anthalib/wtype",
+		Path:    "github.com/Synthace/antha/antha/anthalib/wtype",
 		useExpr: "wtype.FALSE",
 	})
 	p.addImportReq(&ImportReq{
-		Path:    "github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/jobfile",
+		Path:    "github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/jobfile",
 		useExpr: "jobfile.DefaultClient",
 	})
 	p.addImportReq(&ImportReq{
-		Path:    "github.com/antha-lang/antha/antha/anthalib/wunit",
+		Path:    "github.com/Synthace/antha/antha/anthalib/wunit",
 		useExpr: "wunit.GetGlobalUnitRegistry",
 	})
 	p.addImportReq(&ImportReq{
-		Path:    "github.com/antha-lang/antha/execute",
+		Path:    "github.com/Synthace/antha/execute",
 		useExpr: "execute.MixInto",
 	})
 

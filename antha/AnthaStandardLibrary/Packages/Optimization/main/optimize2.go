@@ -35,8 +35,8 @@ func comb(n, r int) []string {
 // import (
 // 	"fmt"
 // 	"github.com/Synthace/go-glpk/glpk"
-// 	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/Optimization"
-// 	"github.com/antha-lang/antha/antha/anthalib/wutil"
+// 	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/Optimization"
+// 	"github.com/Synthace/antha/antha/anthalib/wutil"
 // )
 
 // func OptimizeAssembly2(problem AssemblyProblem, constraints Constraints, parameters Optimization.AssemblyOptimizerParameters) {

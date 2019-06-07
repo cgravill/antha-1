@@ -27,7 +27,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 )
 
 func equalFold(a, b string) bool {

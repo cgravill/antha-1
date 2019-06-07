@@ -32,13 +32,13 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/laboratory/effects/id"
-	"github.com/antha-lang/antha/microArch/driver/liquidhandling"
-	"github.com/antha-lang/antha/microArch/simulator"
-	simulator_lh "github.com/antha-lang/antha/microArch/simulator/liquidhandling"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/laboratory/effects"
+	"github.com/Synthace/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/microArch/driver/liquidhandling"
+	"github.com/Synthace/antha/microArch/simulator"
+	simulator_lh "github.com/Synthace/antha/microArch/simulator/liquidhandling"
 )
 
 // the liquid handler structure defines the interface to a particular liquid handling

@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/driver"
-	platereader "github.com/antha-lang/antha/driver/antha_platereader_v1"
-	"github.com/antha-lang/antha/instructions"
-	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/target"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/driver"
+	platereader "github.com/Synthace/antha/driver/antha_platereader_v1"
+	"github.com/Synthace/antha/instructions"
+	"github.com/Synthace/antha/laboratory/effects"
+	"github.com/Synthace/antha/target"
+	"github.com/Synthace/antha/workflow"
 )
 
 // WOPlateReader defines the state of a write only plate-reader device

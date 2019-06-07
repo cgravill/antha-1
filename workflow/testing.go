@@ -5,8 +5,8 @@ import (
 	"io"
 	"time"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/utils"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/utils"
 )
 
 // Testing contains data and configuration for testing.

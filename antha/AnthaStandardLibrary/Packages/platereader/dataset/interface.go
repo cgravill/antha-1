@@ -4,8 +4,8 @@ package dataset
 import (
 	"time"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/platereader"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/platereader"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 )
 
 // minimal interface to support existing antha elements which use plate reader data (AddPlateReder_Results)

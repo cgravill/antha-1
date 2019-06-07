@@ -5,14 +5,14 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/antha-lang/antha/antha/anthalib/mixer"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/inventory/components"
-	"github.com/antha-lang/antha/laboratory"
-	"github.com/antha-lang/antha/laboratory/effects/id"
-	"github.com/antha-lang/antha/laboratory/testlab"
-	lh "github.com/antha-lang/antha/microArch/scheduler/liquidhandling"
+	"github.com/Synthace/antha/antha/anthalib/mixer"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/inventory/components"
+	"github.com/Synthace/antha/laboratory"
+	"github.com/Synthace/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/laboratory/testlab"
+	lh "github.com/Synthace/antha/microArch/scheduler/liquidhandling"
 	"github.com/pkg/errors"
 )
 

@@ -23,8 +23,8 @@
 package liquidhandling
 
 import (
-	"github.com/antha-lang/antha/microArch/driver"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/microArch/driver"
+	"github.com/Synthace/antha/workflow"
 )
 
 // driver interface

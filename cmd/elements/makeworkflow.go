@@ -4,8 +4,8 @@ import (
 	"flag"
 	"regexp"
 
-	"github.com/antha-lang/antha/logger"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/logger"
+	"github.com/Synthace/antha/workflow"
 )
 
 func makeWorkflowCmd(l *logger.Logger, args []string) error {
@@ -13,7 +13,7 @@ func makeWorkflowCmd(l *logger.Logger, args []string) error {
 	flagSet.Usage = workflow.NewFlagUsage(flagSet,
 		"Modify workflow adding selected elements",
 		"[flags] [workflow-snippet.json...]",
-		"github.com/antha-lang/antha/cmd/elements")
+		"github.com/Synthace/antha/cmd/elements")
 
 	var regexStr, inDir, toFile string
 	flagSet.StringVar(&regexStr, "regex", "", "Regular expression to match against element type path (optional)")

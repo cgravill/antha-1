@@ -31,7 +31,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/antha-lang/antha/antha/token"
+	"github.com/Synthace/antha/antha/token"
 )
 
 type byPos []*CommentGroup

@@ -27,11 +27,11 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/fasta"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/gdx"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/genbank"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/laboratory"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/fasta"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/gdx"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/genbank"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/laboratory"
 )
 
 // Creates a DNASequence from a sequence file of format: .gdx .fasta .gb

@@ -35,8 +35,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/AnthaPath"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/search"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/AnthaPath"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/search"
 )
 
 // http://parts.igem.org/Registry_API

@@ -1,7 +1,7 @@
 package migrate
 
 import (
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/workflow"
 )
 
 // Migrator migrates data from a previous format to the v2.0 format

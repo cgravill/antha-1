@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-test/deep"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 )
 
 // TipChooserTipbox defines the state of a tipbox for testing, should be an array of 8 strings each of length 12

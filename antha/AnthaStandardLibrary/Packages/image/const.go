@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	anthapath "github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/AnthaPath"
+	anthapath "github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/AnthaPath"
 	imaging "github.com/disintegration/imaging"
 )
 

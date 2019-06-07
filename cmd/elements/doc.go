@@ -2,7 +2,7 @@
 //
 // The elements command is a command to help work with elements and
 // workflows. Various subcommands are available, and just like the
-// composer command (github.com/antha-lang/antha/cmd/composer), they
+// composer command (github.com/Synthace/antha/cmd/composer), they
 // accept workflow snippets as inputs.
 //
 // Additionally, this package facilitates the testing of elements

@@ -28,10 +28,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/fasta"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/genbank"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/laboratory"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/fasta"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/genbank"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/laboratory"
 )
 
 // PartSource is any type which has a GetSequences method

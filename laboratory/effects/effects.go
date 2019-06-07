@@ -1,12 +1,12 @@
 package effects
 
 import (
-	"github.com/antha-lang/antha/instructions"
-	"github.com/antha-lang/antha/inventory"
-	"github.com/antha-lang/antha/inventory/cache/plateCache"
-	"github.com/antha-lang/antha/laboratory/effects/id"
-	"github.com/antha-lang/antha/microArch/sampletracker"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/instructions"
+	"github.com/Synthace/antha/inventory"
+	"github.com/Synthace/antha/inventory/cache/plateCache"
+	"github.com/Synthace/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/microArch/sampletracker"
+	"github.com/Synthace/antha/workflow"
 )
 
 type LaboratoryEffects struct {

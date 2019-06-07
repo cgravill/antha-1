@@ -3,8 +3,8 @@ package liquidhandling
 import (
 	"time"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wutil"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wutil"
 )
 
 // LHTimer provides timing for instructions

@@ -1,6 +1,6 @@
 package wtype
 
-import "github.com/antha-lang/antha/laboratory/effects/id"
+import "github.com/Synthace/antha/laboratory/effects/id"
 
 // head
 type LHHead struct {

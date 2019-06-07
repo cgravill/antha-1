@@ -16,6 +16,6 @@ test:
 	./scripts/antha-test.sh
 
 testelements: $(REPOSITORIES)
-	go test github.com/antha-lang/antha/cmd/elements -v -args -keep $(abspath $<)
+	go test github.com/Synthace/antha/cmd/elements -v -args -keep $(abspath $<)
 
 .PHONY: all build lint test testelements

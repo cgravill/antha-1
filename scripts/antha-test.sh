@@ -12,10 +12,10 @@ BUILD_ID=${4:-}
 ## There are some packages that only contain test files. Go test gets
 ## upset if you try to include these packages in coverage, so we have
 ## to filter them out:
-COVERPKG=$(go list -f '{{if (len .GoFiles) gt 0}}{{.ImportPath}}{{end}}' github.com/antha-lang/antha/... | tr '\n' ',' | sed -e 's/,$//')
+COVERPKG=$(go list -f '{{if (len .GoFiles) gt 0}}{{.ImportPath}}{{end}}' github.com/Synthace/antha/... | tr '\n' ',' | sed -e 's/,$//')
 
-go test -covermode=atomic -coverprofile=cover.profile -coverpkg="${COVERPKG}" github.com/antha-lang/antha/...
+go test -covermode=atomic -coverprofile=cover.profile -coverpkg="${COVERPKG}" github.com/Synthace/antha/...
 
 if [[ -n "${COVERALLS_TOKEN}" && -s cover.profile ]]; then
-    coveralls -reponame="github.com/antha-lang/antha" -repotoken="${COVERALLS_TOKEN}" -commitsha="${COMMIT_SHA}" -branchname="${BRANCH_NAME}" -buildid="${BUILD_ID}" cover.profile
+    coveralls -reponame="github.com/Synthace/antha" -repotoken="${COVERALLS_TOKEN}" -commitsha="${COMMIT_SHA}" -branchname="${BRANCH_NAME}" -buildid="${BUILD_ID}" cover.profile
 fi

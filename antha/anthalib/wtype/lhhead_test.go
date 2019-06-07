@@ -3,7 +3,7 @@ package wtype
 import (
 	"testing"
 
-	"github.com/antha-lang/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/laboratory/effects/id"
 )
 
 //makeAlignmentTestPlate make a plate setting only the important things

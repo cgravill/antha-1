@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/antha-lang/antha/laboratory"
-	"github.com/antha-lang/antha/laboratory/effects/id"
-	"github.com/antha-lang/antha/laboratory/testlab"
-	lh "github.com/antha-lang/antha/microArch/scheduler/liquidhandling"
+	"github.com/Synthace/antha/laboratory"
+	"github.com/Synthace/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/laboratory/testlab"
+	lh "github.com/Synthace/antha/microArch/scheduler/liquidhandling"
 )
 
 func GetLiquidHandlerForTest(lab *laboratory.Laboratory) *lh.Liquidhandler {

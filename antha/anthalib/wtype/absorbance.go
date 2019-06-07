@@ -23,7 +23,7 @@
 package wtype
 
 import (
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
 )
 
 type Absorbance struct {

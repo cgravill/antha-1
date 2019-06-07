@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wutil/text"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wutil/text"
 )
 
 // Some potentially confusing logic in need of testing

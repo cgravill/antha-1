@@ -14,9 +14,9 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/antha-lang/antha/utils"
+	"github.com/Synthace/antha/utils"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 	"github.com/qri-io/jsonschema"
 	git "gopkg.in/src-d/go-git.v4"
 )

@@ -4,7 +4,7 @@ package blast
 import (
 	"testing"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences/biogo/ncbi/blast"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences/biogo/ncbi/blast"
 )
 
 func TestBLAST(t *testing.T) {

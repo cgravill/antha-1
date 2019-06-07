@@ -1,4 +1,4 @@
-module github.com/antha-lang/antha
+module github.com/Synthace/antha
 
 require (
 	github.com/Synthace/antha-runner v0.0.0-20190529155927-0247575e892e

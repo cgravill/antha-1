@@ -10,9 +10,9 @@ import (
 	lc_driver "github.com/Synthace/instruction-plugins/LabcyteEcho/driver"
 	pm_driver "github.com/Synthace/instruction-plugins/PipetMax/driver"
 	tecan_driver "github.com/Synthace/instruction-plugins/TecanScript/driver"
-	lhdriver "github.com/antha-lang/antha/microArch/driver/liquidhandling"
-	"github.com/antha-lang/antha/target"
-	"github.com/antha-lang/antha/workflow"
+	lhdriver "github.com/Synthace/antha/microArch/driver/liquidhandling"
+	"github.com/Synthace/antha/target"
+	"github.com/Synthace/antha/workflow"
 )
 
 var linkedDriverFuns = map[target.MixerDriverSubType](func() lhdriver.LiquidhandlingDriver){

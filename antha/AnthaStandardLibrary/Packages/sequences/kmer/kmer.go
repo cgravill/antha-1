@@ -3,7 +3,7 @@ package kmer
 import (
 	"sort"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 )
 
 func Hashseq(s string, n int) map[string]int {

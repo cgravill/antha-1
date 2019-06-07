@@ -34,7 +34,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/antha-lang/antha/antha/token"
+	"github.com/Synthace/antha/antha/token"
 )
 
 // ----------------------------------------------------------------------------

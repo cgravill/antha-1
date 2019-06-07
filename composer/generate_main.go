@@ -8,7 +8,7 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/workflow"
 )
 
 type renderer struct {
@@ -140,7 +140,7 @@ package main
 	"os"
 	"io/ioutil"
 
-	"github.com/antha-lang/antha/laboratory"
+	"github.com/Synthace/antha/laboratory"
 	"github.com/ugorji/go/codec"
 
 {{range elementTypes}}{{if .IsAnthaElement}}	{{printf "%q" .ImportPath}}
@@ -152,8 +152,8 @@ package main
 	"io/ioutil"
 	"testing"
 
-	"github.com/antha-lang/antha/laboratory"
-	"github.com/antha-lang/antha/laboratory/testlab"
+	"github.com/Synthace/antha/laboratory"
+	"github.com/Synthace/antha/laboratory/testlab"
 	"github.com/ugorji/go/codec"
 
 {{range elementTypes}}{{if .IsAnthaElement}}	{{printf "%q" .ImportPath}}

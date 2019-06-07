@@ -8,11 +8,11 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/logger"
-	"github.com/antha-lang/antha/workflow"
-	"github.com/antha-lang/antha/workflow/migrate"
-	"github.com/antha-lang/antha/workflow/v1_2"
+	"github.com/Synthace/antha/laboratory/effects"
+	"github.com/Synthace/antha/logger"
+	"github.com/Synthace/antha/workflow"
+	"github.com/Synthace/antha/workflow/migrate"
+	"github.com/Synthace/antha/workflow/v1_2"
 )
 
 func getTestProvider() (migrate.WorkflowProvider, error) {

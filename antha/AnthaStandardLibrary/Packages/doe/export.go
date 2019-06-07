@@ -27,9 +27,9 @@ import (
 
 	"strconv"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/spreadsheet"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wutil"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/spreadsheet"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wutil"
 	"github.com/tealeg/xlsx"
 )
 

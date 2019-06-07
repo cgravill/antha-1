@@ -26,7 +26,7 @@ package eng
 import (
 	"math"
 
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
 )
 
 //Equations from Islam et al:

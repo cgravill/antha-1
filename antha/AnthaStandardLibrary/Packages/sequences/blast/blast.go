@@ -30,8 +30,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences/biogo/ncbi/blast"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/text"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences/biogo/ncbi/blast"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/text"
 	"github.com/mgutz/ansi"
 )
 

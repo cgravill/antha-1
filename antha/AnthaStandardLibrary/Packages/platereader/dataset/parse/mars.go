@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/platereader/dataset"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/search"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/spreadsheet"
-	"github.com/antha-lang/antha/antha/anthalib/wutil"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/platereader/dataset"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/search"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/spreadsheet"
+	"github.com/Synthace/antha/antha/anthalib/wutil"
 	"github.com/tealeg/xlsx"
 )
 

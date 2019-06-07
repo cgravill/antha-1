@@ -23,7 +23,7 @@
 // solutions is a utility package for working with solutions of LHComponents
 package solutions
 
-import "github.com/antha-lang/antha/antha/anthalib/wtype"
+import "github.com/Synthace/antha/antha/anthalib/wtype"
 
 // NormaliseName evaluates whether a string contains a concentration and attempts to normalise the name in a standardised format.
 // e.g. 10ng/ul glucose will be normalised to 10 mg/l glucose or 10mM glucose to 10 mM/l glucose or 10mM/l glucose to 10 mM/l glucose or glucose 10mM/l to 10 mM/l glucose

@@ -26,13 +26,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/enzymes"
-	"github.com/antha-lang/antha/laboratory"
-	"github.com/antha-lang/antha/laboratory/testlab"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/enzymes"
+	"github.com/Synthace/antha/laboratory"
+	"github.com/Synthace/antha/laboratory/testlab"
 
 	"testing"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 )
 
 type parseXLSXTest struct {

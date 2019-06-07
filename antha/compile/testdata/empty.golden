@@ -2,8 +2,8 @@
 
 package empty
 
-import "github.com/antha-lang/antha/antha/anthalib/execution"
-import "github.com/antha-lang/antha/antha/execute"
+import "github.com/Synthace/antha/antha/anthalib/execution"
+import "github.com/Synthace/antha/antha/execute"
 import "github.com/Synthace/goflow"
 import "sync"
 import "encoding/json"

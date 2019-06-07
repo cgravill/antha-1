@@ -27,7 +27,7 @@ import (
 	"github.com/pkg/errors"
 	"math"
 
-	"github.com/antha-lang/antha/antha/anthalib/wutil"
+	"github.com/Synthace/antha/antha/anthalib/wutil"
 )
 
 // Epsilon a small delta used when to avoid floating point errors when comparing

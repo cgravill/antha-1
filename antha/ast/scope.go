@@ -30,7 +30,7 @@ package ast
 
 import (
 	"fmt"
-	"github.com/antha-lang/antha/antha/token"
+	"github.com/Synthace/antha/antha/token"
 	"strings"
 )
 

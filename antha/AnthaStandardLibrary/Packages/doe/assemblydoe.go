@@ -26,8 +26,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/enzymes"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/enzymes"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 )
 
 func AssemblyParametersFromRuns(runs []Run, enzymename string) (assemblyparameters []enzymes.Assemblyparameters) {

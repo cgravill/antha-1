@@ -24,9 +24,9 @@
 package eng
 
 import (
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/Labware"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/Liquidclasses"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/Labware"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/Liquidclasses"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
 	"math"
 )
 

@@ -1,6 +1,6 @@
 package v1_2
 
-import "github.com/antha-lang/antha/antha/anthalib/wtype"
+import "github.com/Synthace/antha/antha/anthalib/wtype"
 
 type opt struct {
 	MaxPlates            *float64 `json:"maxPlates,omitempty"`

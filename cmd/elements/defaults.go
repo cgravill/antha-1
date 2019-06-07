@@ -9,8 +9,8 @@ import (
 	"reflect"
 	"regexp"
 
-	"github.com/antha-lang/antha/logger"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/logger"
+	"github.com/Synthace/antha/workflow"
 )
 
 func defaults(l *logger.Logger, args []string) error {
@@ -18,7 +18,7 @@ func defaults(l *logger.Logger, args []string) error {
 	flagSet.Usage = workflow.NewFlagUsage(flagSet,
 		"Gather defaults for an element set from metadata.json files in the repo",
 		"[flags] [workflow-snippet.json...]",
-		"github.com/antha-lang/antha/cmd/elements")
+		"github.com/Synthace/antha/cmd/elements")
 
 	var regexStr, inDir string
 	flagSet.StringVar(&regexStr, "regex", "", "Regular expression to match against element type path (optional)")

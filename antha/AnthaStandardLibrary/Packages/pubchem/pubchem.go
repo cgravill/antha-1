@@ -31,7 +31,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
 )
 
 // https://pubchem.ncbi.nlm.nih.gov/pug_rest/PUG_REST.html#_Toc409516757

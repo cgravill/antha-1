@@ -29,11 +29,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/doe"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/enzymes"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/doe"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/enzymes"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
 )
 
 func ReadDesign(filename string) [][]string {

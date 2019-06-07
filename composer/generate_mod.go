@@ -9,7 +9,7 @@ import (
 	"runtime/debug"
 	"text/template"
 
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/workflow"
 )
 
 // Because we generate code, and that code has a dependency on antha
@@ -32,16 +32,16 @@ import (
 var modtpl = `
 {{define "repository"}}module {{.Name}}
 
-require github.com/antha-lang/antha {{.AnthaVersion}}
+require github.com/Synthace/antha {{.AnthaVersion}}
 {{end}}
 
 {{define "workflow"}}module workflow
 
 require (
-	github.com/antha-lang/antha {{.AnthaVersion}}
+	github.com/Synthace/antha {{.AnthaVersion}}
 {{range $repoName, $repo := .Repositories}}	{{$repoName}} v0.0.0
 {{end}})
-{{if .ReplaceAntha}}replace github.com/antha-lang/antha => {{.AnthaDir}}{{end}}
+{{if .ReplaceAntha}}replace github.com/Synthace/antha => {{.AnthaDir}}{{end}}
 {{if .ReplaceRunner}}replace github.com/Synthace/antha-runner => {{.RunnerDir}}{{end}}
 {{if .ReplacePlugins}}replace github.com/Synthace/instruction-plugins => {{.PluginsDir}}{{end}}
 {{range $repoName, $repo := .Repositories}}replace {{$repoName}} => {{repopath $repoName}}
@@ -71,11 +71,11 @@ func newRepositoryMod(name string) *repositoryMod {
 func AnthaModule() *debug.Module {
 	if info, ok := debug.ReadBuildInfo(); ok {
 		var anthaMod *debug.Module
-		if info.Main.Path == "github.com/antha-lang/antha" {
+		if info.Main.Path == "github.com/Synthace/antha" {
 			anthaMod = &info.Main
 		} else {
 			for _, mod := range info.Deps {
-				if mod.Path == "github.com/antha-lang/antha" {
+				if mod.Path == "github.com/Synthace/antha" {
 					anthaMod = mod
 					break
 				}

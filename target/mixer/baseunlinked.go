@@ -2,7 +2,7 @@
 
 package mixer
 
-import "github.com/antha-lang/antha/workflow"
+import "github.com/Synthace/antha/workflow"
 
 func (bm *BaseMixer) maybeLinkedDriver(wf *workflow.Workflow, data []byte) error {
 	return nil

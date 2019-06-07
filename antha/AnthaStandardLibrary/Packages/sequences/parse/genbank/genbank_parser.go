@@ -31,9 +31,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/laboratory"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/laboratory"
 )
 
 //Parses file of type .gb to DNASequence. Features are not annotated

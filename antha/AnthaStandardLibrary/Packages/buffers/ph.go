@@ -27,10 +27,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/antha-lang/antha/antha/anthalib/mixer"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/laboratory"
+	"github.com/Synthace/antha/antha/anthalib/mixer"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/laboratory"
 )
 
 type PHperdegC float64

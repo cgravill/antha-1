@@ -22,9 +22,9 @@
 package tipwastes
 
 import (
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/inventory/tipboxes"
-	"github.com/antha-lang/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/inventory/tipboxes"
+	"github.com/Synthace/antha/laboratory/effects/id"
 )
 
 func makeTipwastes(idGen *id.IDGenerator) (tipwastes []*wtype.LHTipwaste) {

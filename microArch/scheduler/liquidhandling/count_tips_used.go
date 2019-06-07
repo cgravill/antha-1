@@ -3,8 +3,8 @@ package liquidhandling
 import (
 	"fmt"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	driver "github.com/antha-lang/antha/microArch/driver/liquidhandling"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	driver "github.com/Synthace/antha/microArch/driver/liquidhandling"
 )
 
 func (lh Liquidhandler) countTipsUsed(insts []driver.TerminalRobotInstruction) ([]wtype.TipEstimate, error) {

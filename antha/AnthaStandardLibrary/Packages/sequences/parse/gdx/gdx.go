@@ -25,9 +25,9 @@ package gdx
 import (
 	"encoding/xml"
 
-	parse "github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/Parser"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/laboratory"
+	parse "github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/Parser"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/laboratory"
 )
 
 // GDXToDNASequence parses DNA sequence files in .gdx format into a set of DNA sequences of type []wtype.DNASequence

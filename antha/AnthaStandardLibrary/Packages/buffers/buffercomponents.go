@@ -24,8 +24,8 @@
 package buffers
 
 import (
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/pubchem"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/pubchem"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
 )
 
 func StockConcentration(nameofmolecule string, massofmoleculeactuallyaddedinG wunit.Mass, diluent string, totalvolumeinL wunit.Volume) (actualconc wunit.Concentration, err error) {

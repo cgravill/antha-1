@@ -3,8 +3,8 @@ package migrate
 import (
 	"encoding/json"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/laboratory/effects"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/laboratory/effects"
 )
 
 // Utility code for migrating parameter values from raw JSON to workflow 2.0

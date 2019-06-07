@@ -1,7 +1,7 @@
 package wtype
 
 import (
-	"github.com/antha-lang/antha/graph"
+	"github.com/Synthace/antha/graph"
 	"github.com/pkg/errors"
 )
 

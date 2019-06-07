@@ -1,14 +1,14 @@
 package main
 
 import (
-	//"github.com/antha-lang/antha/antha/anthalib/wtype"
+	//"github.com/Synthace/antha/antha/anthalib/wtype"
 	"fmt"
 	"math/rand"
 	"reflect"
 	"sort"
 	"time"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/Optimization"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/Optimization"
 )
 
 func DefaultParameters() Optimization.AssemblyOptimizerParameters {

@@ -1,6 +1,6 @@
 package wtype
 
-import "github.com/antha-lang/antha/laboratory/effects/id"
+import "github.com/Synthace/antha/laboratory/effects/id"
 
 func CopyComponentArray(idGen *id.IDGenerator, arin []*Liquid) []*Liquid {
 	r := make([]*Liquid, len(arin))

@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/antha-lang/antha/antha/anthalib/mixer"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/instructions"
-	"github.com/antha-lang/antha/laboratory"
-	"github.com/antha-lang/antha/target"
+	"github.com/Synthace/antha/antha/anthalib/mixer"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/instructions"
+	"github.com/Synthace/antha/laboratory"
+	"github.com/Synthace/antha/target"
 )
 
 // SetInputPlate Indicate to the scheduler the the contents of the plate is user

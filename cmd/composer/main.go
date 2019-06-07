@@ -6,16 +6,16 @@ import (
 	"path/filepath"
 
 	runner "github.com/Synthace/antha-runner/export"
-	"github.com/antha-lang/antha/composer"
-	"github.com/antha-lang/antha/logger"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/composer"
+	"github.com/Synthace/antha/logger"
+	"github.com/Synthace/antha/workflow"
 )
 
 func main() {
 	flag.Usage = workflow.NewFlagUsage(nil,
 		"Parse, compile and run a workflow",
 		"[flags] [workflow-snippet.json...]",
-		"github.com/antha-lang/antha/cmd/composer")
+		"github.com/Synthace/antha/cmd/composer")
 
 	var inDir, outDir string
 	var keep, run, linkedDrivers bool

@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/pcr"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/laboratory"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/pcr"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/laboratory"
 )
 
 // ParsePCRExc3el takes in a pcr design file (.xlsx or .csv) and converts this

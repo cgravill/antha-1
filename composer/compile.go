@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/antha-lang/antha/utils"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/utils"
+	"github.com/Synthace/antha/workflow"
 )
 
 func (mc *mainComposer) compileWorkflow() error {
@@ -88,7 +88,7 @@ func (cb *ComposerBase) GoList() (string, error) {
 	// We filter out packages that don't contain "normal" go files
 	// (this removes packages that only contain tests) because
 	// otherwise "go test" gets upset with us.
-	cmd := exec.Command("go", "list", "-f", "{{if (len .GoFiles) gt 0}}{{.ImportPath}}{{end}}", "github.com/antha-lang/antha/...")
+	cmd := exec.Command("go", "list", "-f", "{{if (len .GoFiles) gt 0}}{{.ImportPath}}{{end}}", "github.com/Synthace/antha/...")
 	for repoName := range cb.clonedRepositories {
 		cmd.Args = append(cmd.Args, path.Join(string(repoName), "..."))
 	}

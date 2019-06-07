@@ -3,7 +3,7 @@ package wtype
 import (
 	"fmt"
 
-	"github.com/antha-lang/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/laboratory/effects/id"
 )
 
 // PRInstruction is a high-level instruction to a plate reader to measure a

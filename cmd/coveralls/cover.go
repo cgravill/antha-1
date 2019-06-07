@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/antha-lang/antha/utils"
+	"github.com/Synthace/antha/utils"
 	"golang.org/x/tools/cover"
 )
 

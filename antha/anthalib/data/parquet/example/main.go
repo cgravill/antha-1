@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/antha-lang/antha/antha/anthalib/data/parquet"
+	"github.com/Synthace/antha/antha/anthalib/data/parquet"
 	"github.com/pkg/errors"
 )
 

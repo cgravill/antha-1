@@ -27,10 +27,10 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
-	"github.com/antha-lang/antha/laboratory/effects/id"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/workflow"
 )
 
 // describes a liquid handler, its capabilities and current state

@@ -2,8 +2,8 @@ package parquetinfo
 
 import (
 	"encoding/json"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/schemas"
-	"github.com/antha-lang/antha/antha/anthalib/data/parquet"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/schemas"
+	"github.com/Synthace/antha/antha/anthalib/data/parquet"
 )
 
 // ParquetInfoKey is used to embed JSON DataInfo in a Parquet file footer as

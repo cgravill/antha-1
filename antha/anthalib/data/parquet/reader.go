@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/anthalib/data"
+	"github.com/Synthace/antha/antha/anthalib/data"
 	"github.com/pkg/errors"
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"

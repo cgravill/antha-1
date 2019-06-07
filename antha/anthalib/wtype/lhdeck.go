@@ -29,7 +29,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/antha-lang/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/laboratory/effects/id"
 )
 
 type deckSlot struct {

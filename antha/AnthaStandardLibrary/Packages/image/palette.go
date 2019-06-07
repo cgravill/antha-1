@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 	"reflect"
 
-	anthapath "github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/AnthaPath"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/laboratory"
+	anthapath "github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/AnthaPath"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/laboratory"
 )
 
 // An AnthaColor represents a color linked to an LHComponent

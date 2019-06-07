@@ -23,8 +23,8 @@
 package platereading
 
 import (
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/microArch/driver"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/microArch/driver"
 )
 
 type PlateReadingDriver interface {

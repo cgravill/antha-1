@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/antha-lang/antha/utils"
+	"github.com/Synthace/antha/utils"
 )
 
 func (wf *Workflow) Validate() error {

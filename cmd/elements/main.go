@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/antha-lang/antha/logger"
+	"github.com/Synthace/antha/logger"
 )
 
 func main() {

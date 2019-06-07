@@ -25,7 +25,7 @@ package wtype
 import (
 	"encoding/json"
 
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
 	"github.com/pkg/errors"
 )
 

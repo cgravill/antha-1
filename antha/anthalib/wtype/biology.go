@@ -27,9 +27,9 @@ import (
 	"fmt"
 	"strings"
 
-	. "github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences/biogo/ncbi/blast"
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences/blast"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
+	. "github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences/biogo/ncbi/blast"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences/blast"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
 )
 
 // the following are all physical things; we need a way to separate

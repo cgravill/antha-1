@@ -23,7 +23,7 @@
 package text
 
 import (
-	"github.com/antha-lang/antha/antha/anthalib/wutil/text"
+	"github.com/Synthace/antha/antha/anthalib/wutil/text"
 )
 
 // PrettyPrint will return an indented string of an object.

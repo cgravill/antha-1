@@ -28,9 +28,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/microArch/driver/liquidhandling"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/laboratory/effects"
+	"github.com/Synthace/antha/microArch/driver/liquidhandling"
 )
 
 // v2.0 should be another linear program - basically just want to optimize

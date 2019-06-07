@@ -8,12 +8,12 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	drv "github.com/antha-lang/antha/driver/antha_driver_v1"
-	pb "github.com/antha-lang/antha/driver/liquidhandling/pb"
-	driver "github.com/antha-lang/antha/microArch/driver"
-	liquidhandling "github.com/antha-lang/antha/microArch/driver/liquidhandling"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	drv "github.com/Synthace/antha/driver/antha_driver_v1"
+	pb "github.com/Synthace/antha/driver/liquidhandling/pb"
+	driver "github.com/Synthace/antha/microArch/driver"
+	liquidhandling "github.com/Synthace/antha/microArch/driver/liquidhandling"
+	"github.com/Synthace/antha/workflow"
 )
 
 func toInt32(i []int) []int32 {

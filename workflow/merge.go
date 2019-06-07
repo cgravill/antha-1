@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/antha-lang/antha/utils"
+	"github.com/Synthace/antha/utils"
 )
 
 func (a *Workflow) Merge(b *Workflow) error {

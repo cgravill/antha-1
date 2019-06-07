@@ -5,11 +5,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/microArch/driver/liquidhandling"
-	"github.com/antha-lang/antha/workflow"
-	"github.com/antha-lang/antha/workflow/migrate"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/laboratory/effects"
+	"github.com/Synthace/antha/microArch/driver/liquidhandling"
+	"github.com/Synthace/antha/workflow"
+	"github.com/Synthace/antha/workflow/migrate"
 )
 
 type workflowv1_2 struct {

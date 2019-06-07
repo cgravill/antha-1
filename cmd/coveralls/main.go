@@ -3,15 +3,15 @@ package main
 import (
 	"flag"
 
-	"github.com/antha-lang/antha/logger"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/logger"
+	"github.com/Synthace/antha/workflow"
 )
 
 func main() {
 	flag.Usage = workflow.NewFlagUsage(nil,
 		"Parse and transform go coverage profile data into coveralls format",
 		"[flags] path/to/cover.profile",
-		"github.com/antha-lang/antha/cmd/coveralls")
+		"github.com/Synthace/antha/cmd/coveralls")
 
 	var repoName, repoToken, commitSHA, branchName, buildId string
 	flag.StringVar(&repoName, "reponame", "", "Name of git repository")

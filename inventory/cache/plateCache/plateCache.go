@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/inventory/plates"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/inventory/plates"
 )
 
 type PlateCache struct {

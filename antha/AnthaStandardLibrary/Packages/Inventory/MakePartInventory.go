@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
 )
 
 // MakePartInventory takes in a variable number of arguments which obey the source interface

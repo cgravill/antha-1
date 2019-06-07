@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/fasta"
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/laboratory"
-	"github.com/antha-lang/antha/laboratory/testlab"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/sequences/parse/fasta"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/laboratory"
+	"github.com/Synthace/antha/laboratory/testlab"
 )
 
 func TestDNASet(t *testing.T) {

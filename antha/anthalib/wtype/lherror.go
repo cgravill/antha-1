@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/anthalib/wutil"
+	"github.com/Synthace/antha/antha/anthalib/wutil"
 )
 
 // consts for liquid handling planner errors

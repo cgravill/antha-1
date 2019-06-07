@@ -23,7 +23,7 @@
 // Package sequences is for interacting with and manipulating biological sequences; in extension to methods available in wtype
 package sequences
 
-import "github.com/antha-lang/antha/antha/anthalib/wtype"
+import "github.com/Synthace/antha/antha/anthalib/wtype"
 
 func Prefix(seq string, lengthofprefix int) (prefix string) {
 	end := lengthofprefix

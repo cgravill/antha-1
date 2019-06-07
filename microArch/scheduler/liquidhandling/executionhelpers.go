@@ -25,9 +25,9 @@ package liquidhandling
 import (
 	"time"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/graph"
-	"github.com/antha-lang/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/graph"
+	"github.com/Synthace/antha/laboratory/effects/id"
 )
 
 const (

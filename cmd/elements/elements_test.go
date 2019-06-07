@@ -11,9 +11,9 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/antha-lang/antha/composer"
-	"github.com/antha-lang/antha/logger"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/composer"
+	"github.com/Synthace/antha/logger"
+	"github.com/Synthace/antha/workflow"
 )
 
 var (

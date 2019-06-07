@@ -32,7 +32,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/antha-lang/antha/antha/token"
+	"github.com/Synthace/antha/antha/token"
 )
 
 // An Error in scanning. In an ErrorList, an error is represented by an *Error.

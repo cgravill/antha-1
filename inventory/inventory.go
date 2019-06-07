@@ -1,12 +1,12 @@
 package inventory
 
 import (
-	"github.com/antha-lang/antha/inventory/components"
-	"github.com/antha-lang/antha/inventory/plates"
-	"github.com/antha-lang/antha/inventory/tipboxes"
-	"github.com/antha-lang/antha/inventory/tipwastes"
-	"github.com/antha-lang/antha/laboratory/effects/id"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/inventory/components"
+	"github.com/Synthace/antha/inventory/plates"
+	"github.com/Synthace/antha/inventory/tipboxes"
+	"github.com/Synthace/antha/inventory/tipwastes"
+	"github.com/Synthace/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/workflow"
 )
 
 type Inventory struct {

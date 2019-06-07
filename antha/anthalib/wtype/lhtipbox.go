@@ -28,7 +28,7 @@ import (
 	"math"
 	"strings"
 
-	"github.com/antha-lang/antha/laboratory/effects/id"
+	"github.com/Synthace/antha/laboratory/effects/id"
 )
 
 /* tip box */

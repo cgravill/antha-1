@@ -24,7 +24,7 @@
 package text
 
 import (
-	"github.com/antha-lang/antha/antha/anthalib/wutil/text"
+	"github.com/Synthace/antha/antha/anthalib/wutil/text"
 )
 
 // Print prints to standard out a string description highlighted in red followed by a values in unformatted text

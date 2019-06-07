@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/graph"
-	"github.com/antha-lang/antha/instructions"
-	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/microArch/driver/liquidhandling"
-	"github.com/antha-lang/antha/target"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/graph"
+	"github.com/Synthace/antha/instructions"
+	"github.com/Synthace/antha/laboratory/effects"
+	"github.com/Synthace/antha/microArch/driver/liquidhandling"
+	"github.com/Synthace/antha/target"
 )
 
 func (a *ir) getMixes() (ret []*target.Mix) {

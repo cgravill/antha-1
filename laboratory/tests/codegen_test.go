@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/antha-lang/antha/antha/anthalib/wtype"
-	"github.com/antha-lang/antha/codegen"
-	"github.com/antha-lang/antha/instructions"
-	"github.com/antha-lang/antha/laboratory/effects"
-	"github.com/antha-lang/antha/laboratory/testlab"
-	"github.com/antha-lang/antha/target"
-	"github.com/antha-lang/antha/target/human"
-	"github.com/antha-lang/antha/workflow"
+	"github.com/Synthace/antha/antha/anthalib/wtype"
+	"github.com/Synthace/antha/codegen"
+	"github.com/Synthace/antha/instructions"
+	"github.com/Synthace/antha/laboratory/effects"
+	"github.com/Synthace/antha/laboratory/testlab"
+	"github.com/Synthace/antha/target"
+	"github.com/Synthace/antha/target/human"
+	"github.com/Synthace/antha/workflow"
 )
 
 type lowLevelTestInst struct {

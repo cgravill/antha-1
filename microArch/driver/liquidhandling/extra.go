@@ -3,7 +3,7 @@ package liquidhandling
 import (
 	"reflect"
 
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
 )
 
 func SafeGetF64(m map[string]interface{}, key string) float64 {

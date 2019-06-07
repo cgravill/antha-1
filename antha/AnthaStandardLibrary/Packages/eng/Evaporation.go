@@ -27,8 +27,8 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/antha-lang/antha/antha/AnthaStandardLibrary/Packages/Liquidclasses"
-	"github.com/antha-lang/antha/antha/anthalib/wunit"
+	"github.com/Synthace/antha/antha/AnthaStandardLibrary/Packages/Liquidclasses"
+	"github.com/Synthace/antha/antha/anthalib/wunit"
 )
 
 func Θ(liquid string, airvelocity wunit.Velocity) (float64, error) {
