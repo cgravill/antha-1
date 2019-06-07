@@ -39,9 +39,6 @@
         },
         "Repositories": {
             "type": "object",
-            "propertyNames": {
-                "pattern": "^(repos.antha.com|github.com)/"
-            },
             "patternProperties": {
                 ".*": {
                     "$ref": "#/definitions/repository"
