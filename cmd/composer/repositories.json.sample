@@ -3,7 +3,7 @@
     "Repositories": {
         "Synthace": {
             "Directory": "/home/matthew/src/Go_external_1.11/src/repos.antha.com/antha-ninja/elements-westeros",
-            "Branch": "feature/future_sanity"
+            "Branch": "master"
         }
     }
 }

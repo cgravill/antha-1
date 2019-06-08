@@ -38,15 +38,15 @@ You can pick any directory you like, **BUT** it should not be withing your `GOPA
 We've got a nice clean working area, let's get the code that we need!
 
 ```bash
-git clone -b feature/future_sanity https://github.com/Synthace/antha.git
-git clone -b feature/future_sanity https://github.com/Synthace/antha-runner.git
-git clone -b feature/future_sanity https://github.com/Synthace/instruction-plugins.git
+git clone https://github.com/Synthace/antha.git
+git clone https://github.com/Synthace/antha-runner.git
+git clone https://github.com/Synthace/instruction-plugins.git
 ```
 
 Lets also get an elements repository to work with, I'm picking elements-westeros on the development environment:
 
 ```bash
-git clone -b feature/future_sanity https://repos.antha.com/antha-ninja/elements-westeros.git
+git clone https://repos.antha.com/antha-ninja/elements-westeros.git
 ```
 
 This should have got copies of all the latest antha folders locally. I should see the following folders:

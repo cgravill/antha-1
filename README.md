@@ -3,7 +3,7 @@
 For a quick guide walking through a installation and basic tasks, look at the [quickstart guide](README_Quickstart.md).
 This document contains more detailed information, and discussion of further options for installation and use.
 
-[![Coverage Status](https://coveralls.io/repos/github/Synthace/antha/badge.svg?branch=feature/future_sanity)](https://coveralls.io/github/Synthace/antha?branch=feature/future_sanity)
+[![Coverage Status](https://coveralls.io/repos/github/Synthace/antha/badge.svg?branch=master)](https://coveralls.io/github/Synthace/antha?branch=master)
 
 ## Getting Started
 
@@ -38,8 +38,8 @@ This allows installation of the Antha commands without needing to explicitly dow
 2. From within this directory, initialise the project:
   `go mod init Antha`
 3. Add a dependency to the project:
-  `go mod edit "-require=github.com/Synthace/antha@feature/future_sanity"`
-  NOTE: **feature/future_sanity** may be edited to refer to any branch, or commit SHA if a particular version of Antha is desired.
+  `go mod edit "-require=github.com/Synthace/antha@master"`
+  NOTE: **master** may be edited to refer to any branch, or commit SHA if a particular version of Antha is desired.
 4. Install the Antha commands:
   `go install github.com/Synthace/antha/cmd/...`
 
@@ -70,9 +70,9 @@ This is the recommended installation if source code is required, for development
 
 The following projects need to be cloned into the same directory:
 
-  - `git clone -b feature/future_sanity git@github.com:Synthace/antha.git`
-  - `git clone -b feature/future_sanity git@github.com:Synthace/antha-runner.git`
-  - `git clone -b feature/future_sanity git@github.com:Synthace/instruction-plugins.git`
+  - `git clone git@github.com:Synthace/antha.git`
+  - `git clone git@github.com:Synthace/antha-runner.git`
+  - `git clone git@github.com:Synthace/instruction-plugins.git`
 
 (Note, that local dependencies may be observed in `antha/go.mod` - those redirected to local copies should be cloned directly. At current time this is `antha-runner` and `instruction-plugins`)
 

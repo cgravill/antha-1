@@ -42,7 +42,7 @@ Install it.
 
 ## 3. Build the image
 
-    antha-lang/antha$ docker build --target=build -t antha-local --build-arg NETRC="$(cat ~/.netrc)" --build-arg COMMIT_SHA=feature/future_sanity .
+    antha-lang/antha$ docker build --target=build -t antha-local --build-arg NETRC="$(cat ~/.netrc)" --build-arg COMMIT_SHA=master .
 
 For the `COMMIT_SHA` you can provide a branch name or a commit
 hash. Our CI uses commit hash. Because you may well have modified
