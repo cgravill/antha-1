@@ -23,7 +23,8 @@ require (
 	github.com/studio-b12/gowebdav v0.0.0-20190103184047-38f79aeaf1ac
 	github.com/tealeg/xlsx v1.0.3
 	github.com/ugorji/go v1.1.4
-	github.com/xitongsys/parquet-go v0.0.0-20190327025424-682b98622266
+	github.com/xitongsys/parquet-go v1.3.0
+	github.com/xitongsys/parquet-go-source v0.0.0-20190608000953-182051b006f6
 	golang.org/x/net v0.0.0-20190320064053-1272bf9dcd53
 	golang.org/x/tools v0.0.0-20190312170243-e65039ee4138
 	gonum.org/v1/gonum v0.0.0-20181029232933-400065bf7646
