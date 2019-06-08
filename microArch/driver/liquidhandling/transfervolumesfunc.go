@@ -8,39 +8,21 @@ import (
 )
 
 // TransferVolumes returns a slice of volumes V such that Min <= v <= Max and sum(V) = Vol
-func TransferVolumes(Vol, Min, Max wunit.Volume) ([]wunit.Volume, error) {
+func TransferVolumes(vol, min, max wunit.Volume) ([]wunit.Volume, error) {
 
-	max, err := Max.InUnit(Vol.Unit())
-	if err != nil {
-		return nil, err
+	if vol.LessThan(min.MinusEpsilon()) {
+		return nil, wtype.LHError(wtype.LH_ERR_VOL, fmt.Sprintf("Liquid Handler cannot service volume %s requested: minimum volume is %s", vol, min))
 	}
 
-	ret := make([]wunit.Volume, 0)
+	// how many transfers should we make?
+	// Epsilon() here is used to avoid floating point errors e.g. 100+1e-8 ul taking 3 transfers with a 50ul tip
+	n := math.Ceil(wunit.MustDivide(vol.MinusEpsilon(), max.PlusEpsilon()))
+	transferVol := wunit.CopyVolume(vol)
+	transferVol.DivideBy(n)
 
-	//	if vol < min {
-	if Vol.LessThanRounded(Min, 1) {
-		err := wtype.LHError(wtype.LH_ERR_VOL, fmt.Sprintf("Liquid Handler cannot service volume requested: %v - minimum volume is %v", Vol, Min))
-		return ret, err
-	}
-
-	//if vol <= max {
-	if !Vol.GreaterThanRounded(Max, 1) {
-		ret = append(ret, Vol)
-		return ret, nil
-	}
-
-	// vol is > max, need to know by how much
-	// if vol/max = n then we do n+1 equal transfers of vol / (n+1)
-	// this should never be outside the range
-
-	n, _ := math.Modf(Vol.RawValue() / max.RawValue())
-	n += 1
-
-	// should make sure of no rounding errors here... we want to
-	// make sure these are within the resolution of the channel
-
-	for i := 0; i < int(n); i++ {
-		ret = append(ret, wunit.NewVolume(Vol.RawValue()/n, Vol.Unit().PrefixedSymbol()))
+	ret := make([]wunit.Volume, int(n))
+	for i := range ret {
+		ret[i] = wunit.CopyVolume(transferVol)
 	}
 
 	return ret, nil
@@ -49,6 +31,7 @@ func TransferVolumes(Vol, Min, Max wunit.Volume) ([]wunit.Volume, error) {
 // TransferVolumesMulti given a slice of volumes to transfer and channels to use,
 // return an array of transfers to make such that `ret[i][j]` is the volume of the ith transfer to be made with channel j
 func TransferVolumesMulti(vols VolumeSet, chans []*wtype.LHChannelParameter) ([]VolumeSet, error) {
+
 	// aggregate vertically
 	mods := make([]VolumeSet, len(vols))
 	mx := 0

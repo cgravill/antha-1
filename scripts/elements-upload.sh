@@ -14,7 +14,7 @@ repo='
 {
     "SchemaVersion": "2.0",
     "Repositories": {
-        "repos.antha.com/antha-ninja/elements-westeros": {
+        "Synthace": {
             "Directory": "/elements",
             "Commit": "'$commit_sha'",
             "Branch": "'$branch'"

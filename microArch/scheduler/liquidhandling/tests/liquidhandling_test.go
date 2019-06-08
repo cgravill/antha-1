@@ -648,8 +648,10 @@ func TestTipOverrideNegative(t *testing.T) {
 
 			err = lh.Plan(lab.LaboratoryEffects, rq)
 
-			if e, f := "7 (LH_ERR_VOL) : volume error : No tip chosen: Volume 8 ul is too low to be accurately moved by the liquid handler (configured minimum 10 ul). Low volume tips may not be available and / or the robot may need to be configured differently", err.Error(); e != f {
-				return fmt.Errorf("expecting error %q found %q", e, f)
+			expectedErr := "7 (LH_ERR_VOL) : volume error : no tip chosen: volumes [8 ul] could not be moved by the liquid handler in this configuration\n\tHVHead: head0: vertical 8-channel [10 ul - 250 ul]@[0.225 ml/min - 37.5 ml/min] non-independent\n\t\tGilson200 [20 ul - 200 ul] unfiltered\n\tLVHead: head1: vertical 8-channel [0.5 ul - 20 ul]@[0.0225 ml/min - 3.75 ml/min] non-independent"
+
+			if gotErr := err.Error(); expectedErr != gotErr {
+				return fmt.Errorf("errors don't match:\ne: %q\ng: %q", expectedErr, gotErr)
 			}
 			return nil
 		},
@@ -1074,10 +1076,11 @@ func TestExecutionPlanning(t *testing.T) {
 					Assertions: Assertions{
 						NumberOfAssertion(liquidhandling.ASP, 1), //full multichanneling
 						NumberOfAssertion(liquidhandling.DSP, 1), //full multichanneling
+						FinalOutputVolumesAssertion(0.001, map[string]float64{"A1": 18.0, "B1": 17.0, "C1": 15.0, "D1": 12.0, "E1": 17.0, "F1": 18.0, "G1": 14.0, "H1": 18.0}),
 					},
 				},
 				{
-					Name:          "multi channel independent different tips",
+					Name:          "multi channel independent avoid different tips",
 					Liquidhandler: GetIndependentLiquidHandlerForTest(lab),
 					Instructions: Mixes("pcrplate_skirted_riser", TestMixComponents{
 						{
@@ -1092,6 +1095,69 @@ func TestExecutionPlanning(t *testing.T) {
 					Assertions: Assertions{
 						NumberOfAssertion(liquidhandling.ASP, 1), //full multichanneling
 						NumberOfAssertion(liquidhandling.DSP, 1), //full multichanneling
+						TipsUsedAssertion([]wtype.TipEstimate{
+							{
+								TipType:   "Hx300F Tipbox",
+								NTips:     8,
+								NTipBoxes: 1,
+							},
+						}),
+						FinalOutputVolumesAssertion(0.001, map[string]float64{"A1": 10.0, "B1": 100.0, "C1": 10.0, "D1": 100.0, "E1": 10.0, "F1": 100.0, "G1": 10.0, "H1": 100.0}),
+					},
+				},
+				{
+					Name:          "multi channel independent avoid different tips 2",
+					Liquidhandler: GetIndependentLiquidHandlerForTest(lab),
+					Instructions: Mixes("pcrplate_skirted_riser", TestMixComponents{
+						{
+							LiquidName:    "water",
+							VolumesByWell: ColumnWise(8, []float64{10.0, 50.0, 10.0, 50.0, 10.0, 50.0, 10.0, 50.0}),
+							LiquidType:    wtype.LTWater,
+							Sampler:       mixer.Sample,
+						},
+					}),
+					InputPlates:  []*wtype.LHPlate{GetTroughForTest(lab.IDGenerator)},
+					OutputPlates: []*wtype.LHPlate{GetPlateForTest(lab.IDGenerator)},
+					Assertions: Assertions{
+						NumberOfAssertion(liquidhandling.ASP, 1), //full multichanneling
+						NumberOfAssertion(liquidhandling.DSP, 1), //full multichanneling
+						TipsUsedAssertion([]wtype.TipEstimate{
+							{
+								TipType:   "Hx50F Tipbox",
+								NTips:     8,
+								NTipBoxes: 1,
+							},
+						}),
+						FinalOutputVolumesAssertion(0.001, map[string]float64{"A1": 10.0, "B1": 50.0, "C1": 10.0, "D1": 50.0, "E1": 10.0, "F1": 50.0, "G1": 10.0, "H1": 50.0}),
+					},
+				},
+				{
+					Name:          "multi channel independent different number of transfers",
+					Liquidhandler: GetIndependentLiquidHandlerForTest(lab),
+					Instructions: Mixes("pcrplate_skirted_riser", TestMixComponents{
+						{
+							LiquidName:    "water",
+							VolumesByWell: ColumnWise(8, []float64{50.0, 100.0, 50.0, 50.0, 50.0, 50.0, 50.0, 50.0}),
+							LiquidType:    wtype.LTWater,
+							Sampler:       mixer.Sample,
+						},
+					}),
+					InputPlates:  []*wtype.LHPlate{GetTroughForTest(lab.IDGenerator)},
+					OutputPlates: []*wtype.LHPlate{GetTroughForTest(lab.IDGenerator)},
+					Assertions: Assertions{
+						NumberOfAssertion(liquidhandling.ASP, 2), // 1x 8-way, 1x 1-way
+						NumberOfAssertion(liquidhandling.DSP, 2), // 1x 8-way, 1x 1-way
+						NumberOfAssertion(liquidhandling.LOD, 1), // re-use the tips, don't drop 8 and reload 1
+						NumberOfAssertion(liquidhandling.ULD, 1),
+						TipsUsedAssertion([]wtype.TipEstimate{
+							{
+								TipType:   "Hx50F Tipbox",
+								NTips:     8,
+								NTipBoxes: 1,
+							},
+						}),
+						FinalOutputVolumesAssertion(0.001, map[string]float64{"A1": 50.0, "B1": 100.0, "C1": 50.0, "D1": 50.0, "E1": 50.0, "F1": 50.0, "G1": 50.0, "H1": 50.0}),
+						DebugPrintInstructions(),
 					},
 				},
 				{

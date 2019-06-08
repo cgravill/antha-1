@@ -7,8 +7,8 @@ replace github.com/Synthace/antha-runner => ../antha-runner
 replace github.com/Synthace/instruction-plugions => ../instruction-plugins
 
 require (
-	github.com/Synthace/antha-runner v0.0.0-20190607093053-4cb62ed7d2f9
-	github.com/Synthace/instruction-plugins v0.0.0-20190607093144-b4b7b222c024
+	github.com/Synthace/antha-runner v0.0.0-20190608112646-129788abed35
+	github.com/Synthace/instruction-plugins v0.0.0-20190608112550-08eacf773a7b
 	github.com/Synthace/microservice v0.0.0-20190529152803-a1bc18e373c0
 	github.com/antha-lang/toolbox v0.0.0-20180417132942-6ea11e22448c
 	github.com/apache/arrow/go/arrow v0.0.0-20190412182029-853742021ce1
@@ -29,7 +29,8 @@ require (
 	github.com/studio-b12/gowebdav v0.0.0-20190103184047-38f79aeaf1ac
 	github.com/tealeg/xlsx v1.0.3
 	github.com/ugorji/go v1.1.4
-	github.com/xitongsys/parquet-go v0.0.0-20190327025424-682b98622266
+	github.com/xitongsys/parquet-go v1.3.0
+	github.com/xitongsys/parquet-go-source v0.0.0-20190608000953-182051b006f6
 	golang.org/x/net v0.0.0-20190320064053-1272bf9dcd53
 	golang.org/x/tools v0.0.0-20190312170243-e65039ee4138
 	gonum.org/v1/gonum v0.0.0-20190606121551-14af50e936aa

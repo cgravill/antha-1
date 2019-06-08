@@ -22,49 +22,42 @@ var promptTests = []promptTest{
 	makeFifthPromptTest(),
 }
 
-func makeComponents(idGen *id.IDGenerator, names ...string) []*wtype.LHComponent {
-	ret := make([]*wtype.LHComponent, 0, len(names))
-	for _, name := range names {
-		ret = append(ret, makeComponent(idGen, name))
+func makeComponents(ids ...string) []*wtype.LHComponent {
+	ret := make([]*wtype.LHComponent, 0, len(ids))
+	for _, id := range ids {
+		ret = append(ret, makeComponent("Component X", id))
 	}
 
 	return ret
 }
 
-func makeComponent(idGen *id.IDGenerator, name string) *wtype.LHComponent {
-	cmp := wtype.NewLHComponent(idGen)
-	cmp.CName = name
-	return cmp
+func makeComponent(name, id string) *wtype.LHComponent {
+	return &wtype.LHComponent{
+		CName: name,
+		ID:    id,
+	}
 }
 
-var counter int = 0
-
-func getID() string {
-	id := fmt.Sprintf("ID-%d", counter)
-	counter++
-	return id
-}
-
-func mix(components ...*wtype.LHComponent) *wtype.LHInstruction {
+func mix(idGen *id.IDGenerator, components ...*wtype.LHComponent) *wtype.LHInstruction {
 	if len(components) < 2 {
 		panic(fmt.Sprintf("Need at least 2 components to do mix, got %d", len(components)))
 	}
 
 	return &wtype.LHInstruction{
-		ID:      getID(),
+		ID:      idGen.NextID(),
 		Type:    wtype.LHIMIX,
 		Inputs:  components[0 : len(components)-1],
 		Outputs: []*wtype.LHComponent{components[len(components)-1]},
 	}
 }
 
-func prompt(components ...*wtype.LHComponent) *wtype.LHInstruction {
+func prompt(idGen *id.IDGenerator, components ...*wtype.LHComponent) *wtype.LHInstruction {
 	if len(components)%2 != 0 {
 		panic(fmt.Sprintf("Need even number of components to do prompt, got %d", len(components)))
 	}
 
 	return &wtype.LHInstruction{
-		ID:      getID(),
+		ID:      idGen.NextID(),
 		Type:    wtype.LHIPRM,
 		Inputs:  components[0 : len(components)/2],
 		Outputs: components[len(components)/2:],
@@ -73,11 +66,13 @@ func prompt(components ...*wtype.LHComponent) *wtype.LHInstruction {
 
 // B = MIX(A) C = PROMPT(B) D = MIX(C)
 func makeFirstPromptTest() promptTest {
-	idg := id.NewIDGenerator("test")
+	idGen := id.NewIDGenerator("test")
 	name := "Simple - three layers, mix-prompt-mix"
-	cmps := makeComponents(idg, "A", "B", "C", "D")
+	cmps := makeComponents("A", "B", "C", "D")
 	insx := []*wtype.LHInstruction{
-		mix(cmps[0], cmps[1]), prompt(cmps[1], cmps[2]), mix(cmps[2], cmps[3]),
+		mix(idGen, cmps[0], cmps[1]),
+		prompt(idGen, cmps[1], cmps[2]),
+		mix(idGen, cmps[2], cmps[3]),
 	}
 	chain := wtype.MakeNewIChain([]*wtype.LHInstruction{insx[0]}, []*wtype.LHInstruction{insx[1]}, []*wtype.LHInstruction{insx[2]})
 
@@ -85,7 +80,7 @@ func makeFirstPromptTest() promptTest {
 		Name:         name,
 		Instructions: insx,
 		Chain:        chain,
-		IDGen:        idg,
+		IDGen:        idGen,
 	}
 }
 
@@ -94,10 +89,16 @@ func makeFirstPromptTest() promptTest {
 // MIX(A)->B MIX(C)->D PROMPT(B,D)->(E,F) MIX(E)->G MIX(F)->H
 func makeSecondPromptTest() promptTest {
 	name := "Multi-component prompts"
-	idg := id.NewIDGenerator("test")
-	cmps := makeComponents(idg, "A", "B", "C", "D", "E", "F", "G", "H")
+	idGen := id.NewIDGenerator("test")
+	cmps := makeComponents("A", "B", "C", "D", "E", "F", "G", "H")
 
-	insx := []*wtype.LHInstruction{mix(cmps[0], cmps[1]), mix(cmps[2], cmps[3]), prompt(cmps[1], cmps[3], cmps[4], cmps[5]), mix(cmps[4], cmps[6]), mix(cmps[5], cmps[7])}
+	insx := []*wtype.LHInstruction{
+		mix(idGen, cmps[0], cmps[1]),
+		mix(idGen, cmps[2], cmps[3]),
+		prompt(idGen, cmps[1], cmps[3], cmps[4], cmps[5]),
+		mix(idGen, cmps[4], cmps[6]),
+		mix(idGen, cmps[5], cmps[7]),
+	}
 
 	// the middle prompt is what should result after aggregation since all prompts have the same (empty) message
 
@@ -108,28 +109,39 @@ func makeSecondPromptTest() promptTest {
 		Name:         name,
 		Instructions: insx,
 		Chain:        chain,
-		IDGen:        idg,
+		IDGen:        idGen,
 	}
 }
 
 // MIX(A)->B MIX(C)->D PROMPT(B,D)->(E,F) MIX(E)->G MIX(F)->H
 func makeThirdPromptTest() promptTest {
 	name := "Aggregation test 1 : simple merger"
-	idg := id.NewIDGenerator("test")
-	cmps := makeComponents(idg, "A", "B", "C", "D", "E", "F", "G", "H")
+	idGen := id.NewIDGenerator("test")
+	cmps := makeComponents("A", "B", "C", "D", "E", "F", "G", "H")
 
-	insx := []*wtype.LHInstruction{mix(cmps[0], cmps[1]), mix(cmps[2], cmps[3]), prompt(cmps[1], cmps[4]), prompt(cmps[3], cmps[5]), mix(cmps[4], cmps[6]), mix(cmps[5], cmps[7])}
+	insx := []*wtype.LHInstruction{
+		mix(idGen, cmps[0], cmps[1]),
+		mix(idGen, cmps[2], cmps[3]),
+		prompt(idGen, cmps[1], cmps[4]),
+		prompt(idGen, cmps[3], cmps[5]),
+		mix(idGen, cmps[4], cmps[6]),
+		mix(idGen, cmps[5], cmps[7]),
+	}
 
 	// the middle prompt is what should result after aggregation since all prompts have the same (empty) message
 
-	insgs := [][]*wtype.LHInstruction{{insx[0], insx[1]}, {prompt(cmps[1], cmps[3], cmps[4], cmps[5])}, {insx[4], insx[5]}}
+	insgs := [][]*wtype.LHInstruction{
+		{insx[0], insx[1]},
+		{prompt(idGen, cmps[1], cmps[3], cmps[4], cmps[5])},
+		{insx[4], insx[5]},
+	}
 
 	chain := wtype.MakeNewIChain(insgs...)
 	return promptTest{
 		Name:         name,
 		Instructions: insx,
 		Chain:        chain,
-		IDGen:        idg,
+		IDGen:        idGen,
 	}
 }
 
@@ -140,10 +152,21 @@ func makeThirdPromptTest() promptTest {
 // prompt(E) -> F MIX(F) ->G
 func makeFourthPromptTest() promptTest {
 	name := "Aggregation test 2 : prompts separated by mix"
-	idg := id.NewIDGenerator("test")
-	cmps := makeComponents(idg, "A", "B", "C", "D", "E", "F", "G")
-	insx := []*wtype.LHInstruction{prompt(cmps[0], cmps[1]), prompt(cmps[1], cmps[2]), mix(cmps[2], cmps[3]), prompt(cmps[4], cmps[5]), mix(cmps[5], cmps[6])}
-	insgs := [][]*wtype.LHInstruction{{prompt(cmps[0], cmps[4], cmps[1], cmps[5])}, {insx[4]}, {insx[1]}, {insx[2]}}
+	idGen := id.NewIDGenerator("test")
+	cmps := makeComponents("A", "B", "C", "D", "E", "F", "G")
+	insx := []*wtype.LHInstruction{
+		prompt(idGen, cmps[0], cmps[1]),
+		prompt(idGen, cmps[1], cmps[2]),
+		mix(idGen, cmps[2], cmps[3]),
+		prompt(idGen, cmps[4], cmps[5]),
+		mix(idGen, cmps[5], cmps[6]),
+	}
+	insgs := [][]*wtype.LHInstruction{
+		{prompt(idGen, cmps[0], cmps[4], cmps[1], cmps[5])},
+		{insx[4]},
+		{insx[1]},
+		{insx[2]},
+	}
 
 	chain := wtype.MakeNewIChain(insgs...)
 
@@ -151,7 +174,7 @@ func makeFourthPromptTest() promptTest {
 		Name:         name,
 		Instructions: insx,
 		Chain:        chain,
-		IDGen:        idg,
+		IDGen:        idGen,
 	}
 
 }
@@ -161,11 +184,16 @@ func makeFourthPromptTest() promptTest {
 // prompt(A) -> B prompt(B,E) -> (C,F) MIX(C) -> D
 // MIX(F) ->G
 func makeFifthPromptTest() promptTest {
-	idg := id.NewIDGenerator("test")
+	idGen := id.NewIDGenerator("test")
 	name := "multi-component prompt - should occur at correct location in chain"
-	cmps := makeComponents(idg, "A", "B", "C", "D", "E", "F", "G")
+	cmps := makeComponents("A", "B", "C", "D", "E", "F", "G")
 
-	insx := []*wtype.LHInstruction{prompt(cmps[0], cmps[1]), prompt(cmps[1], cmps[4], cmps[2], cmps[5]), mix(cmps[2], cmps[3]), mix(cmps[5], cmps[6])}
+	insx := []*wtype.LHInstruction{
+		prompt(idGen, cmps[0], cmps[1]),
+		prompt(idGen, cmps[1], cmps[4], cmps[2], cmps[5]),
+		mix(idGen, cmps[2], cmps[3]),
+		mix(idGen, cmps[5], cmps[6]),
+	}
 	insgs := [][]*wtype.LHInstruction{{insx[0]}, {insx[1]}, {insx[2], insx[3]}}
 
 	chain := wtype.MakeNewIChain(insgs...)
@@ -174,7 +202,7 @@ func makeFifthPromptTest() promptTest {
 		Name:         name,
 		Instructions: insx,
 		Chain:        chain,
-		IDGen:        idg,
+		IDGen:        idGen,
 	}
 }
 

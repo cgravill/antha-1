@@ -8,13 +8,15 @@ import (
 
 	"github.com/Synthace/antha/antha/anthalib/data"
 	"github.com/pkg/errors"
-	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/ParquetReader"
+	"github.com/xitongsys/parquet-go-source/buffer"
+	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/xitongsys/parquet-go/reader"
+	"github.com/xitongsys/parquet-go/source"
 )
 
 type readState struct {
-	reader      *ParquetReader.ParquetReader
+	reader      *reader.ParquetReader
 	columnNames []data.ColumnName
 }
 
@@ -44,9 +46,9 @@ func TableFromReader(reader io.Reader, opts ...ReadOpt) (*data.Table, error) {
 }
 
 // TableFromBytes reads a data.Table eagerly from a memory buffer
-func TableFromBytes(buffer []byte, opts ...ReadOpt) (*data.Table, error) {
+func TableFromBytes(bytes []byte, opts ...ReadOpt) (*data.Table, error) {
 	// wrap a byte buffer into a ParquetFile object
-	file, err := ParquetFile.NewBufferFile(buffer)
+	file, err := buffer.NewBufferFile(bytes)
 	if err != nil {
 		panic(errors.Wrap(err, "SHOULD NOT HAPPEN: creating in-memory ParquetFile"))
 	}
@@ -57,7 +59,7 @@ func TableFromBytes(buffer []byte, opts ...ReadOpt) (*data.Table, error) {
 // TableFromFile reads a data.Table eagerly from a Parquet file
 func TableFromFile(filePath string, opts ...ReadOpt) (*data.Table, error) {
 	// opening the file on disk via ParquetFile object
-	file, err := ParquetFile.NewLocalFileReader(filePath)
+	file, err := local.NewLocalFileReader(filePath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "read Parquet file '%s'", filePath)
 	}
@@ -66,13 +68,13 @@ func TableFromFile(filePath string, opts ...ReadOpt) (*data.Table, error) {
 	return readTable(read(file, opts))
 }
 
-func read(file ParquetFile.ParquetFile, opts []ReadOpt) (*readState, error) {
+func read(file source.ParquetFile, opts []ReadOpt) (*readState, error) {
 	// for now, reading Parquet file in 1 thread, 100 rows at once
 	// TODO: which parameters to use for really large datasets?
 	np := 1
 
 	// parquet reader
-	parquetReader, err := ParquetReader.NewParquetReader(file, nil, int64(np))
+	parquetReader, err := reader.NewParquetReader(file, nil, int64(np))
 	if err != nil {
 		return nil, errors.Wrapf(err, "create Parquet reader")
 	}

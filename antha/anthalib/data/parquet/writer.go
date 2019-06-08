@@ -7,9 +7,11 @@ import (
 
 	"github.com/Synthace/antha/antha/anthalib/data"
 	"github.com/pkg/errors"
-	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/ParquetWriter"
+	"github.com/xitongsys/parquet-go-source/local"
+	"github.com/xitongsys/parquet-go-source/writerfile"
 	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go/writer"
 )
 
 // WriteOpt sets an optional behavior when creating parquet files.
@@ -17,13 +19,13 @@ type WriteOpt func(*writeState) error
 
 type writeState struct {
 	table  *data.Table
-	writer *ParquetWriter.ParquetWriter
+	writer *writer.ParquetWriter
 }
 
 // TableToWriter writes a data.Table to io.Writer
 func TableToWriter(table *data.Table, writer io.Writer, opts ...WriteOpt) error {
-	// wrapping io.Writer in a ParquetFile.ParquetFile
-	file := ParquetFile.NewWriterFile(writer)
+	// wrapping io.Writer in a source.ParquetFile
+	file := writerfile.NewWriterFile(writer)
 
 	return writeTable(write(file, table, opts))
 }
@@ -33,8 +35,8 @@ func TableToBytes(table *data.Table, opts ...WriteOpt) ([]byte, error) {
 	// a memory buffer writer
 	buffer := bytes.NewBuffer(nil)
 
-	// a ParquetFile.ParquetFile on the top of the memory buffer writer
-	file := ParquetFile.NewWriterFile(buffer)
+	// a source.ParquetFile on the top of the memory buffer writer
+	file := writerfile.NewWriterFile(buffer)
 
 	// writing the table
 	if err := TableToWriter(table, file, opts...); err != nil {
@@ -46,7 +48,7 @@ func TableToBytes(table *data.Table, opts ...WriteOpt) ([]byte, error) {
 // TableToFile writes a data.Table to a file on disk
 func TableToFile(table *data.Table, filePath string, opts ...WriteOpt) error {
 	// opening the file
-	file, err := ParquetFile.NewLocalFileWriter(filePath)
+	file, err := local.NewLocalFileWriter(filePath)
 	if err != nil {
 		return errors.Wrapf(err, "opening Parquet file '%s' for writing", filePath)
 	}
@@ -55,9 +57,9 @@ func TableToFile(table *data.Table, filePath string, opts ...WriteOpt) error {
 	return writeTable(write(file, table, opts))
 }
 
-func write(file ParquetFile.ParquetFile, table *data.Table, opts []WriteOpt) (*writeState, error) {
+func write(file source.ParquetFile, table *data.Table, opts []WriteOpt) (*writeState, error) {
 	// Parquet writer and its settings
-	writer, err := ParquetWriter.NewParquetWriter(file, nil, 1)
+	writer, err := writer.NewParquetWriter(file, nil, 1)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating Parquet writer")
 	}
@@ -74,7 +76,7 @@ func write(file ParquetFile.ParquetFile, table *data.Table, opts []WriteOpt) (*w
 	return w, nil
 }
 
-// writes a data.Table to ParquetFile.ParquetFile
+// writes a data.Table to source.ParquetFile
 func writeTable(w *writeState, err error) error {
 	if err != nil {
 		return err

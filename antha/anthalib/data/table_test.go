@@ -3,6 +3,7 @@ package data
 import (
 	"math"
 	"reflect"
+	"sort"
 	"testing"
 )
 
@@ -921,35 +922,57 @@ func TestForeachKey(t *testing.T) {
 			makeSeries("key1", []int64{1, 1, 2, 3, 3}, nil),
 			makeSeries("key2", []string{"aa", "aa", "aa", "xx", ""}, []bool{true, true, true, true, false}),
 			makeSeries("value", []float64{1.5, 2.5, 3.5, math.NaN(), 5.5}, []bool{true, true, true, false, true}),
-		), "key1", "key2")
+		), 4, "key1", "key2")
 
 		testForeachKey(t, "ForeachKey empty table", NewTable(
 			makeSeries("key", []int64{}, nil),
 			makeSeries("value", []float64{}, nil),
-		), "key")
+		), 0, "key")
 	})
 }
 
-func testForeachKey(t *testing.T, message string, table *Table, key ...ColumnName) {
-	// populating a restored table with ForeachKey results
-	// TODO: simplify the code below using table.Append when it's available
-	restoredTableBuilder := Must().NewTableBuilder(table.Schema().Columns)
-	table.Must().ForeachKey(key...).By(func(key Row, values *Table) {
-		for value := range values.IterAll() {
-			restoredTableRow := make([]interface{}, len(table.Schema().Columns))
-			copy(restoredTableRow[:len(key.values)], key.values)
-			copy(restoredTableRow[len(key.values):], value.values)
-			restoredTableBuilder.Append(restoredTableRow)
+func testForeachKey(t *testing.T, message string, table *Table, expecteNumGroups int, keyCols ...ColumnName) {
+	// splitting the table into partitions using ForeachKey and counting the number of partitions
+	partitions := make([]*Table, 0)
+	actualNumGroups := 0
+	table.Must().ForeachKey(keyCols...).By(func(key Row, partition *Table) {
+		// extending the partition table by (constant) key columns
+		for i := range key.schema.Columns {
+			partition = partition.Must().Extend(key.schema.Columns[i].Name).ConstantType(key.values[i], key.schema.Columns[i].Type)
 		}
+		partitions = append(partitions, partition)
+		actualNumGroups++
 	})
-	restoredTable := restoredTableBuilder.Build()
 
-	// sorting the tables by the same sort key (since their rows may be in different order) and comparing them
-	sortKey := make(Key, len(table.Schema().Columns))
-	for i, col := range table.Schema().Columns {
+	// checking the number of partitions
+	if actualNumGroups != expecteNumGroups {
+		t.Errorf("expected number of groups %d, found %d", expecteNumGroups, actualNumGroups)
+	}
+
+	if actualNumGroups > 0 {
+		// merging the partitions into a "restored" table
+		restoredTable := Must().Append(partitions...).Exact()
+
+		// normalizing both tables and comparing them
+		assertEqual(t, normalize(table), normalize(restoredTable), message)
+	}
+}
+
+// Normalises the table series order and rows order.
+func normalize(t *Table) *Table {
+	// normalizing the table series order (by sorting them by name)
+	series := t.series
+	sort.Slice(series, func(i, j int) bool {
+		return series[i].col < series[j].col
+	})
+	t = NewTable(series...)
+
+	// normalizing the table rows order (by sorting them all)
+	sortKey := make(Key, len(t.Schema().Columns))
+	for i, col := range t.Schema().Columns {
 		sortKey[i] = ColumnKey{col.Name, true}
 	}
-	assertEqual(t, table.Must().Sort(sortKey), restoredTable.Must().Sort(sortKey), message)
+	return t.Must().Sort(sortKey)
 }
 
 func TestComposition(t *testing.T) {

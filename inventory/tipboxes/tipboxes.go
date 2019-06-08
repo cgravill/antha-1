@@ -63,9 +63,13 @@ func (inv *Inventory) ForEach(fun func(wtype.LHTipbox) error) error {
 	inv.lock.Lock()
 	defer inv.lock.Unlock()
 
-	for _, tb := range inv.tipboxByType {
-		if err := fun(*tb); err != nil {
-			return err
+	for key, tb := range inv.tipboxByType {
+		// we store tipboxes twice - once under the key `tipbox.Type` and once under `tipbox.Tiptype.Type`
+		// but we should only call fun once for each
+		if key == tb.Type {
+			if err := fun(*tb); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

@@ -23,6 +23,7 @@
 package liquidhandling
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Synthace/antha/antha/anthalib/wtype"
@@ -175,6 +176,9 @@ func aggregatePromptsWithSameMessage(idGen *id.IDGenerator, inss []*wtype.LHInst
 	}
 
 	// aggregate instructions
+	// TODO --> user control of scope of this aggregation
+	//          i.e. break every plate, some other subset
+
 	// in case we see sequential identical prompts / waits
 	// we aggregate them here
 	for prompter, iar := range prMessage {
@@ -195,6 +199,37 @@ func aggregatePromptsWithSameMessage(idGen *id.IDGenerator, inss []*wtype.LHInst
 	return insOut
 }
 
+// test that prompts have same number of inputs as outputs
+// and that they correspond correctly
+func validatePrompts(instructions []*wtype.LHInstruction) error {
+	for _, ins := range instructions {
+		if err := validatePrompt(ins); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validatePrompt(ins *wtype.LHInstruction) error {
+	//ignore non-prompts
+	if ins.Type != wtype.LHIPRM {
+		return nil
+	}
+
+	if len(ins.Inputs) != len(ins.Outputs) {
+		return fmt.Errorf("Prompt %s has %d inputs but %d outputs, these must match", ins.ID, len(ins.Inputs), len(ins.Outputs))
+	}
+
+	for i := 0; i < len(ins.Inputs); i++ {
+		// very crude check but should catch egregious errors
+		if ins.Inputs[i].CName != ins.Outputs[i].CName {
+			return fmt.Errorf("Prompt %s has input %d with name %s but output %d with name %s (must match)", ins.ID, i, ins.Inputs[i].CName, i, ins.Outputs[i].CName)
+		}
+	}
+
+	return nil
+}
+
 //buildInstructionChain guarantee all nodes are dependency-ordered
 //in order to aggregate without introducing cycles
 func BuildInstructionChain(idGen *id.IDGenerator, unsorted map[string]*wtype.LHInstruction) (*wtype.IChain, error) {
@@ -202,6 +237,13 @@ func BuildInstructionChain(idGen *id.IDGenerator, unsorted map[string]*wtype.LHI
 	unsortedSlice := make([]*wtype.LHInstruction, 0, len(unsorted))
 	for _, instruction := range unsorted {
 		unsortedSlice = append(unsortedSlice, instruction)
+	}
+
+	// validate that prompts are correctly specified
+	err := validatePrompts(unsortedSlice)
+
+	if err != nil {
+		return nil, err
 	}
 
 	tg, err := wtype.MakeTGraph(unsortedSlice)
@@ -225,6 +267,13 @@ func BuildInstructionChain(idGen *id.IDGenerator, unsorted map[string]*wtype.LHI
 	sortedAsIns = make([]*wtype.LHInstruction, len(sorted))
 	for i, nIns := range sorted {
 		sortedAsIns[i] = nIns.(*wtype.LHInstruction)
+	}
+
+	// validate that prompts remain correctly specified
+	err = validatePrompts(sortedAsIns)
+
+	if err != nil {
+		return nil, err
 	}
 
 	// sort again post aggregation

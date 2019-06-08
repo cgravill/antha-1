@@ -13,25 +13,6 @@ import (
 	"github.com/Synthace/antha/workflow"
 )
 
-func setUpTipsFor(lab *laboratory.Laboratory, lhp *liquidhandling.LHProperties) {
-	err := lab.Inventory.TipBoxes.ForEach(func(tb wtype.LHTipbox) error {
-		if tb.Mnfr == lhp.Mnfr || lhp.Mnfr == "MotherNature" {
-			// Don't return filter tips: the iteration order through the
-			// inventory is non deterministic, so if we return filter
-			// tips then we risk the tests failing due to the planner
-			// choosing to use the filter tips.
-			// This conditional is copied from instruction-plugins
-			if !tb.Tiptype.Filtered && tb.Tiptype.Type != "LVGilson200" {
-				lhp.Tips = append(lhp.Tips, tb.Tips[0][0])
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		panic(err)
-	}
-}
-
 const (
 	HVMinRate = 0.225
 	HVMaxRate = 37.5
@@ -41,7 +22,7 @@ const (
 
 func getIndependentConfig() *wtype.LHChannelParameter {
 	minvol := wunit.NewVolume(0.5, "ul")
-	maxvol := wunit.NewVolume(250, "ul")
+	maxvol := wunit.NewVolume(1000, "ul")
 	minspd := wunit.NewFlowRate(LVMinRate, "ml/min")
 	maxspd := wunit.NewFlowRate(HVMaxRate, "ml/min")
 
@@ -90,8 +71,6 @@ func makeLayout(lab *laboratory.Laboratory) *liquidhandling.LHProperties {
 		yp += yi
 	}
 	lhp := liquidhandling.NewLHProperties(lab.IDGenerator, "Pipetmax", "Gilson", liquidhandling.LLLiquidHandler, liquidhandling.DisposableTips, layout)
-	// get tips permissible from the factory
-	setUpTipsFor(lab, lhp)
 
 	lhp.Preferences = &workflow.LayoutOpt{
 		Tipboxes:  workflow.Addresses{"position_9", "position_6", "position_3", "position_5", "position_2"},
@@ -110,10 +89,21 @@ func makeIndependentLH(lab *laboratory.Laboratory) *liquidhandling.LHProperties 
 	// set manufacturer so the right tipChooser is selected
 	lhp.Mnfr = "Hamilton"
 
+	// get tips permissible from the factory
+	err := lab.Inventory.TipBoxes.ForEach(func(tb wtype.LHTipbox) error {
+		if tb.Mnfr == lhp.Mnfr {
+			lhp.Tips = append(lhp.Tips, tb.Tips[0][0])
+		}
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
+
 	// test independent liquidhandler has only one head to avoid multi-head instruction issues
 	config := getIndependentConfig()
-	adaptor := wtype.NewLHAdaptor(lab.IDGenerator, "DummyAdaptor", "Gilson", config)
-	head := wtype.NewLHHead(lab.IDGenerator, "Head", "Gilson", config)
+	adaptor := wtype.NewLHAdaptor(lab.IDGenerator, "DummyAdaptor", "Hamilton", config)
+	head := wtype.NewLHHead(lab.IDGenerator, "Head", "Hamilton", config)
 	head.Adaptor = adaptor
 
 	ha := wtype.NewLHHeadAssembly(nil)
@@ -130,6 +120,24 @@ func makeIndependentLH(lab *laboratory.Laboratory) *liquidhandling.LHProperties 
 
 func makeGilson(lab *laboratory.Laboratory) *liquidhandling.LHProperties {
 	lhp := makeLayout(lab)
+
+	// get tips permissible from the factory
+	err := lab.Inventory.TipBoxes.ForEach(func(tb wtype.LHTipbox) error {
+		if tb.Mnfr == lhp.Mnfr {
+			// Don't return filter tips: the iteration order through the
+			// inventory is non deterministic, so if we return filter
+			// tips then we risk the tests failing due to the planner
+			// choosing to use the filter tips.
+			// This conditional is copied from instruction-plugins
+			if !tb.Tiptype.Filtered && tb.Tiptype.Type != "LVGilson200" {
+				lhp.Tips = append(lhp.Tips, tb.Tips[0][0])
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	hvconfig := getHVConfig()
 	hvadaptor := wtype.NewLHAdaptor(lab.IDGenerator, "DummyAdaptor", "Gilson", hvconfig)

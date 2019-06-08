@@ -299,6 +299,29 @@ func ExampleTable_Extend_onSelectedColsDynamicTypes() {
 	// |3|   chest|    600|       2|          450|
 }
 
+func ExampleTable_Extend_dynamicProjection() {
+	// calculate new column value on a projection using dynamic types.
+	type Stuff struct {
+		description string
+	}
+	withCustomCol, _ := pirateBooty.Extend("Stuff").On("Name", "Price").
+		Interface(func(v ...interface{}) interface{} {
+			if v[1] == nil {
+				return nil
+			}
+			return Stuff{description: fmt.Sprintf("%v that costs $%.2f", v[0].(string), v[1].(float64))}
+		}, reflect.TypeOf(Stuff{}))
+	fmt.Println(withCustomCol.ToRows())
+	// Output: 4 Row(s):
+	// | |    Name|  Price|Quantity|                                  Stuff|
+	// | |  string|float64|   int64|                             data.Stuff|
+	// ---------------------------------------------------------------------
+	// |0|doubloon|      1|    1200|{description:doubloon that costs $1.00}|
+	// |1|    grog|  <nil>|      44|                                  <nil>|
+	// |2| cutlass|    5.5|      30| {description:cutlass that costs $5.50}|
+	// |3|   chest|    600|       2| {description:chest that costs $600.00}|
+}
+
 func ExampleTable_Extend_onSelectedColsMixedTypes() {
 	// calculate new column value on selected columns using dynamic types for inputs and static type for output.
 	salePrices, _ := pirateBooty.Extend("Reduced Price").On("Price").

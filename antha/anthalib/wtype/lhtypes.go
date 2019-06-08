@@ -120,8 +120,13 @@ func (lhcp LHChannelParameter) VolumeLimitString() string {
 	return fmt.Sprintf("Min: %s Max: %s", lhcp.Minvol.ToString(), lhcp.Maxvol.ToString())
 }
 
-func (lhcp LHChannelParameter) String() string {
-	return fmt.Sprintf("%s %s Minvol %s Maxvol %s Minspd %s Maxspd %s Multi %d Independent %t Ori %v Head %d", lhcp.Platform, lhcp.Name, lhcp.Minvol.ToString(), lhcp.Maxvol.ToString(), lhcp.Minspd.ToString(), lhcp.Maxspd.ToString(), lhcp.Multi, lhcp.Independent, lhcp.Orientation, lhcp.Head)
+// String get a single line summary of the channel parameters
+func (lhcp *LHChannelParameter) String() string {
+	ind := "non-independent"
+	if lhcp.Independent {
+		ind = "independent"
+	}
+	return fmt.Sprintf("head%d: %s %d-channel [%s - %s]@[%s - %s] %s", lhcp.Head, lhcp.Orientation, lhcp.Multi, lhcp.Minvol.ToString(), lhcp.Maxvol.ToString(), lhcp.Minspd.ToString(), lhcp.Maxspd.ToString(), ind)
 }
 
 // given the dimension of the plate, what is the constraint
@@ -172,6 +177,18 @@ func NewLHChannelParameter(name, platform string, minvol, maxvol wunit.Volume, m
 	}
 }
 
+// Merge returns a new channel description which combines the constraints of both
+func (lhcp *LHChannelParameter) Merge(rhs *LHChannelParameter) *LHChannelParameter {
+	ret := lhcp.Dup()
+	if rhs != nil {
+		ret.Minvol = wunit.MaxVolume(lhcp.Minvol, rhs.Minvol)
+		ret.Maxvol = wunit.MinVolume(lhcp.Maxvol, rhs.Maxvol)
+	}
+	return ret
+}
+
+// MergeWithTip returns a new channel decription combining the constraints of the channel and tip.
+// if tip is nil, returns a copy of this channel description
 func (lhcp *LHChannelParameter) MergeWithTip(tip *LHTip) *LHChannelParameter {
 	ret := lhcp.Dup()
 	if tip != nil {

@@ -17,8 +17,11 @@ github.com/Synthace/api-defs v0.0.0-20181004101911-07d24b0e32de h1:mSt8dHE65AYjp
 github.com/Synthace/api-defs v0.0.0-20181004101911-07d24b0e32de/go.mod h1:ZWT3DjxHxoL5YEXpnij34G7XFei7yksiv0tgOM/X+2g=
 github.com/Synthace/grpc-gateway v0.0.0-20180917171637-0cd4b6347062 h1:08n99m2IIAOe2JdLkO8UZ5wxLAuFTdXzi8CdL8p0bFA=
 github.com/Synthace/grpc-gateway v0.0.0-20180917171637-0cd4b6347062/go.mod h1:qXz/YWQdr+sSNJUnWDwHJT4FKPOu0hUUnXpCR7FszDY=
+github.com/Synthace/instruction-plugins v0.0.0-20190507142248-541a8a6edf99 h1:kxDvmoAUsvoMKCE93a68zgtWYjqolNcFjituOdS7O1s=
 github.com/Synthace/instruction-plugins v0.0.0-20190607093144-b4b7b222c024 h1:OS8ulyIbGAFDHv6diSmcDw4pTvjTZr9+9K1sPU76mF8=
 github.com/Synthace/instruction-plugins v0.0.0-20190607093144-b4b7b222c024/go.mod h1:JjevaNJKTMVx1336lXMBjrIBnlsmcwFZkcNwgbLw8tY=
+github.com/Synthace/instruction-plugins v0.0.0-20190608112550-08eacf773a7b h1:fALNRolk8BEQnJyMJJiHwJWtoPk6Ev+RXHgkdrO5RsA=
+github.com/Synthace/instruction-plugins v0.0.0-20190608112550-08eacf773a7b/go.mod h1:JjevaNJKTMVx1336lXMBjrIBnlsmcwFZkcNwgbLw8tY=
 github.com/Synthace/microservice v0.0.0-20190529152803-a1bc18e373c0 h1:u1p6x5O34Rq5NWrvVnJ626XuFAl/EFtktX0zkDhrgu4=
 github.com/Synthace/microservice v0.0.0-20190529152803-a1bc18e373c0/go.mod h1:zN1o2acYTdHiFNkBYDrLpRRxJtmKUFBcl4lkZ6qDyUc=
 github.com/Synthace/osin v0.0.0-20170825171613-73081ebcbc8b/go.mod h1:bnj4oIKTQTA2NCBAwot7usDI9jPRikgA7TUM1k5M25A=
@@ -33,6 +36,7 @@ github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuy
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 h1:kFOfPq6dUM1hTo4JG6LR5AXSUEsOjtdm0kw0FtQtMJA=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239/go.mod h1:2FmKhYUyUczH0OGQWaF5ceTx0UBShxjsH6f8oGKYe2c=
+github.com/antha-lang/antha v0.0.1-alpha.0.20181122124851-ccc2c2488bd6/go.mod h1:MbMl2i2T5KI7Rm+W55ejnUux0H3qIv3eUp73Rkf3qTc=
 github.com/antha-lang/toolbox v0.0.0-20180417132942-6ea11e22448c h1:HxBhuiqdsUDPfWqpiCU69MsT7ey6dDodUpvt7Xf3a0w=
 github.com/antha-lang/toolbox v0.0.0-20180417132942-6ea11e22448c/go.mod h1:F1QKFMetACEKbbsk7Cdr0BzvlphDjKbpbR0QZLMm87Q=
 github.com/antha-lang/units v0.0.0-20180320221051-16e7df36024b h1:Eyq/SdL9Rd7K4bh8Am0NFiCZlSGztggL2/BCsoZY1cs=
@@ -252,6 +256,10 @@ github.com/xanzy/ssh-agent v0.2.0 h1:Adglfbi5p9Z0BmK2oKU9nTG+zKfniSfnaMYB+ULd+Ro
 github.com/xanzy/ssh-agent v0.2.0/go.mod h1:0NyE30eGUDliuLEHJgYte/zncp2zdTStcOnWhgSqHD8=
 github.com/xitongsys/parquet-go v0.0.0-20190327025424-682b98622266 h1:f2C+uJQLZE/FJf53ahXJ5su+LGXbF7bE8rKGMkKwS+w=
 github.com/xitongsys/parquet-go v0.0.0-20190327025424-682b98622266/go.mod h1:on8bl2K/PEouGNEJqxht0t3K4IyN/ABeFu84Hh3lzrE=
+github.com/xitongsys/parquet-go v1.3.0 h1:psKfrDAVz53prerFoVVu6++po53TlMB6bk5OaTe99c0=
+github.com/xitongsys/parquet-go v1.3.0/go.mod h1:on8bl2K/PEouGNEJqxht0t3K4IyN/ABeFu84Hh3lzrE=
+github.com/xitongsys/parquet-go-source v0.0.0-20190608000953-182051b006f6 h1:AEIkyL/xADdZfRBEzHEcRkUGd2uN/6w5FzrRM1P42ak=
+github.com/xitongsys/parquet-go-source v0.0.0-20190608000953-182051b006f6/go.mod h1:xxCx7Wpym/3QCo6JhujJX51dzSXrwmb0oH6FQb39SEA=
 github.com/yhat/wsutil v0.0.0-20170731153501-1d66fa95c997/go.mod h1:DIGbh/f5XMAessMV/uaIik81gkDVjUeQ9ApdaU7wRKE=
 go.opencensus.io v0.20.1/go.mod h1:6WKK9ahsWS3RSO+PY9ZHZUfv2irvY6gN279GOPZjmmk=
 go.opencensus.io v0.20.2 h1:NAfh7zF0/3/HqtMvJNZ/RFrSlCE6ZTlHmKfhL/Dm1Jk=

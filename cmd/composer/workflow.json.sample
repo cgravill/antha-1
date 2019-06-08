@@ -3,7 +3,7 @@
     "WorkflowId": "abc",
 
     "Repositories": {
-        "repos.antha.com/antha-ninja/elements-westeros": {
+        "Synthace": {
             "Directory": "/home/matthew/src/Go_external_1.11/src/repos.antha.com/antha-ninja/elements-westeros",
             "Branch": "matthew"
         }
@@ -12,7 +12,7 @@
     "Elements": {
         "Types": [
             {
-                "RepositoryName": "repos.antha.com/antha-ninja/elements-westeros",
+                "RepositoryName": "Synthace",
                 "ElementPath": "Tests/FileOutput"
             }
         ],
