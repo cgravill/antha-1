@@ -1,7 +1,7 @@
 module github.com/antha-lang/antha
 
 require (
-	github.com/Synthace/antha-runner v0.0.0-20190529155927-0247575e892e
+	github.com/Synthace/antha-runner v0.0.0-20190608101840-1fccb317dd6c
 	github.com/Synthace/instruction-plugins v0.0.0-20190531115713-454e2a35efc4
 	github.com/Synthace/microservice v0.0.0-20190529152803-a1bc18e373c0
 	github.com/antha-lang/toolbox v0.0.0-20180417132942-6ea11e22448c
