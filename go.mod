@@ -7,8 +7,8 @@ replace github.com/Synthace/antha-runner => ../antha-runner
 replace github.com/Synthace/instruction-plugions => ../instruction-plugins
 
 require (
-	github.com/Synthace/antha-runner v0.0.0-20190608112646-129788abed35
-	github.com/Synthace/instruction-plugins v0.0.0-20190608112550-08eacf773a7b
+	github.com/Synthace/antha-runner v0.0.0-20190608141855-5ce8ba89797c
+	github.com/Synthace/instruction-plugins v0.0.0-20190608142025-47ab38c5c90a
 	github.com/Synthace/microservice v0.0.0-20190529152803-a1bc18e373c0
 	github.com/antha-lang/toolbox v0.0.0-20180417132942-6ea11e22448c
 	github.com/apache/arrow/go/arrow v0.0.0-20190412182029-853742021ce1

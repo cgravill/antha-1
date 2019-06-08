@@ -22,6 +22,8 @@ github.com/Synthace/instruction-plugins v0.0.0-20190607093144-b4b7b222c024 h1:OS
 github.com/Synthace/instruction-plugins v0.0.0-20190607093144-b4b7b222c024/go.mod h1:JjevaNJKTMVx1336lXMBjrIBnlsmcwFZkcNwgbLw8tY=
 github.com/Synthace/instruction-plugins v0.0.0-20190608112550-08eacf773a7b h1:fALNRolk8BEQnJyMJJiHwJWtoPk6Ev+RXHgkdrO5RsA=
 github.com/Synthace/instruction-plugins v0.0.0-20190608112550-08eacf773a7b/go.mod h1:JjevaNJKTMVx1336lXMBjrIBnlsmcwFZkcNwgbLw8tY=
+github.com/Synthace/instruction-plugins v0.0.0-20190608142025-47ab38c5c90a h1:9ovHJENZ2RlxRclbnQbHS9lFqA45CUDLvhaZ9Xk8KZw=
+github.com/Synthace/instruction-plugins v0.0.0-20190608142025-47ab38c5c90a/go.mod h1:JjevaNJKTMVx1336lXMBjrIBnlsmcwFZkcNwgbLw8tY=
 github.com/Synthace/microservice v0.0.0-20190529152803-a1bc18e373c0 h1:u1p6x5O34Rq5NWrvVnJ626XuFAl/EFtktX0zkDhrgu4=
 github.com/Synthace/microservice v0.0.0-20190529152803-a1bc18e373c0/go.mod h1:zN1o2acYTdHiFNkBYDrLpRRxJtmKUFBcl4lkZ6qDyUc=
 github.com/Synthace/osin v0.0.0-20170825171613-73081ebcbc8b/go.mod h1:bnj4oIKTQTA2NCBAwot7usDI9jPRikgA7TUM1k5M25A=
